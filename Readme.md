@@ -41,6 +41,10 @@ var app = http.createServer(function(req, res){
   - `stream` file streaming has started `(stream)`
   - `end` streaming has completed
 
+## Error-handling
+
+  By default when no `error` listeners are present an automatic response will be made, otherwise you have full control over the response, aka you may show a 5xx page etc.
+
 ## About
 
   Send is Connect's `static()` extracted for generalized use, a secure file
@@ -49,8 +53,6 @@ var app = http.createServer(function(req, res){
 
   It does _not_ perform internal caching, you should use a reverse proxy cache such
   as Varnish for this. If your application is small enough that it would benefit from single-node memory caching, it's small enough that it does not need caching at all ;).
-
-  FUD: If you're performing pointless benchmarks, before complaining first consider that node-static does not respect cache-control directives and thus responds faster, but with invalid responses, use a real cache.
 
 ## Debugging
 

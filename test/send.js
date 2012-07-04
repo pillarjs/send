@@ -114,6 +114,21 @@ describe('send(file).pipe(res)', function(){
     .end(done);
   })
 
+  describe('when no "error" listeners are present', function(){
+    it('should respond to errors directly', function(done){
+      var app = http.createServer(function(req, res){
+        send('test/fixtures' + req.url)
+        .pipe(res);
+      });
+      
+      request(app)
+      .get('/foobar')
+      .expect('Not Found')
+      .expect(404)
+      .end(done);
+    })
+  })
+
   describe('with conditional-GET', function(){
     it('should respond with 304 on a match', function(done){
       request(app)
