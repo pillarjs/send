@@ -2,7 +2,10 @@
 var send = require('..')
   , http = require('http')
   , Stream = require('stream')
-  , request = require('supertest');
+  , request = require('supertest')
+  , assert = require('assert');
+
+// test server
 
 var app = http.createServer(function(req, res){
   function error(err) {
@@ -21,6 +24,12 @@ var app = http.createServer(function(req, res){
   .on('directory', redirect)
   .pipe(res);
 });
+
+describe('send.mime', function(){
+  it('should be exposed', function(){
+    assert(send.mime);
+  })
+})
 
 describe('send(file).pipe(res)', function(){
   it('should stream the file contents', function(done){
