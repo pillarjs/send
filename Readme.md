@@ -45,6 +45,13 @@ var app = http.createServer(function(req, res){
 
   FUD: If you're performing pointless benchmarks, before complaining first consider that node-static does not respect cache-control directives and thus responds faster, but with invalid responses, use a real cache.
 
+## Running tests
+
+```
+$ npm install
+$ make test
+```
+
 ## License 
 
 (The MIT License)
