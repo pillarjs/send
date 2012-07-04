@@ -6,8 +6,8 @@ var send = require('..')
 
 var app = http.createServer(function(req, res){
   function error(err) {
-    res.statusCode = err.status || 500;
-    res.end(err.message);
+    res.statusCode = err.status;
+    res.end(http.STATUS_CODES[err.status]);
   }
 
   function redirect() {
