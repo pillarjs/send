@@ -39,7 +39,7 @@ describe('send(file).pipe(res)', function(){
   it('should treat a malformed URI as a bad request', function(done){
     request(app)
     .get('/some%99thing.txt')
-    .expect('invalid request uri', done);
+    .expect('Bad Request', done);
   })
 
   it('should treat an ENAMETOOLONG as a 404', function(done){
@@ -101,7 +101,7 @@ describe('send(file).pipe(res)', function(){
     request(app)
     .get('/meow')
     .expect(404)
-    .expect('not found')
+    .expect('Not Found')
     .end(done);
   })
 
@@ -308,7 +308,7 @@ describe('send(file, options)', function(){
       request(app)
       .get('/.secret')
       .expect(404)
-      .expect('not found')
+      .expect('Not Found')
       .end(done);
     })
   })
@@ -338,7 +338,7 @@ describe('send(file, options)', function(){
 
         request(app)
         .get('/pets/../../send.js')
-        .expect('forbidden')
+        .expect('Forbidden')
         .end(done);
       })
     })
@@ -348,7 +348,7 @@ describe('send(file, options)', function(){
         request(app)
         .get('/../send.js')
         .expect(403)
-        .expect('forbidden')
+        .expect('Forbidden')
         .end(done);
       })
     })
