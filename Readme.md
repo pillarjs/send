@@ -1,7 +1,8 @@
 
 # send
 
-  Better streaming static file server for node with Range and conditional-GET support.
+  Send is Connect's `static()` extracted for generalized use, a secure file
+  server supporting partial responses (Ranges), conditional-GET negotiation, high test coverage, and granular events which may be leveraged to take appropriate actions in your application or framework.
 
 ## Installation
 
@@ -76,11 +77,7 @@ var app = http.createServer(function(req, res){
 
   By default when no `error` listeners are present an automatic response will be made, otherwise you have full control over the response, aka you may show a 5xx page etc.
 
-## About
-
-  Send is Connect's `static()` extracted for generalized use, a secure file
-  server supporting partial responses (Ranges), conditional-GET negotiation, high test coverage, and emits
-  detailed errors which may be leveraged to take appropriate actions in your application or framework.
+## Caching
 
   It does _not_ perform internal caching, you should use a reverse proxy cache such
   as Varnish for this, or those fancy things called CDNs. If your application is small enough that it would benefit from single-node memory caching, it's small enough that it does not need caching at all ;).
