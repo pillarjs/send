@@ -59,6 +59,19 @@ var app = http.createServer(function(req, res){
   - `stream` file streaming has started `(stream)`
   - `end` streaming has completed
 
+### .root(dir)
+
+  Serve files relative to `path`. Aliased as `.from(dir)`.
+
+### .index(path)
+
+  By default send supports "index.html" files, to disable this
+  invoke `.index(false)` or to supply a new index pass a string.
+
+### .maxage(ms)
+
+  Provide a max-age in milliseconds for http caching, defaults to 0.
+
 ## Error-handling
 
   By default when no `error` listeners are present an automatic response will be made, otherwise you have full control over the response, aka you may show a 5xx page etc.

@@ -9,5 +9,6 @@ var send = require('..')
 http.createServer(function(req, res){
   send(req.url)
   .from(__dirname + '/public')
+  .maxage(60000)
   .pipe(res);
 }).listen(3000);
