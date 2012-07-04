@@ -7,7 +7,17 @@
 
     $ npm install send
 
-## Example
+## Examples
+
+  Small:
+
+```js
+var app = http.createServer(function(req, res){
+  send(req.url).pipe(res);
+});
+```
+
+  Serving from a root directory with custom error-handling:
 
 ```js
 var app = http.createServer(function(req, res){
