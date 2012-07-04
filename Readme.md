@@ -1,7 +1,7 @@
 
 # send
 
-  Send is Connect's `static()` extracted for generalized use, a secure file
+  Send is Connect's `static()` extracted for generalized use, a streaming static file
   server supporting partial responses (Ranges), conditional-GET negotiation, high test coverage, and granular events which may be leveraged to take appropriate actions in your application or framework.
 
 ## Installation
