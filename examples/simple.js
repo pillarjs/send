@@ -8,6 +8,6 @@ var send = require('..')
 
 http.createServer(function(req, res){
   send(req.url)
-  .root(__dirname + '/public')
+  .from(__dirname + '/public')
   .pipe(res);
 }).listen(3000);

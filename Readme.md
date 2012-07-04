@@ -50,7 +50,9 @@ var app = http.createServer(function(req, res){
 });
 ```
 
-## Events
+## API
+
+### Events
 
   - `error` an error occurred `(err)`
   - `directory` a directory was requested
