@@ -114,11 +114,27 @@ describe('send(file).pipe(res)', function(){
     .end(done);
   })
 
+  describe('when no "directory" listeners are present', function(){
+    it('should respond with a redirect', function(done){
+      var app = http.createServer(function(req, res){
+        send(req.url)
+        .root('test/fixtures')
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/pets')
+      .expect(301)
+      .expect('Location', '/pets/')
+      .expect('Redirecting to /pets/')
+      .end(done);
+    })
+  })
+
   describe('when no "error" listeners are present', function(){
     it('should respond to errors directly', function(done){
       var app = http.createServer(function(req, res){
-        send('test/fixtures' + req.url)
-        .pipe(res);
+        send('test/fixtures' + req.url).pipe(res);
       });
       
       request(app)
