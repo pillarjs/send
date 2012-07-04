@@ -12,6 +12,9 @@
   Small:
 
 ```js
+var http = require('http');
+var send = require('send');
+
 var app = http.createServer(function(req, res){
   send(req.url).pipe(res);
 });
@@ -20,6 +23,9 @@ var app = http.createServer(function(req, res){
   Serving from a root directory with custom error-handling:
 
 ```js
+var http = require('http');
+var send = require('send');
+
 var app = http.createServer(function(req, res){
   // your custom error-handling logic:
   function error(err) {
