@@ -34,6 +34,13 @@ var app = http.createServer(function(req, res){
 });
 ```
 
+## Events
+
+  - `error` an error occurred `(err)`
+  - `directory` a directory was requested
+  - `stream` file streaming has started `(stream)`
+  - `end` streaming has completed
+
 ## About
 
   Send is Connect's `static()` extracted for generalized use, a secure file
