@@ -68,7 +68,7 @@ var app = http.createServer(function(req, res){
   detailed errors which may be leveraged to take appropriate actions in your application or framework.
 
   It does _not_ perform internal caching, you should use a reverse proxy cache such
-  as Varnish for this. If your application is small enough that it would benefit from single-node memory caching, it's small enough that it does not need caching at all ;).
+  as Varnish for this, or those fancy things called CDNs. If your application is small enough that it would benefit from single-node memory caching, it's small enough that it does not need caching at all ;).
 
 ## Debugging
 
