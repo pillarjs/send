@@ -123,6 +123,13 @@ describe('send(file).pipe(res)', function(){
     .end(done);
   })
 
+  it('should set Content-Type via mime map', function(done){
+    request(app)
+    .get('/name.txt')
+    .expect('Content-Type', 'text/plain; charset=UTF-8')
+    .end(done);
+  })
+
   describe('when no "directory" listeners are present', function(){
     it('should respond with a redirect', function(done){
       var app = http.createServer(function(req, res){
