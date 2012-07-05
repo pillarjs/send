@@ -127,7 +127,12 @@ describe('send(file).pipe(res)', function(){
     request(app)
     .get('/name.txt')
     .expect('Content-Type', 'text/plain; charset=UTF-8')
-    .end(done);
+    .end(function(){
+      request(app)
+      .get('/tobi.html')
+      .expect('Content-Type', 'text/html; charset=UTF-8')
+      .end(done);
+    });
   })
 
   describe('when no "directory" listeners are present', function(){
