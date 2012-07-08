@@ -17,7 +17,7 @@ var http = require('http');
 var send = require('send');
 
 var app = http.createServer(function(req, res){
-  send(req.url).pipe(res);
+  send(req, req.url).pipe(res);
 });
 ```
 
