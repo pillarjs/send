@@ -7,7 +7,7 @@ var send = require('..')
   , http = require('http');
 
 http.createServer(function(req, res){
-  send(req.url)
+  send(req, req.url)
   .from(__dirname + '/public')
   .maxage(60000)
   .pipe(res);

@@ -19,7 +19,7 @@ var app = http.createServer(function(req, res){
     res.end('Redirecting to ' + req.url + '/');
   }
 
-  send('test/fixtures' + req.url)
+  send(req, 'test/fixtures' + req.url)
   .on('error', error)
   .on('directory', redirect)
   .pipe(res);
