@@ -17,7 +17,7 @@ var http = require('http');
 var send = require('send');
 
 var app = http.createServer(function(req, res){
-  send(req.url).pipe(res);
+  send(req, req.url).pipe(res);
 });
 ```
 
@@ -43,7 +43,7 @@ var app = http.createServer(function(req, res){
 
   // transfer arbitrary files from within
   // /www/example.com/public/*
-  send(url.parse(req.url).pathname)
+  send(req, url.parse(req.url).pathname)
   .root('/www/example.com/public')
   .on('error', error)
   .on('directory', redirect)
