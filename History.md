@@ -1,4 +1,9 @@
 
+0.0.3 / 2012-07-16 
+==================
+
+  * fix normalization of the root directory. Closes #3
+
 0.0.2 / 2012-07-09 
 ==================
 
