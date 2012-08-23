@@ -290,6 +290,32 @@ describe('send(file).pipe(res)', function(){
       })
     })
   })
+
+  describe('when "options" is specified', function(){
+    it('should support start/end', function(done){
+      var app = http.createServer(function(req, res){
+        var i = parseInt(req.url.slice(1));
+        send(req, 'test/fixtures/nums', { start:i*3, end:i*3+2 }).pipe(res);
+      });
+
+      request(app)
+      .get('/1')
+      .expect('456', done);
+    })
+
+    it('should support start/end with Range request', function(done){
+      var app = http.createServer(function(req, res){
+        var i = parseInt(req.url.slice(1));
+        send(req, 'test/fixtures/nums', { start:i*3, end:i*3+2 }).pipe(res);
+      });
+
+      request(app)
+      .get('/0')
+      .set('Range', 'bytes=-2')
+      .expect('23')
+      .end(done);
+    })
+  })
 })
 
 describe('send(file, options)', function(){
