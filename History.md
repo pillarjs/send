@@ -1,4 +1,9 @@
 
+0.1.0 / 2012-08-25 
+==================
+
+  * add options parameter to send() that is passed to fs.createReadStream() [kanongil]
+
 0.0.4 / 2012-08-16 
 ==================
 
