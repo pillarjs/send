@@ -1,4 +1,3 @@
-
 # send
 
   Send is Connect's `static()` extracted for generalized use, a streaming static file
@@ -26,6 +25,7 @@ var app = http.createServer(function(req, res){
 ```js
 var http = require('http');
 var send = require('send');
+var url = require('url');
 
 var app = http.createServer(function(req, res){
   // your custom error-handling logic:
