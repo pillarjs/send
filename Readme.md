@@ -73,6 +73,10 @@ var app = http.createServer(function(req, res){
 
   Provide a max-age in milliseconds for http caching, defaults to 0.
 
+### .hidden(bool)
+
+  Enable or disable transfer of hidden files, defaults to false.
+
 ## Error-handling
 
   By default when no `error` listeners are present an automatic response will be made, otherwise you have full control over the response, aka you may show a 5xx page etc.
