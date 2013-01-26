@@ -19,5 +19,9 @@
   "scripts": {
     "test": "make test"
   },
+  "repository" :
+  { "type" : "git"
+  , "url" : "git://github.com/visionmedia/send.git"
+  },
   "main": "index"
 }
