@@ -17,7 +17,7 @@ var send = require('send');
 
 var app = http.createServer(function(req, res){
   send(req, req.url).pipe(res);
-});
+}).listen(3000);
 ```
 
   Serving from a root directory with custom error-handling:
@@ -48,7 +48,7 @@ var app = http.createServer(function(req, res){
   .on('error', error)
   .on('directory', redirect)
   .pipe(res);
-});
+}).listen(3000);
 ```
 
 ## API
