@@ -57,6 +57,7 @@ var app = http.createServer(function(req, res){
 
   - `error` an error occurred `(err)`
   - `directory` a directory was requested
+  - `file` a file was requested `(path, stat)`
   - `stream` file streaming has started `(stream)`
   - `end` streaming has completed
 
