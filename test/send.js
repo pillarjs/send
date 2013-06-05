@@ -316,6 +316,22 @@ describe('send(file).pipe(res)', function(){
       .end(done);
     })
   })
+  
+  describe('when multiple index file names are set', function(){
+    it('should respond with unicorns.html', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url)
+        .root('test/fixtures')
+        .index(["whatever.html", "unicorns.html"])
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/pets/')
+      .expect('dahut\ndahu\ndahunicorn')
+      .end(done);
+    })
+  })
 })
 
 describe('send(file, options)', function(){
