@@ -7,7 +7,7 @@
   "dependencies": {
     "debug": "*",
     "mime": "~1.2.9",
-    "fresh": "0.1.0",
+    "fresh": "0.2.0",
     "range-parser": "0.0.4"
   },
   "devDependencies": {
