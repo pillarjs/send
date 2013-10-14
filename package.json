@@ -1,13 +1,13 @@
 {
   "name": "send",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "Better streaming static file server with Range and conditional-GET support",
   "keywords": ["static", "file", "server"],
   "author": "TJ Holowaychuk <tj@vision-media.ca>",
   "dependencies": {
     "debug": "*",
     "mime": "~1.2.9",
-    "fresh": "0.1.0",
+    "fresh": "0.2.0",
     "range-parser": "0.0.4"
   },
   "devDependencies": {
