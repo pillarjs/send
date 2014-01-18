@@ -291,6 +291,20 @@ describe('send(file).pipe(res)', function(){
     })
   })
 
+  describe('when a fallback file option is specified', function() {
+    it('should return the fallback file if the specified file does not exist', function(done) {
+      var app = http.createServer(function(req, res){
+        send(req, 'test/fixtures' + req.url, { fallback: 'test/fixtures/name.txt' }).pipe(res);
+      });
+
+      request(app)
+      .get('/noexisty.text')
+      .expect('Content-Length', '4')
+      .expect('tobi', done);
+    })
+  })
+
+
   describe('when "options" is specified', function(){
     it('should support start/end', function(done){
       var app = http.createServer(function(req, res){
