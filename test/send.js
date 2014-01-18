@@ -304,7 +304,6 @@ describe('send(file).pipe(res)', function(){
     })
   })
 
-
   describe('when "options" is specified', function(){
     it('should support start/end', function(done){
       var app = http.createServer(function(req, res){
