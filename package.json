@@ -1,8 +1,12 @@
 {
   "name": "send",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Better streaming static file server with Range and conditional-GET support",
-  "keywords": ["static", "file", "server"],
+  "keywords": [
+    "static",
+    "file",
+    "server"
+  ],
   "author": "TJ Holowaychuk <tj@vision-media.ca>",
   "dependencies": {
     "debug": "*",
@@ -19,9 +23,9 @@
   "scripts": {
     "test": "make test"
   },
-  "repository" :
-  { "type" : "git"
-  , "url" : "git://github.com/visionmedia/send.git"
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/visionmedia/send.git"
   },
   "main": "index"
 }
