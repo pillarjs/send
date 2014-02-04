@@ -68,7 +68,8 @@ var app = http.createServer(function(req, res){
 ### .index(path)
 
   By default send supports "index.html" files, to disable this
-  invoke `.index(false)` or to supply a new index pass a string.
+  invoke `.index(false)` or to supply a new index file name pass either
+  a string or an array of strings (which will be tried in order).
 
 ### .maxage(ms)
 
