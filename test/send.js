@@ -1,4 +1,3 @@
-
 var send = require('..')
   , http = require('http')
   , Stream = require('stream')
@@ -386,6 +385,19 @@ describe('send(file, options)', function(){
         request(app)
         .get('/pets/../../send.js')
         .expect('Forbidden')
+        .end(done);
+      })
+
+      it('should allow ".."', function(done){
+        var app = http.createServer(function(req, res){
+          send(req, req.url)
+          .root(__dirname + '/fixtures/../fixtures')
+          .pipe(res);
+        });
+
+        request(app)
+        .get('/name.txt')
+        .expect('tobi')
         .end(done);
       })
     })
