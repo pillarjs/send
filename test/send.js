@@ -1,12 +1,15 @@
 
+var assert = require('assert');
+var fs = require('fs');
+var http = require('http');
+var path = require('path');
+var request = require('supertest');
 var send = require('..')
-  , http = require('http')
-  , Stream = require('stream')
-  , request = require('supertest')
-  , assert = require('assert');
+var Stream = require('stream');
 
 // test server
 
+var fixtures = path.join(__dirname, 'fixtures');
 var app = http.createServer(function(req, res){
   function error(err) {
     res.statusCode = err.status;
@@ -19,7 +22,8 @@ var app = http.createServer(function(req, res){
     res.end('Redirecting to ' + req.url + '/');
   }
 
-  send(req, 'test/fixtures' + req.url)
+  send(req, req.url)
+  .root(fixtures)
   .on('error', error)
   .on('directory', redirect)
   .pipe(res);
@@ -345,7 +349,7 @@ describe('send(file, options)', function(){
     it('should default to index.html', function(done){
       request(app)
       .get('/pets/')
-      .expect('tobi\nloki\njane')
+      .expect(fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'))
       .end(done);
     })
   })
