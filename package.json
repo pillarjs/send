@@ -17,7 +17,7 @@
   "devDependencies": {
     "mocha": "*",
     "should": "*",
-    "supertest": "0.0.1",
+    "supertest": "0.10.0",
     "connect": "2.x"
   },
   "scripts": {
