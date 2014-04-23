@@ -9,6 +9,7 @@
   ],
   "author": "TJ Holowaychuk <tj@vision-media.ca>",
   "dependencies": {
+    "buffer-crc32": "0.2.1",
     "debug": "0.8.0",
     "fresh": "~0.2.1",
     "mime": "1.2.11",
