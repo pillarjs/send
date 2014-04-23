@@ -374,6 +374,28 @@ describe('send(file, options)', function(){
       .expect(fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'))
       .end(done);
     })
+
+    it('should be configurable', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, index: 'tobi.html'})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/')
+      .expect(200, '<p>tobi</p>', done);
+    })
+
+    it('should support disabling', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, index: false})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/pets/')
+      .expect(403, done);
+    })
   })
 
   describe('hidden', function(){
