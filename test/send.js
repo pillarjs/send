@@ -223,35 +223,36 @@ describe('send(file).pipe(res)', function(){
       request(app)
       .get('/nums')
       .set('Range', 'bytes=0-4')
-      .expect('12345', done);
+      .expect(206, '12345', done);
     })
     
     it('should be inclusive', function(done){
       request(app)
       .get('/nums')
       .set('Range', 'bytes=0-0')
-      .expect('1', done);
+      .expect(206, '1', done);
     })
     
     it('should set Content-Range', function(done){
       request(app)
       .get('/nums')
       .set('Range', 'bytes=2-5')
-      .expect('Content-Range', 'bytes 2-5/9', done);
+      .expect('Content-Range', 'bytes 2-5/9')
+      .expect(206, done);
     })
 
     it('should support -n', function(done){
       request(app)
       .get('/nums')
       .set('Range', 'bytes=-3')
-      .expect('789', done);
+      .expect(206, '789', done);
     })
     
     it('should support n-', function(done){
       request(app)
       .get('/nums')
       .set('Range', 'bytes=3-')
-      .expect('456789', done);
+      .expect(206, '456789', done);
     })
 
     it('should respond with 206 "Partial Content"', function(done){
@@ -265,9 +266,8 @@ describe('send(file).pipe(res)', function(){
       request(app)
       .get('/nums')
       .set('Range', 'bytes=2-3')
-      .expect('34')
       .expect('Content-Length', '2')
-      .end(done);
+      .expect(206, '34', done);
     })
 
     describe('when last-byte-pos of the range is greater the length', function(){
@@ -276,7 +276,7 @@ describe('send(file).pipe(res)', function(){
         .get('/nums')
         .set('Range', 'bytes=2-50')
         .expect('Content-Range', 'bytes 2-8/9')
-        .end(done);
+        .expect(206, done);
       })
 
       it('should adapt the Content-Length accordingly', function(done){
@@ -284,7 +284,7 @@ describe('send(file).pipe(res)', function(){
         .get('/nums')
         .set('Range', 'bytes=2-50')
         .expect('Content-Length', '7')
-        .end(done);
+        .expect(206, done);
       })
     })
 
@@ -303,7 +303,16 @@ describe('send(file).pipe(res)', function(){
         request(app)
         .get('/nums')
         .set('Range', 'asdf')
-        .expect('123456789', done);
+        .expect(200, '123456789', done);
+      })
+    })
+
+    describe('when multiple ranges', function(){
+      it('should respond with 200 and the entire contents', function(done){
+        request(app)
+        .get('/nums')
+        .set('Range', '1-1,3-')
+        .expect(200, '123456789', done);
       })
     })
   })
