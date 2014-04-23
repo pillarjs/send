@@ -67,6 +67,18 @@ describe('send(file).pipe(res)', function(){
     .expect(404, done);
   })
 
+  it('should handle headers already sent error', function(done){
+    var app = http.createServer(function(req, res){
+      res.write('0');
+      send(req, req.url, {root: fixtures})
+      .on('error', function(err){ res.end(' - ' + err.message) })
+      .pipe(res);
+    });
+    request(app)
+    .get('/nums')
+    .expect(200, '0 - Can\'t set headers after they are sent.', done);
+  })
+
   it('should support HEAD', function(done){
     request(app)
     .head('/name.txt')
