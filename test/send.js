@@ -49,6 +49,12 @@ describe('send(file).pipe(res)', function(){
     .expect('hey', done);
   })
 
+  it('should serve files with dots in name', function(done){
+    request(app)
+    .get('/do..ts.txt')
+    .expect('...', done);
+  })
+
   it('should treat a malformed URI as a bad request', function(done){
     request(app)
     .get('/some%99thing.txt')
@@ -396,11 +402,27 @@ describe('send(file, options)', function(){
 
     describe('when missing', function(){
       it('should consider .. malicious', function(done){
+        var app = http.createServer(function(req, res){
+          send(req, fixtures + req.url)
+          .pipe(res);
+        });
+
         request(app)
         .get('/../send.js')
         .expect(403)
         .expect('Forbidden')
         .end(done);
+      })
+
+      it('should still serve files with dots in name', function(done){
+        var app = http.createServer(function(req, res){
+          send(req, fixtures + req.url)
+          .pipe(res);
+        });
+
+        request(app)
+        .get('/do..ts.txt')
+        .expect('...', done);
       })
     })
   })
