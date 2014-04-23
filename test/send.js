@@ -22,8 +22,7 @@ var app = http.createServer(function(req, res){
     res.end('Redirecting to ' + req.url + '/');
   }
 
-  send(req, req.url)
-  .root(fixtures)
+  send(req, req.url, {root: fixtures})
   .on('error', error)
   .on('directory', redirect)
   .pipe(res);
@@ -148,8 +147,7 @@ describe('send(file).pipe(res)', function(){
   describe('when no "directory" listeners are present', function(){
     it('should respond with a redirect', function(done){
       var app = http.createServer(function(req, res){
-        send(req, req.url)
-        .root('test/fixtures')
+        send(req, req.url, {root: 'test/fixtures'})
         .pipe(res);
       });
 
@@ -374,8 +372,7 @@ describe('send(file, options)', function(){
     describe('when given', function(){
       it('should join root', function(done){
         var app = http.createServer(function(req, res){
-          send(req, req.url)
-          .root(__dirname + '/fixtures')
+          send(req, req.url, {root: __dirname + '/fixtures'})
           .pipe(res);
         });
 
@@ -387,8 +384,7 @@ describe('send(file, options)', function(){
 
       it('should restrict paths to within root', function(done){
         var app = http.createServer(function(req, res){
-          send(req, req.url)
-          .root(__dirname + '/fixtures')
+          send(req, req.url, {root: __dirname + '/fixtures'})
           .on('error', function(err){ res.end(err.message) })
           .pipe(res);
         });

@@ -43,8 +43,7 @@ var app = http.createServer(function(req, res){
 
   // transfer arbitrary files from within
   // /www/example.com/public/*
-  send(req, url.parse(req.url).pathname)
-  .root('/www/example.com/public')
+  send(req, url.parse(req.url).pathname, {root: '/www/example.com/public'})
   .on('error', error)
   .on('directory', redirect)
   .pipe(res);
@@ -52,6 +51,25 @@ var app = http.createServer(function(req, res){
 ```
 
 ## API
+
+### Options
+
+#### hidden
+
+  Enable or disable transfer of hidden files, defaults to false.
+
+#### index
+
+  By default send supports "index.html" files, to disable this
+  set `false` or to supply a new index pass a string.
+
+#### maxage
+
+  Provide a max-age in milliseconds for http caching, defaults to 0.
+
+#### root
+
+  Serve files relative to `path`.
 
 ### Events
 
