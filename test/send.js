@@ -396,6 +396,18 @@ describe('send(file, options)', function(){
       .get('/pets/')
       .expect(403, done);
     })
+
+    it('should support fallbacks', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, index: ['default.htm', 'index.html']})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/pets/')
+      .expect(200, fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'))
+      .end(done);
+    })
   })
 
   describe('hidden', function(){

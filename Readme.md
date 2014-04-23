@@ -61,7 +61,8 @@ var app = http.createServer(function(req, res){
 #### index
 
   By default send supports "index.html" files, to disable this
-  set `false` or to supply a new index pass a string.
+  set `false` or to supply a new index pass a string or an array
+  in preferred order.
 
 #### maxage
 
@@ -83,10 +84,11 @@ var app = http.createServer(function(req, res){
 
   Serve files relative to `path`. Aliased as `.from(dir)`.
 
-### .index(path)
+### .index(paths)
 
   By default send supports "index.html" files, to disable this
-  invoke `.index(false)` or to supply a new index pass a string.
+  invoke `.index(false)` or to supply a new index pass a string
+  or an array in preferred order.
 
 ### .maxage(ms)
 
