@@ -1,0 +1,12 @@
+[submodule "node_modules/debug"]
+	path = node_modules/debug
+	url = https://github.com/visionmedia/debug.git
+[submodule "node_modules/fresh"]
+	path = node_modules/fresh
+	url = https://github.com/visionmedia/node-fresh.git
+[submodule "node_modules/mime"]
+	path = node_modules/mime
+	url = git://github.com/broofa/node-mime.git
+[submodule "node_modules/range-parser"]
+	path = node_modules/range-parser
+	url = https://github.com/visionmedia/node-range-parser.git
