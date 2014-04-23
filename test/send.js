@@ -81,11 +81,8 @@ describe('send(file).pipe(res)', function(){
   it('should add an ETag header field', function(done){
     request(app)
     .get('/name.txt')
-    .end(function(err, res){
-      if (err) return done(err);
-      res.headers.should.have.property('etag');
-      done();
-    });
+    .expect('etag', /^W\/"[^"]+"$/)
+    .end(done);
   })
 
   it('should add a Date header field', function(done){
