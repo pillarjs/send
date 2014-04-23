@@ -391,6 +391,18 @@ describe('send(file, options)', function(){
         .expect('Forbidden')
         .end(done);
       })
+
+      it('should allow .. in root', function(done){
+        var app = http.createServer(function(req, res){
+          send(req, req.url, {root: __dirname + '/fixtures/../fixtures'})
+          .pipe(res);
+        });
+
+        request(app)
+        .get('/pets/../../send.js')
+        .expect('Forbidden')
+        .end(done);
+      })
     })
 
     describe('when missing', function(){
