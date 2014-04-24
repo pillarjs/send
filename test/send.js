@@ -311,8 +311,70 @@ describe('send(file).pipe(res)', function(){
       it('should respond with 200 and the entire contents', function(done){
         request(app)
         .get('/nums')
-        .set('Range', '1-1,3-')
+        .set('Range', 'bytes=1-1,3-')
         .expect(200, '123456789', done);
+      })
+    })
+
+    describe('when if-range present', function(){
+      it('should respond with parts when etag unchanged', function(done){
+        request(app)
+        .get('/nums')
+        .end(function(err, res){
+          if (err) return done(err);
+          var etag = res.headers.etag;
+
+          request(app)
+          .get('/nums')
+          .set('If-Range', etag)
+          .set('Range', 'bytes=0-0')
+          .expect(206, '1', done);
+        })
+      })
+
+      it('should respond with 200 when etag changed', function(done){
+        request(app)
+        .get('/nums')
+        .end(function(err, res){
+          if (err) return done(err);
+          var etag = res.headers.etag.replace(/"(.)/, '"0$1');
+
+          request(app)
+          .get('/nums')
+          .set('If-Range', etag)
+          .set('Range', 'bytes=0-0')
+          .expect(200, '123456789', done);
+        })
+      })
+
+      it('should respond with parts when modified unchanged', function(done){
+        request(app)
+        .get('/nums')
+        .end(function(err, res){
+          if (err) return done(err);
+          var modified = res.headers['last-modified']
+
+          request(app)
+          .get('/nums')
+          .set('If-Range', modified)
+          .set('Range', 'bytes=0-0')
+          .expect(206, '1', done);
+        })
+      })
+
+      it('should respond with 200 when modified changed', function(done){
+        request(app)
+        .get('/nums')
+        .end(function(err, res){
+          if (err) return done(err);
+          var modified = Date.parse(res.headers['last-modified']) - 20000;
+
+          request(app)
+          .get('/nums')
+          .set('If-Range', new Date(modified).toUTCString())
+          .set('Range', 'bytes=0-0')
+          .expect(200, '123456789', done);
+        })
       })
     })
   })
