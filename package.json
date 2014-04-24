@@ -1,6 +1,6 @@
 {
   "name": "send",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Better streaming static file server with Range and conditional-GET support",
   "keywords": [
     "static",

@@ -1,4 +1,20 @@
 
+0.3.0 / 2014-04-24
+==================
+
+ * Fix sending files with dots without root set
+ * Coerce option types
+ * Accept API options in options object
+ * Set etags to "weak"
+ * Include file path in etag
+ * Make "Can't set headers after they are sent." catchable
+ * Send full entity-body for multi range requests
+ * Default directory access to 403 when index disabled
+ * Support multiple index paths
+ * Support "If-Range" header
+ * Control whether to generate etags
+ * deps: mime@1.2.11
+
 0.2.0 / 2014-01-29
 ==================
 
