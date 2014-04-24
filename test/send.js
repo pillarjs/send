@@ -403,6 +403,21 @@ describe('send(file).pipe(res)', function(){
       .expect('23')
       .end(done);
     })
+
+    it('should support disabling etags', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {etag: false, root: fixtures})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/nums')
+      .expect(200, function(err, res){
+        if (err) return done(err);
+        res.headers.should.not.have.property('etag');
+        done();
+      });
+    })
   })
 })
 

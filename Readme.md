@@ -54,6 +54,10 @@ var app = http.createServer(function(req, res){
 
 ### Options
 
+#### etag
+
+  Enable or disable etag generation, defaults to true.
+
 #### hidden
 
   Enable or disable transfer of hidden files, defaults to false.
@@ -79,6 +83,10 @@ var app = http.createServer(function(req, res){
   - `file` a file was requested `(path, stat)`
   - `stream` file streaming has started `(stream)`
   - `end` streaming has completed
+
+### .etag(bool)
+
+  Enable or disable etag generation, defaults to true.
 
 ### .root(dir)
 
