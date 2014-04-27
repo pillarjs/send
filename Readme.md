@@ -127,7 +127,7 @@ $ DEBUG=send node app
 
 ```
 $ npm install
-$ make test
+$ npm test
 ```
 
 ## License 
