@@ -1,3 +1,7 @@
+unreleased
+==========
+
+ * Calculate Etag with md5 for reduced collisions
 
 0.3.0 / 2014-04-24
 ==================
