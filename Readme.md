@@ -1,5 +1,6 @@
 # send
 
+[![NPM version](https://badge.fury.io/js/send.svg)](https://badge.fury.io/js/send)
 [![Build Status](https://travis-ci.org/visionmedia/send.svg?branch=master)](https://travis-ci.org/visionmedia/send)
 
   Send is Connect's `static()` extracted for generalized use, a streaming static file
