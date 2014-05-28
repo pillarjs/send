@@ -2,6 +2,7 @@ unreleased
 ==========
 
  * Calculate Etag with md5 for reduced collisions
+ * Fix wrong behavior when index file matches directory
  * Ignore stream errors after request ends
    - Goodbye `EBADF, read`
  * Skip directories in index file search

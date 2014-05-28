@@ -457,6 +457,28 @@ describe('send(file, options)', function(){
       .expect(200, fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'), done)
     })
 
+    it('should 404 if no index file found (file)', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, index: 'default.htm'})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/pets/')
+      .expect(404, done)
+    })
+
+    it('should 404 if no index file found (dir)', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, index: 'pets'})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/')
+      .expect(404, done)
+    })
+
     it('should not follow directories', function(done){
       var app = http.createServer(function(req, res){
         send(req, req.url, {root: fixtures, index: ['pets', 'name.txt']})
