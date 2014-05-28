@@ -16,13 +16,15 @@
     "range-parser": "~1.0.0"
   },
   "devDependencies": {
+    "istanbul": "0.2.10",
     "mocha": "~1.19.0",
     "should": "~3.3.2",
     "supertest": "~0.13.0"
   },
   "scripts": {
     "test": "mocha --reporter dot",
-    "test-travis": "mocha --reporter spec"
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec"
   },
   "repository": {
     "type": "git",
