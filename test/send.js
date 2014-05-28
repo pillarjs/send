@@ -6,7 +6,6 @@ var path = require('path');
 var request = require('supertest');
 var send = require('..')
 var should = require('should');
-var Stream = require('stream');
 
 // test server
 
@@ -40,25 +39,25 @@ describe('send(file).pipe(res)', function(){
     request(app)
     .get('/name.txt')
     .expect('Content-Length', '4')
-    .expect('tobi', done);
+    .expect(200, 'tobi', done)
   })
 
   it('should decode the given path as a URI', function(done){
     request(app)
     .get('/some%20thing.txt')
-    .expect('hey', done);
+    .expect(200, 'hey', done)
   })
 
   it('should serve files with dots in name', function(done){
     request(app)
     .get('/do..ts.txt')
-    .expect('...', done);
+    .expect(200, '...', done)
   })
 
   it('should treat a malformed URI as a bad request', function(done){
     request(app)
     .get('/some%99thing.txt')
-    .expect('Bad Request', done);
+    .expect(400, 'Bad Request', done)
   })
 
   it('should treat an ENAMETOOLONG as a 404', function(done){
@@ -84,11 +83,7 @@ describe('send(file).pipe(res)', function(){
     request(app)
     .head('/name.txt')
     .expect('Content-Length', '4')
-    .expect(200)
-    .end(function(err, res){
-      res.text.should.equal('');
-      done();
-    });
+    .expect(200, '', done)
   })
 
   it('should add an ETag header field', function(done){
@@ -101,56 +96,44 @@ describe('send(file).pipe(res)', function(){
   it('should add a Date header field', function(done){
     request(app)
     .get('/name.txt')
-    .end(function(err, res){
-      if (err) return done(err);
-      res.headers.should.have.property('date');
-      done();
-    });
+    .expect('date', /^\w{3}, \d+ \w+ \d+ \d+:\d+:\d+ \w+$/, done)
   })
 
   it('should add a Last-Modified header field', function(done){
     request(app)
     .get('/name.txt')
-    .end(function(err, res){
-      if (err) return done(err);
-      res.headers.should.have.property('last-modified');
-      done();
-    });
+    .expect('last-modified', /^\w{3}, \d+ \w+ \d+ \d+:\d+:\d+ \w+$/, done)
   })
 
   it('should add a Accept-Ranges header field', function(done){
     request(app)
     .get('/name.txt')
-    .expect('Accept-Ranges', 'bytes')
-    .end(done);
+    .expect('Accept-Ranges', 'bytes', done)
   })
 
   it('should 404 if the file does not exist', function(done){
     request(app)
     .get('/meow')
-    .expect(404)
-    .expect('Not Found')
-    .end(done);
+    .expect(404, 'Not Found', done)
   })
 
   it('should 301 if the directory exists', function(done){
     request(app)
     .get('/pets')
-    .expect(301)
     .expect('Location', '/pets/')
-    .expect('Redirecting to /pets/')
-    .end(done);
+    .expect(301, 'Redirecting to /pets/', done)
   })
 
   it('should set Content-Type via mime map', function(done){
     request(app)
     .get('/name.txt')
     .expect('Content-Type', 'text/plain; charset=UTF-8')
-    .end(function(){
+    .expect(200, function(err){
+      if (err) return done(err)
       request(app)
       .get('/tobi.html')
       .expect('Content-Type', 'text/html; charset=UTF-8')
-      .end(done);
+      .expect(200, done)
     });
   })
 
@@ -163,10 +146,8 @@ describe('send(file).pipe(res)', function(){
 
       request(app)
       .get('/pets')
-      .expect(301)
       .expect('Location', '/pets/')
-      .expect('Redirecting to /pets/')
-      .end(done);
+      .expect(301, 'Redirecting to /pets/', done)
     })
   })
 
@@ -178,9 +159,7 @@ describe('send(file).pipe(res)', function(){
       
       request(app)
       .get('/foobar')
-      .expect('Not Found')
-      .expect(404)
-      .end(done);
+      .expect(404, 'Not Found', done)
     })
   })
 
@@ -188,14 +167,13 @@ describe('send(file).pipe(res)', function(){
     it('should respond with 304 on a match', function(done){
       request(app)
       .get('/name.txt')
-      .end(function(err, res){
-        var etag = res.headers.etag;
-
+      .expect(200, function(err, res){
+        if (err) return done(err)
         request(app)
         .get('/name.txt')
-        .set('If-None-Match', etag)
-        .expect(304)
-        .end(function(err, res){
+        .set('If-None-Match', res.headers.etag)
+        .expect(304, function(err, res){
+          if (err) return done(err)
           res.headers.should.not.have.property('content-type');
           res.headers.should.not.have.property('content-length');
           done();
@@ -206,15 +184,12 @@ describe('send(file).pipe(res)', function(){
     it('should respond with 200 otherwise', function(done){
       request(app)
       .get('/name.txt')
-      .end(function(err, res){
-        var etag = res.headers.etag;
-
+      .expect(200, function(err, res){
+        if (err) return done(err)
         request(app)
         .get('/name.txt')
-        .set('If-None-Match', '123')
-        .expect(200)
-        .expect('tobi')
-        .end(done);
+        .set('If-None-Match', '"123"')
+        .expect(200, 'tobi', done)
       })
     })
   })
@@ -321,7 +296,7 @@ describe('send(file).pipe(res)', function(){
       it('should respond with parts when etag unchanged', function(done){
         request(app)
         .get('/nums')
-        .end(function(err, res){
+        .expect(200, function(err, res){
           if (err) return done(err);
           var etag = res.headers.etag;
 
@@ -336,7 +311,7 @@ describe('send(file).pipe(res)', function(){
       it('should respond with 200 when etag changed', function(done){
         request(app)
         .get('/nums')
-        .end(function(err, res){
+        .expect(200, function(err, res){
           if (err) return done(err);
           var etag = res.headers.etag.replace(/"(.)/, '"0$1');
 
@@ -351,7 +326,7 @@ describe('send(file).pipe(res)', function(){
       it('should respond with parts when modified unchanged', function(done){
         request(app)
         .get('/nums')
-        .end(function(err, res){
+        .expect(200, function(err, res){
           if (err) return done(err);
           var modified = res.headers['last-modified']
 
@@ -366,7 +341,7 @@ describe('send(file).pipe(res)', function(){
       it('should respond with 200 when modified changed', function(done){
         request(app)
         .get('/nums')
-        .end(function(err, res){
+        .expect(200, function(err, res){
           if (err) return done(err);
           var modified = Date.parse(res.headers['last-modified']) - 20000;
 
@@ -389,7 +364,7 @@ describe('send(file).pipe(res)', function(){
 
       request(app)
       .get('/1')
-      .expect('456', done);
+      .expect(200, '456', done);
     })
 
     it('should support start/end with Range request', function(done){
@@ -401,8 +376,7 @@ describe('send(file).pipe(res)', function(){
       request(app)
       .get('/0')
       .set('Range', 'bytes=-2')
-      .expect('23')
-      .end(done);
+      .expect(206, '23', done)
     })
 
     it('should support disabling etags', function(done){
@@ -427,8 +401,7 @@ describe('send(file, options)', function(){
     it('should default to 0', function(done){
       request(app)
       .get('/name.txt')
-      .expect('Cache-Control', 'public, max-age=0')
-      .end(done);
+      .expect('Cache-Control', 'public, max-age=0', done)
     })
 
     it('should support Infinity', function(done){
@@ -440,8 +413,7 @@ describe('send(file, options)', function(){
       
       request(app)
       .get('/name.txt')
-      .expect('Cache-Control', 'public, max-age=31536000')
-      .end(done);
+      .expect('Cache-Control', 'public, max-age=31536000', done)
     })
   })
 
@@ -449,8 +421,7 @@ describe('send(file, options)', function(){
     it('should default to index.html', function(done){
       request(app)
       .get('/pets/')
-      .expect(fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'))
-      .end(done);
+      .expect(fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'), done)
     })
 
     it('should be configurable', function(done){
@@ -483,8 +454,7 @@ describe('send(file, options)', function(){
 
       request(app)
       .get('/pets/')
-      .expect(200, fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'))
-      .end(done);
+      .expect(200, fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'), done)
     })
   })
 
@@ -492,9 +462,7 @@ describe('send(file, options)', function(){
     it('should default to false', function(done){
       request(app)
       .get('/.secret')
-      .expect(404)
-      .expect('Not Found')
-      .end(done);
+      .expect(404, 'Not Found', done)
     })
   })
 
@@ -508,21 +476,18 @@ describe('send(file, options)', function(){
 
         request(app)
         .get('/pets/../name.txt')
-        .expect('tobi')
-        .end(done);
+        .expect(200, 'tobi', done)
       })
 
       it('should restrict paths to within root', function(done){
         var app = http.createServer(function(req, res){
           send(req, req.url, {root: __dirname + '/fixtures'})
-          .on('error', function(err){ res.end(err.message) })
           .pipe(res);
         });
 
         request(app)
         .get('/pets/../../send.js')
-        .expect('Forbidden')
-        .end(done);
+        .expect(403, 'Forbidden', done)
       })
 
       it('should allow .. in root', function(done){
@@ -533,8 +498,7 @@ describe('send(file, options)', function(){
 
         request(app)
         .get('/pets/../../send.js')
-        .expect('Forbidden')
-        .end(done);
+        .expect(403, 'Forbidden', done)
       })
     })
 
@@ -547,9 +511,7 @@ describe('send(file, options)', function(){
 
         request(app)
         .get('/../send.js')
-        .expect(403)
-        .expect('Forbidden')
-        .end(done);
+        .expect(403, 'Forbidden', done)
       })
 
       it('should still serve files with dots in name', function(done){
@@ -560,7 +522,7 @@ describe('send(file, options)', function(){
 
         request(app)
         .get('/do..ts.txt')
-        .expect('...', done);
+        .expect(200, '...', done);
       })
     })
   })
