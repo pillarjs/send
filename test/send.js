@@ -60,6 +60,12 @@ describe('send(file).pipe(res)', function(){
     .expect(400, 'Bad Request', done)
   })
 
+  it('should 400 on NULL bytes', function(done){
+    request(app)
+    .get('/some%00thing.txt')
+    .expect(400, 'Bad Request', done)
+  })
+
   it('should treat an ENAMETOOLONG as a 404', function(done){
     var path = Array(100).join('foobar');
     request(app)
@@ -122,6 +128,16 @@ describe('send(file).pipe(res)', function(){
     .get('/pets')
     .expect('Location', '/pets/')
     .expect(301, 'Redirecting to /pets/', done)
+  })
+
+  it('should not override content-type', function(done){
+    var app = http.createServer(function(req, res){
+      res.setHeader('Content-Type', 'application/x-custom')
+      send(req, req.url, {root: fixtures}).pipe(res)
+    });
+    request(app)
+    .get('/nums')
+    .expect('Content-Type', 'application/x-custom', done);
   })
 
   it('should set Content-Type via mime map', function(done){
@@ -367,6 +383,17 @@ describe('send(file).pipe(res)', function(){
       .expect(200, '456', done);
     })
 
+    it('should adjust too large end', function(done){
+      var app = http.createServer(function(req, res){
+        var i = parseInt(req.url.slice(1));
+        send(req, 'test/fixtures/nums', { start:i*3, end:90 }).pipe(res);
+      });
+
+      request(app)
+      .get('/1')
+      .expect(200, '456789', done);
+    })
+
     it('should support start/end with Range request', function(done){
       var app = http.createServer(function(req, res){
         var i = parseInt(req.url.slice(1));
@@ -500,6 +527,17 @@ describe('send(file, options)', function(){
   })
 
   describe('root', function(){
+    it('should set with deprecated from', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {from: __dirname + '/fixtures'})
+        .pipe(res)
+      });
+
+      request(app)
+      .get('/pets/../name.txt')
+      .expect(200, 'tobi', done)
+    })
+
     describe('when given', function(){
       it('should join root', function(done){
         var app = http.createServer(function(req, res){
