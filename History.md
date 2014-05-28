@@ -1,7 +1,7 @@
-unreleased
-==========
+0.4.0 / 2014-05-27
+==================
 
- * Calculate Etag with md5 for reduced collisions
+ * Calculate ETag with md5 for reduced collisions
  * Fix wrong behavior when index file matches directory
  * Ignore stream errors after request ends
    - Goodbye `EBADF, read`
