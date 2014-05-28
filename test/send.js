@@ -456,6 +456,17 @@ describe('send(file, options)', function(){
       .get('/pets/')
       .expect(200, fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'), done)
     })
+
+    it('should not follow directories', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, index: ['pets', 'name.txt']})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/')
+      .expect(200, 'tobi', done)
+    })
   })
 
   describe('hidden', function(){

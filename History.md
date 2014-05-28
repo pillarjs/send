@@ -4,6 +4,7 @@ unreleased
  * Calculate Etag with md5 for reduced collisions
  * Ignore stream errors after request ends
    - Goodbye `EBADF, read`
+ * Skip directories in index file search
  * deps: debug@0.8.1
 
 0.3.0 / 2014-04-24
