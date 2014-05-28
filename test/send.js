@@ -5,6 +5,7 @@ var http = require('http');
 var path = require('path');
 var request = require('supertest');
 var send = require('..')
+var should = require('should');
 var Stream = require('stream');
 
 // test server

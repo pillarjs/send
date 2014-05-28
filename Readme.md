@@ -1,5 +1,7 @@
 # send
 
+[![Build Status](https://travis-ci.org/visionmedia/send.svg?branch=master)](https://travis-ci.org/visionmedia/send)
+
   Send is Connect's `static()` extracted for generalized use, a streaming static file
   server supporting partial responses (Ranges), conditional-GET negotiation, high test coverage, and granular events which may be leveraged to take appropriate actions in your application or framework.
 

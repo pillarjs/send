@@ -21,7 +21,8 @@
     "connect": "2.x"
   },
   "scripts": {
-    "test": "mocha --require should --reporter spec --bail"
+    "test": "mocha --reporter dot",
+    "test-travis": "mocha --reporter spec"
   },
   "repository": {
     "type": "git",
