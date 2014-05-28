@@ -15,10 +15,9 @@
     "range-parser": "~1.0.0"
   },
   "devDependencies": {
-    "mocha": "*",
-    "should": "*",
-    "supertest": "0.10.0",
-    "connect": "2.x"
+    "mocha": "~1.19.0",
+    "should": "~3.3.2",
+    "supertest": "~0.13.0"
   },
   "scripts": {
     "test": "mocha --reporter dot",
