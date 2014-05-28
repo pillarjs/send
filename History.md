@@ -2,6 +2,7 @@ unreleased
 ==========
 
  * Calculate Etag with md5 for reduced collisions
+ * deps: debug@0.8.1
 
 0.3.0 / 2014-04-24
 ==================
