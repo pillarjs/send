@@ -431,6 +431,18 @@ describe('send(file, options)', function(){
       .expect('Cache-Control', 'public, max-age=0', done)
     })
 
+    it('should floor to integer', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, 'test/fixtures/name.txt')
+        .maxage(123956)
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/name.txt')
+      .expect('Cache-Control', 'public, max-age=123', done)
+    })
+
     it('should support Infinity', function(done){
       var app = http.createServer(function(req, res){
         send(req, 'test/fixtures/name.txt')
