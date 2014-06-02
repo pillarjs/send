@@ -1,5 +1,5 @@
-unreleased
-==========
+0.4.1 / 2014-06-02
+==================
 
  * Send `max-age` in `Cache-Control` in correct format
 
