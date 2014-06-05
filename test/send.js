@@ -548,20 +548,6 @@ describe('send(file).pipe(res)', function(){
     })
   })
 
-  describe('.from()', function(){
-    it('should set with deprecated from', function(done){
-      var app = http.createServer(function(req, res){
-        send(req, req.url)
-        .from(__dirname + '/fixtures')
-        .pipe(res);
-      });
-
-      request(app)
-      .get('/pets/../name.txt')
-      .expect(200, 'tobi', done)
-    })
-  })
-
   describe('.index()', function(){
     it('should be configurable', function(done){
       var app = http.createServer(function(req, res){
@@ -680,19 +666,6 @@ describe('send(file, options)', function(){
         res.headers.should.not.have.property('etag');
         done();
       });
-    })
-  })
-
-  describe('from', function(){
-    it('should set with deprecated from', function(done){
-      var app = http.createServer(function(req, res){
-        send(req, req.url, {from: __dirname + '/fixtures'})
-        .pipe(res)
-      });
-
-      request(app)
-      .get('/pets/../name.txt')
-      .expect(200, 'tobi', done)
     })
   })
 

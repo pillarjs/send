@@ -2,6 +2,7 @@ unreleased
 ==========
 
  * Accept file system paths in `path` instead of URL-encoded paths
+ * Remove `from` option; use `root` option
  * Remove `send.etag()`; use `etag` in `options`
  * Remove `send.hidden()`; use `hidden` in `options`
 
