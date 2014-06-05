@@ -598,6 +598,44 @@ describe('send(file).pipe(res)', function(){
     })
   })
 
+  describe('.index()', function(){
+    it('should be configurable', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures})
+        .index('tobi.html')
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/')
+      .expect(200, '<p>tobi</p>', done);
+    })
+
+    it('should support disabling', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures})
+        .index(false)
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/pets/')
+      .expect(403, done);
+    })
+
+    it('should support fallbacks', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures})
+        .index(['default.htm', 'index.html'])
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/pets/')
+      .expect(200, fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'), done)
+    })
+  })
+
   describe('.maxage()', function(){
     it('should default to 0', function(done){
       var app = http.createServer(function(req, res){

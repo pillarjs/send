@@ -4,6 +4,7 @@ unreleased
  * Deprecate `from` option; use `root` option
  * Deprecate `send.etag()` -- use `etag` in `options`
  * Deprecate `send.hidden()` -- use `hidden` in `options`
+ * Deprecate `send.index()` -- use `index` in `options`
  * Deprecate `send.maxage()` -- use `maxAge` in `options`
  * Deprecate `send.root()` -- use `root` in `options`
  * deps: debug@1.0.3
