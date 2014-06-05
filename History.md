@@ -5,6 +5,7 @@ unreleased
  * Remove `from` option; use `root` option
  * Remove `send.etag()`; use `etag` in `options`
  * Remove `send.hidden()`; use `hidden` in `options`
+ * Remove `send.index()`; use `index` in `options`
  * Remove `send.maxage()`; use `maxAge` in `options`
  * Remove `send.root()`; use `root` in `options`
 
