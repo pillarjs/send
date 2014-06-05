@@ -1,3 +1,8 @@
+unreleased
+==========
+
+ * Include link in default redirect response
+
 0.4.3 / 2014-06-11
 ==================
 

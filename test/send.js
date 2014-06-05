@@ -190,16 +190,20 @@ describe('send(file).pipe(res)', function(){
   })
 
   describe('when no "directory" listeners are present', function(){
-    it('should respond with a redirect', function(done){
-      var app = http.createServer(function(req, res){
+    var server
+    before(function(){
+      server = http.createServer(function(req, res){
         send(req, req.url, {root: 'test/fixtures'})
-        .pipe(res);
-      });
+        .pipe(res)
+      })
+    })
 
-      request(app)
+    it('should respond with an HTML redirect', function(done){
+      request(server)
       .get('/pets')
       .expect('Location', '/pets/')
-      .expect(301, 'Redirecting to /pets/', done)
+      .expect('Content-Type', 'text/html; charset=utf-8')
+      .expect(301, 'Redirecting to <a href="/pets/">/pets/</a>\n', done)
     })
   })
 
