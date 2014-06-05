@@ -569,6 +569,20 @@ describe('send(file).pipe(res)', function(){
       });
     })
   })
+
+  describe('.hidden()', function(){
+    it('should default support sending hidden files', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures})
+        .hidden(true)
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/.hidden')
+      .expect(200, /secret/, done);
+    })
+  })
 })
 
 describe('send(file, options)', function(){
@@ -586,6 +600,25 @@ describe('send(file, options)', function(){
         res.headers.should.not.have.property('etag');
         done();
       });
+    })
+  })
+
+  describe('hidden', function(){
+    it('should default to false', function(done){
+      request(app)
+      .get('/.hidden')
+      .expect(404, 'Not Found', done)
+    })
+
+    it('should default support sending hidden files', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {hidden: true, root: fixtures})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/.hidden')
+      .expect(200, /secret/, done)
     })
   })
 
@@ -704,14 +737,6 @@ describe('send(file, options)', function(){
       request(app)
       .get('/')
       .expect(200, 'tobi', done)
-    })
-  })
-
-  describe('hidden', function(){
-    it('should default to false', function(done){
-      request(app)
-      .get('/.secret')
-      .expect(404, 'Not Found', done)
     })
   })
 

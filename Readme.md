@@ -114,10 +114,6 @@ var app = http.createServer(function(req, res){
   This can also be a string accepted by the
   [ms](https://www.npmjs.org/package/ms#readme) module.
 
-### .hidden(bool)
-
-  Enable or disable transfer of hidden files, defaults to false.
-
 ## Error-handling
 
   By default when no `error` listeners are present an automatic response will be made, otherwise you have full control over the response, aka you may show a 5xx page etc.

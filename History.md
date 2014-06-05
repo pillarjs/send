@@ -2,6 +2,7 @@ unreleased
 ==========
 
  * Deprecate `send.etag()` -- use `etag` in `options`
+ * Deprecate `send.hidden()` -- use `hidden` in `options`
  * deps: debug@1.0.3
    - Add support for multiple wildcards in namespaces
 
