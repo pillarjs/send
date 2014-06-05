@@ -598,6 +598,56 @@ describe('send(file).pipe(res)', function(){
     })
   })
 
+  describe('.maxage()', function(){
+    it('should default to 0', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, 'test/fixtures/name.txt')
+        .maxage(undefined)
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/name.txt')
+      .expect('Cache-Control', 'public, max-age=0', done)
+    })
+
+    it('should floor to integer', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, 'test/fixtures/name.txt')
+        .maxage(1234)
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/name.txt')
+      .expect('Cache-Control', 'public, max-age=1', done)
+    })
+
+    it('should accept string', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, 'test/fixtures/name.txt')
+        .maxage('30d')
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/name.txt')
+      .expect('Cache-Control', 'public, max-age=2592000', done)
+    })
+
+    it('should max at 1 year', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, 'test/fixtures/name.txt')
+        .maxage(Infinity)
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/name.txt')
+      .expect('Cache-Control', 'public, max-age=31536000', done)
+    })
+  })
+
   describe('.root()', function(){
     it('should set root', function(done){
       var app = http.createServer(function(req, res){
@@ -673,8 +723,7 @@ describe('send(file, options)', function(){
 
     it('should floor to integer', function(done){
       var app = http.createServer(function(req, res){
-        send(req, 'test/fixtures/name.txt')
-        .maxage(123956)
+        send(req, 'test/fixtures/name.txt', {maxAge: 123956})
         .pipe(res);
       });
 
@@ -685,20 +734,18 @@ describe('send(file, options)', function(){
 
     it('should accept string', function(done){
       var app = http.createServer(function(req, res){
-        send(req, 'test/fixtures/name.txt')
-        .maxage('1y')
+        send(req, 'test/fixtures/name.txt', {maxAge: '30d'})
         .pipe(res);
       });
 
       request(app)
       .get('/name.txt')
-      .expect('Cache-Control', 'public, max-age=31557600', done)
+      .expect('Cache-Control', 'public, max-age=2592000', done)
     })
 
-    it('should support Infinity', function(done){
+    it('should max at 1 year', function(done){
       var app = http.createServer(function(req, res){
-        send(req, 'test/fixtures/name.txt')
-        .maxage(Infinity)
+        send(req, 'test/fixtures/name.txt', {maxAge: Infinity})
         .pipe(res);
       });
       
