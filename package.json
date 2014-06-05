@@ -18,7 +18,7 @@
   ],
   "dependencies": {
     "debug": "0.8.1",
-    "finished": "1.1.4",
+    "finished": "1.2.1",
     "fresh": "~0.2.1",
     "mime": "1.2.11",
     "range-parser": "~1.0.0"
