@@ -5,6 +5,7 @@ unreleased
  * Remove `from` option; use `root` option
  * Remove `send.etag()`; use `etag` in `options`
  * Remove `send.hidden()`; use `hidden` in `options`
+ * Remove `send.root()`; use `root` in `options`
 
 0.6.0 / 2014-07-11
 ==================
