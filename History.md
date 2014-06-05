@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+ * deps: debug@1.0.1
  * deps: finished@1.2.1
 
 0.4.1 / 2014-06-02
