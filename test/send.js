@@ -548,24 +548,6 @@ describe('send(file).pipe(res)', function(){
     })
   })
 
-  describe('.etag()', function(){
-    it('should support disabling etags', function(done){
-      var app = http.createServer(function(req, res){
-        send(req, req.url, {root: fixtures})
-        .etag(false)
-        .pipe(res);
-      });
-
-      request(app)
-      .get('/nums')
-      .expect(200, function(err, res){
-        if (err) return done(err);
-        res.headers.should.not.have.property('etag');
-        done();
-      });
-    })
-  })
-
   describe('.from()', function(){
     it('should set with deprecated from', function(done){
       var app = http.createServer(function(req, res){
