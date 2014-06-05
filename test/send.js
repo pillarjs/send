@@ -1,4 +1,6 @@
 
+process.env.NO_DEPRECATION = 'send';
+
 var assert = require('assert');
 var fs = require('fs');
 var http = require('http');
@@ -548,10 +550,13 @@ describe('send(file).pipe(res)', function(){
       .set('Range', 'bytes=-2')
       .expect(206, '23', done)
     })
+  })
 
+  describe('.etag()', function(){
     it('should support disabling etags', function(done){
       var app = http.createServer(function(req, res){
-        send(req, req.url, {etag: false, root: fixtures})
+        send(req, req.url, {root: fixtures})
+        .etag(false)
         .pipe(res);
       });
 
@@ -567,6 +572,23 @@ describe('send(file).pipe(res)', function(){
 })
 
 describe('send(file, options)', function(){
+  describe('etag', function(){
+    it('should support disabling etags', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {etag: false, root: fixtures})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/nums')
+      .expect(200, function(err, res){
+        if (err) return done(err);
+        res.headers.should.not.have.property('etag');
+        done();
+      });
+    })
+  })
+
   describe('maxAge', function(){
     it('should default to 0', function(done){
       request(app)

@@ -15,6 +15,7 @@
   ],
   "dependencies": {
     "debug": "1.0.3",
+    "depd": "0.3.0",
     "escape-html": "1.0.1",
     "finished": "1.2.2",
     "fresh": "0.2.2",

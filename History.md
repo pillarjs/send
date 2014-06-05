@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+ * Deprecate `send.etag()` -- use `etag` in `options`
  * deps: debug@1.0.3
    - Add support for multiple wildcards in namespaces
 
