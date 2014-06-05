@@ -562,20 +562,6 @@ describe('send(file).pipe(res)', function(){
     })
   })
 
-  describe('.hidden()', function(){
-    it('should default support sending hidden files', function(done){
-      var app = http.createServer(function(req, res){
-        send(req, req.url, {root: fixtures})
-        .hidden(true)
-        .pipe(res);
-      });
-
-      request(app)
-      .get('/.hidden')
-      .expect(200, /secret/, done);
-    })
-  })
-
   describe('.index()', function(){
     it('should be configurable', function(done){
       var app = http.createServer(function(req, res){
@@ -709,7 +695,6 @@ describe('send(file, options)', function(){
       .expect(200, 'tobi', done)
     })
   })
-
 
   describe('hidden', function(){
     it('should default to false', function(done){
