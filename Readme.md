@@ -4,90 +4,56 @@
 [![Build Status](https://travis-ci.org/visionmedia/send.svg?branch=master)](https://travis-ci.org/visionmedia/send)
 [![Coverage Status](https://img.shields.io/coveralls/visionmedia/send.svg?branch=master)](https://coveralls.io/r/visionmedia/send)
 
-  Send is Connect's `static()` extracted for generalized use, a streaming static file
-  server supporting partial responses (Ranges), conditional-GET negotiation, high test coverage, and granular events which may be leveraged to take appropriate actions in your application or framework.
+Send is a library for streaming files from the file system as a http response
+supporting partial responses (Ranges), conditional-GET negotiation, high test
+coverage, and granular events which may be leveraged to take appropriate actions
+in your application or framework.
+
+Looking to serve up entire folders mapped to URLs? Try [serve-static](https://www.npmjs.org/package/serve-static#readme).
 
 ## Installation
 
-    $ npm install send
-
-## Examples
-
-  Small:
-
-```js
-var http = require('http');
-var send = require('send');
-
-var app = http.createServer(function(req, res){
-  send(req, req.url).pipe(res);
-}).listen(3000);
-```
-
-  Serving from a root directory with custom error-handling:
-
-```js
-var http = require('http');
-var send = require('send');
-var url = require('url');
-
-var app = http.createServer(function(req, res){
-  // your custom error-handling logic:
-  function error(err) {
-    res.statusCode = err.status || 500;
-    res.end(err.message);
-  }
-
-  // your custom headers
-  function headers(res, path, stat) {
-    // serve all files for download
-    res.setHeader('Content-Disposition', 'attachment');
-  }
-
-  // your custom directory handling logic:
-  function redirect() {
-    res.statusCode = 301;
-    res.setHeader('Location', req.url + '/');
-    res.end('Redirecting to ' + req.url + '/');
-  }
-
-  // transfer arbitrary files from within
-  // /www/example.com/public/*
-  send(req, url.parse(req.url).pathname, {root: '/www/example.com/public'})
-  .on('error', error)
-  .on('directory', redirect)
-  .on('headers', headers)
-  .pipe(res);
-}).listen(3000);
+```sh
+$ npm install send
 ```
 
 ## API
 
-### Options
+```js
+var send = require('send')
+```
 
-#### etag
+### send(req, path, [options])
 
-  Enable or disable etag generation, defaults to true.
+Create a `SendStream` for the given `req` and `path`. `req` is the
+incoming HTTP request, which is used to provide conditional GET and
+range requests. `path` is the file system path to send. If `path`
+refers to a directory instead of a file, an "index" file is searched
+for within the directory and sent (see `options.index`).
 
-#### hidden
+#### options.etag
 
-  Enable or disable transfer of hidden files, defaults to false.
+Enable or disable etag generation, defaults to true.
 
-#### index
+#### options.hidden
 
-  By default send supports "index.html" files, to disable this
-  set `false` or to supply a new index pass a string or an array
-  in preferred order.
+Enable or disable transfer of hidden files, defaults to false.
 
-#### maxAge
+#### options.index
 
-  Provide a max-age in milliseconds for http caching, defaults to 0.
-  This can also be a string accepted by the
-  [ms](https://www.npmjs.org/package/ms#readme) module.
+By default send supports "index.html" files, to disable this
+set `false` or to supply a new index pass a string or an array
+in preferred order.
 
-#### root
+#### options.maxAge
 
-  Serve files relative to `path`.
+Provide a max-age in milliseconds for http caching, defaults to 0.
+This can also be a string accepted by the
+[ms](https://www.npmjs.org/package/ms#readme) module.
+
+#### options.root
+
+Serve files relative to `path`.
 
 ### Events
 
@@ -111,13 +77,26 @@ var app = http.createServer(function(req, res){
 
  To enable `debug()` instrumentation output export __DEBUG__:
 
-```
+```sh
 $ DEBUG=send node app
+```
+
+## Examples
+
+```js
+var http = require('http');
+var send = require('send');
+
+var server = http.createServer(function(req, res){
+  send(req, 'cat_video.mp4').pipe(res);
+});
+
+server.listen(3000);
 ```
 
 ## Running tests
 
-```
+```sh
 $ npm install
 $ npm test
 ```
