@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+ * Deprecate `from` option; use `root` option
  * Deprecate `send.etag()` -- use `etag` in `options`
  * Deprecate `send.hidden()` -- use `hidden` in `options`
  * deps: debug@1.0.3

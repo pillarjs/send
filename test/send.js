@@ -570,6 +570,20 @@ describe('send(file).pipe(res)', function(){
     })
   })
 
+  describe('.from()', function(){
+    it('should set with deprecated from', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url)
+        .from(__dirname + '/fixtures')
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/pets/../name.txt')
+      .expect(200, 'tobi', done)
+    })
+  })
+
   describe('.hidden()', function(){
     it('should default support sending hidden files', function(done){
       var app = http.createServer(function(req, res){
@@ -602,6 +616,20 @@ describe('send(file, options)', function(){
       });
     })
   })
+
+  describe('from', function(){
+    it('should set with deprecated from', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {from: __dirname + '/fixtures'})
+        .pipe(res)
+      });
+
+      request(app)
+      .get('/pets/../name.txt')
+      .expect(200, 'tobi', done)
+    })
+  })
+
 
   describe('hidden', function(){
     it('should default to false', function(done){
@@ -741,17 +769,6 @@ describe('send(file, options)', function(){
   })
 
   describe('root', function(){
-    it('should set with deprecated from', function(done){
-      var app = http.createServer(function(req, res){
-        send(req, req.url, {from: __dirname + '/fixtures'})
-        .pipe(res)
-      });
-
-      request(app)
-      .get('/pets/../name.txt')
-      .expect(200, 'tobi', done)
-    })
-
     describe('when given', function(){
       it('should join root', function(done){
         var app = http.createServer(function(req, res){
