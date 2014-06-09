@@ -1,5 +1,5 @@
-unreleased
-==========
+0.4.2 / 2014-06-09
+==================
 
  * fix "event emitter leak" warnings
  * deps: debug@1.0.1
