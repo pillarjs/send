@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+ * fix "event emitter leak" warnings
  * deps: debug@1.0.1
  * deps: finished@1.2.1
 
