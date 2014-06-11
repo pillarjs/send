@@ -3,6 +3,7 @@ unreleased
 
  * deps: debug@1.0.2
    - fix some debugging output colors on node.js 0.8
+ * deps: fresh@0.2.2
 
 0.4.2 / 2014-06-09
 ==================
