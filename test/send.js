@@ -172,6 +172,23 @@ describe('send(file).pipe(res)', function(){
     .expect(404, done);
   })
 
+  it('should 500 on file stream error', function(done){
+    var app = http.createServer(function(req, res){
+      send(req, req.url, {root: 'test/fixtures'})
+      .on('stream', function(stream){
+        // simulate file error
+        process.nextTick(function(){
+          stream.emit('error', new Error('boom!'));
+        });
+      })
+      .pipe(res);
+    });
+
+    request(app)
+    .get('/name.txt')
+    .expect(500, done);
+  })
+
   describe('when no "directory" listeners are present', function(){
     it('should respond with a redirect', function(done){
       var app = http.createServer(function(req, res){
