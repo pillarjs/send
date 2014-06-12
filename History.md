@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+ * Do not throw un-catchable error on file open race condition
  * Use `escape-html` for HTML escaping
  * deps: debug@1.0.2
    - fix some debugging output colors on node.js 0.8

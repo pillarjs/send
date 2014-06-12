@@ -153,6 +153,25 @@ describe('send(file).pipe(res)', function(){
     });
   })
 
+  it('should 404 if file disappears after stat, before open', function(done){
+    var app = http.createServer(function(req, res){
+      send(req, req.url, {root: 'test/fixtures'})
+      .on('file', function(){
+        // simulate file ENOENT after on open, after stat
+        var fn = this.send;
+        this.send = function(path, stat){
+          path += '__xxx_no_exist';
+          fn.call(this, path, stat);
+        };
+      })
+      .pipe(res);
+    });
+
+    request(app)
+    .get('/name.txt')
+    .expect(404, done);
+  })
+
   describe('when no "directory" listeners are present', function(){
     it('should respond with a redirect', function(done){
       var app = http.createServer(function(req, res){
