@@ -18,7 +18,7 @@
     "escape-html": "1.0.1",
     "finished": "1.2.2",
     "fresh": "0.2.2",
-    "mime": "1.2.11",
+    "mime-types": "~1.0.1",
     "ms": "0.6.2",
     "range-parser": "~1.0.0"
   },

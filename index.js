@@ -6,15 +6,16 @@
 var crypto = require('crypto')
 var debug = require('debug')('send')
 var escapeHtml = require('escape-html')
+var mime = require('mime-types')
   , parseRange = require('range-parser')
   , Stream = require('stream')
-  , mime = require('mime')
   , fresh = require('fresh')
   , path = require('path')
   , http = require('http')
   , onFinished = require('finished')
   , fs = require('fs')
   , basename = path.basename
+  , extname = path.extname
   , normalize = path.normalize
   , join = path.join
 var EventEmitter = require('events').EventEmitter;
@@ -30,13 +31,7 @@ var upPathRegexp = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/;
  * Expose `send`.
  */
 
-exports = module.exports = send;
-
-/**
- * Expose mime module.
- */
-
-exports.mime = mime;
+module.exports = send
 
 /**
  * Shim EventEmitter.listenerCount for node.js < 0.10
@@ -527,11 +522,17 @@ SendStream.prototype.stream = function(path, options){
 
 SendStream.prototype.type = function(path){
   var res = this.res;
-  if (res.getHeader('Content-Type')) return;
-  var type = mime.lookup(path);
-  var charset = mime.charsets.lookup(type);
+
+  if (res.getHeader('Content-Type')) {
+    return;
+  }
+
+  var ext = extname(path);
+  var type = mime.contentType(ext) || 'application/octet-stream';
+
   debug('content-type %s', type);
-  res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
+
+  res.setHeader('Content-Type', type);
 };
 
 /**

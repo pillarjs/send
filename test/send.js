@@ -31,12 +31,6 @@ var app = http.createServer(function(req, res){
   .pipe(res);
 });
 
-describe('send.mime', function(){
-  it('should be exposed', function(){
-    assert(send.mime);
-  })
-})
-
 describe('send(file).pipe(res)', function(){
   it('should stream the file contents', function(done){
     request(app)
@@ -140,14 +134,21 @@ describe('send(file).pipe(res)', function(){
   it('should set Content-Type via mime map', function(done){
     request(app)
     .get('/name.txt')
-    .expect('Content-Type', 'text/plain; charset=UTF-8')
+    .expect('Content-Type', 'text/plain; charset=utf-8')
     .expect(200, function(err){
       if (err) return done(err)
       request(app)
       .get('/tobi.html')
-      .expect('Content-Type', 'text/html; charset=UTF-8')
+      .expect('Content-Type', 'text/html; charset=utf-8')
       .expect(200, done)
     });
+  })
+
+  it('should default Content-Type to octet-stream', function(done){
+    request(app)
+    .get('/nums')
+    .expect('Content-Type', 'application/octet-stream')
+    .expect(200, done);
   })
 
   it('should 404 if file disappears after stat, before open', function(done){

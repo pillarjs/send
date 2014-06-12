@@ -8,6 +8,7 @@ unreleased
  * Remove `send.index()`; use `index` in `options`
  * Remove `send.maxage()`; use `maxAge` in `options`
  * Remove `send.root()`; use `root` in `options`
+ * Remove `send.mime`; add/change mime types using `mime-type` module directly
 
 0.6.0 / 2014-07-11
 ==================
