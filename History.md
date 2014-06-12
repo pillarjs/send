@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+ * Use `escape-html` for HTML escaping
  * deps: debug@1.0.2
    - fix some debugging output colors on node.js 0.8
  * deps: finished@1.2.2
