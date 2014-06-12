@@ -1,5 +1,5 @@
-unreleased
-==========
+0.4.3 / 2014-06-11
+==================
 
  * Do not throw un-catchable error on file open race condition
  * Use `escape-html` for HTML escaping
