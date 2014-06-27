@@ -75,6 +75,8 @@ var app = http.createServer(function(req, res){
 #### maxage
 
   Provide a max-age in milliseconds for http caching, defaults to 0.
+  This can also be a string accepted by the
+  [ms](https://www.npmjs.org/package/ms#readme) module.
 
 #### root
 
@@ -105,6 +107,8 @@ var app = http.createServer(function(req, res){
 ### .maxage(ms)
 
   Provide a max-age in milliseconds for http caching, defaults to 0.
+  This can also be a string accepted by the
+  [ms](https://www.npmjs.org/package/ms#readme) module.
 
 ### .hidden(bool)
 
