@@ -3,6 +3,7 @@ unreleased
 
  * Accept string for `maxAge` (converted by `ms`)
  * Include link in default redirect response
+ * Use `EventEmitter.listenerCount` to count listeners
 
 0.4.3 / 2014-06-11
 ==================
