@@ -1,5 +1,5 @@
-unreleased
-==========
+0.5.0 / 2014-06-28
+==================
 
  * Accept string for `maxAge` (converted by `ms`)
  * Add `headers` event
