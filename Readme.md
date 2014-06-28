@@ -38,6 +38,12 @@ var app = http.createServer(function(req, res){
     res.end(err.message);
   }
 
+  // your custom headers
+  function headers(res, path, stat) {
+    // serve all files for download
+    res.setHeader('Content-Disposition', 'attachment');
+  }
+
   // your custom directory handling logic:
   function redirect() {
     res.statusCode = 301;
@@ -50,6 +56,7 @@ var app = http.createServer(function(req, res){
   send(req, url.parse(req.url).pathname, {root: '/www/example.com/public'})
   .on('error', error)
   .on('directory', redirect)
+  .on('headers', headers)
   .pipe(res);
 }).listen(3000);
 ```
@@ -87,6 +94,7 @@ var app = http.createServer(function(req, res){
   - `error` an error occurred `(err)`
   - `directory` a directory was requested
   - `file` a file was requested `(path, stat)`
+  - `headers` the headers are about to be set on a file `(res, path, stat)`
   - `stream` file streaming has started `(stream)`
   - `end` streaming has completed
 

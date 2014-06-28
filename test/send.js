@@ -9,6 +9,7 @@ var should = require('should');
 
 // test server
 
+var dateRegExp = /^\w{3}, \d+ \w+ \d+ \d+:\d+:\d+ \w+$/;
 var fixtures = path.join(__dirname, 'fixtures');
 var app = http.createServer(function(req, res){
   function error(err) {
@@ -102,13 +103,13 @@ describe('send(file).pipe(res)', function(){
   it('should add a Date header field', function(done){
     request(app)
     .get('/name.txt')
-    .expect('date', /^\w{3}, \d+ \w+ \d+ \d+:\d+:\d+ \w+$/, done)
+    .expect('date', dateRegExp, done)
   })
 
   it('should add a Last-Modified header field', function(done){
     request(app)
     .get('/name.txt')
-    .expect('last-modified', /^\w{3}, \d+ \w+ \d+ \d+:\d+:\d+ \w+$/, done)
+    .expect('last-modified', dateRegExp, done)
   })
 
   it('should add a Accept-Ranges header field', function(done){
@@ -187,6 +188,108 @@ describe('send(file).pipe(res)', function(){
     request(app)
     .get('/name.txt')
     .expect(500, done);
+  })
+
+  describe('"headers" event', function () {
+    var args
+    var fn
+    var headers
+    var server
+    before(function () {
+      server = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('headers', function () {
+          args = arguments
+          headers = true
+          fn && fn.apply(this, arguments)
+        })
+        .pipe(res)
+      })
+    })
+    beforeEach(function () {
+      args = undefined
+      fn = undefined
+      headers = false
+    })
+
+    it('should fire when sending file', function (done) {
+      request(server)
+      .get('/nums')
+      .expect(200, '123456789', function (err, res) {
+        if (err) return done(err)
+        headers.should.be.true
+        done()
+      })
+    })
+
+    it('should not fire on 404', function (done) {
+      request(server)
+      .get('/bogus')
+      .expect(404, function (err, res) {
+        if (err) return done(err)
+        headers.should.be.false
+        done()
+      })
+    })
+
+    it('should fire on index', function (done) {
+      request(server)
+      .get('/pets/')
+      .expect(200, /tobi/, function (err, res) {
+        if (err) return done(err)
+        headers.should.be.true
+        done()
+      })
+    })
+
+    it('should not fire on redirect', function (done) {
+      request(server)
+      .get('/pets')
+      .expect(301, function (err, res) {
+        if (err) return done(err)
+        headers.should.be.false
+        done()
+      })
+    })
+
+    it('should provide path', function (done) {
+      request(server)
+      .get('/nums')
+      .expect(200, '123456789', function (err, res) {
+        if (err) return done(err)
+        headers.should.be.true
+        args[1].should.endWith('nums')
+        done()
+      })
+    })
+
+    it('should provide stat', function (done) {
+      request(server)
+      .get('/nums')
+      .expect(200, '123456789', function (err, res) {
+        if (err) return done(err)
+        headers.should.be.true
+        args[2].should.have.property('mtime')
+        done()
+      })
+    })
+
+    it('should allow altering headers', function (done) {
+      fn = function (res, path, stat) {
+        res.setHeader('Cache-Control', 'no-cache')
+        res.setHeader('Content-Type', 'text/x-custom')
+        res.setHeader('ETag', 'W/"everything"')
+        res.setHeader('X-Created', stat.ctime.toUTCString())
+      }
+
+      request(server)
+      .get('/nums')
+      .expect('Cache-Control', 'no-cache')
+      .expect('Content-Type', 'text/x-custom')
+      .expect('ETag', 'W/"everything"')
+      .expect('X-Created', dateRegExp)
+      .expect(200, '123456789', done)
+    })
   })
 
   describe('when no "directory" listeners are present', function(){
