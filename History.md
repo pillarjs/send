@@ -1,5 +1,5 @@
-unreleased
-==========
+0.6.0 / 2014-07-11
+==================
 
  * Deprecate `from` option; use `root` option
  * Deprecate `send.etag()` -- use `etag` in `options`
