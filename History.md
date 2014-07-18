@@ -12,6 +12,7 @@ unreleased
  * Deprecate `send.index()` -- use `index` in `options`
  * Deprecate `send.maxage()` -- use `maxAge` in `options`
  * Deprecate `send.root()` -- use `root` in `options`
+ * Cap `maxAge` value to 1 year
  * deps: debug@1.0.3
    - Add support for multiple wildcards in namespaces
 
