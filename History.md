@@ -1,6 +1,8 @@
 unreleased
 ==========
 
+ * Deprecate `hidden` option; use `dotfiles` option
+ * Add `dotfiles` option
  * deps: debug@1.0.4
 
 0.6.0 / 2014-07-11

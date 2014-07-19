@@ -732,6 +732,153 @@ describe('send(file, options)', function(){
     })
   })
 
+  describe('dotfiles', function () {
+    it('should default to "ignore"', function (done) {
+      request(createServer({root: fixtures}))
+      .get('/.hidden')
+      .expect(404, done)
+    })
+
+    it('should allow file within dotfile directory for back-compat', function (done) {
+      request(createServer({root: fixtures}))
+      .get('/.mine/name.txt')
+      .expect(200, /tobi/, done)
+    })
+
+    it('should reject bad value', function (done) {
+      request(createServer({dotfiles: 'bogus'}))
+      .get('/nums')
+      .expect(500, /dotfiles/, done)
+    })
+
+    describe('when "allow"', function (done) {
+      it('should send dotfile', function (done) {
+        request(createServer({dotfiles: 'allow', root: fixtures}))
+        .get('/.hidden')
+        .expect(200, /secret/, done)
+      })
+
+      it('should send within dotfile directory', function (done) {
+        request(createServer({dotfiles: 'allow', root: fixtures}))
+        .get('/.mine/name.txt')
+        .expect(200, /tobi/, done)
+      })
+
+      it('should 404 for non-existent dotfile', function (done) {
+        request(createServer({dotfiles: 'allow', root: fixtures}))
+        .get('/.nothere')
+        .expect(404, done)
+      })
+    })
+
+    describe('when "deny"', function (done) {
+      it('should 403 for dotfile', function (done) {
+        request(createServer({dotfiles: 'deny', root: fixtures}))
+        .get('/.hidden')
+        .expect(403, done)
+      })
+
+      it('should 403 for dotfile directory', function (done) {
+        request(createServer({dotfiles: 'deny', root: fixtures}))
+        .get('/.mine')
+        .expect(403, done)
+      })
+
+      it('should 403 for dotfile directory with trailing slash', function (done) {
+        request(createServer({dotfiles: 'deny', root: fixtures}))
+        .get('/.mine/')
+        .expect(403, done)
+      })
+
+      it('should 403 for file within dotfile directory', function (done) {
+        request(createServer({dotfiles: 'deny', root: fixtures}))
+        .get('/.mine/name.txt')
+        .expect(403, done)
+      })
+
+      it('should 403 for non-existent dotfile', function (done) {
+        request(createServer({dotfiles: 'deny', root: fixtures}))
+        .get('/.nothere')
+        .expect(403, done)
+      })
+
+      it('should 403 for non-existent dotfile directory', function (done) {
+        request(createServer({dotfiles: 'deny', root: fixtures}))
+        .get('/.what/name.txt')
+        .expect(403, done)
+      })
+
+      it('should send files in root dotfile directory', function (done) {
+        request(createServer({dotfiles: 'deny', root: path.join(fixtures, '.mine')}))
+        .get('/name.txt')
+        .expect(200, /tobi/, done)
+      })
+
+      it('should 403 for dotfile without root', function (done) {
+        var server = http.createServer(function onRequest(req, res) {
+          send(req, fixtures + '/.mine' + req.url, {dotfiles: 'deny'}).pipe(res)
+        })
+
+        request(server)
+        .get('/name.txt')
+        .expect(403, done)
+      })
+    })
+
+    describe('when "ignore"', function (done) {
+      it('should 404 for dotfile', function (done) {
+        request(createServer({dotfiles: 'ignore', root: fixtures}))
+        .get('/.hidden')
+        .expect(404, done)
+      })
+
+      it('should 404 for dotfile directory', function (done) {
+        request(createServer({dotfiles: 'ignore', root: fixtures}))
+        .get('/.mine')
+        .expect(404, done)
+      })
+
+      it('should 404 for dotfile directory with trailing slash', function (done) {
+        request(createServer({dotfiles: 'ignore', root: fixtures}))
+        .get('/.mine/')
+        .expect(404, done)
+      })
+
+      it('should 404 for file within dotfile directory', function (done) {
+        request(createServer({dotfiles: 'ignore', root: fixtures}))
+        .get('/.mine/name.txt')
+        .expect(404, done)
+      })
+
+      it('should 404 for non-existent dotfile', function (done) {
+        request(createServer({dotfiles: 'ignore', root: fixtures}))
+        .get('/.nothere')
+        .expect(404, done)
+      })
+
+      it('should 404 for non-existent dotfile directory', function (done) {
+        request(createServer({dotfiles: 'ignore', root: fixtures}))
+        .get('/.what/name.txt')
+        .expect(404, done)
+      })
+
+      it('should send files in root dotfile directory', function (done) {
+        request(createServer({dotfiles: 'ignore', root: path.join(fixtures, '.mine')}))
+        .get('/name.txt')
+        .expect(200, /tobi/, done)
+      })
+
+      it('should 404 for dotfile without root', function (done) {
+        var server = http.createServer(function onRequest(req, res) {
+          send(req, fixtures + '/.mine' + req.url, {dotfiles: 'ignore'}).pipe(res)
+        })
+
+        request(server)
+        .get('/name.txt')
+        .expect(404, done)
+      })
+    })
+  })
 
   describe('hidden', function(){
     it('should default to false', function(done){
@@ -928,3 +1075,14 @@ describe('send(file, options)', function(){
     })
   })
 })
+
+function createServer(opts) {
+  return http.createServer(function onRequest(req, res) {
+    try {
+      send(req, req.url, opts).pipe(res)
+    } catch (err) {
+      res.statusCode = 500
+      res.end(err.message)
+    }
+  })
+}

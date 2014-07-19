@@ -69,9 +69,20 @@ var app = http.createServer(function(req, res){
 
   Enable or disable etag generation, defaults to true.
 
-#### hidden
+#### dotfiles
 
-  Enable or disable transfer of hidden files, defaults to false.
+  Set how "dotfiles" are treated when encountered. A dotfile is a file
+  or directory that begins with a dot ("."). Note this check is done on
+  the path itself without checking if the path actually exists on the
+  disk. If `root` is specified, only the dotfiles above the root are
+  checked (i.e. the root itself can be within a dotfile when when set
+  to "deny").
+
+  The default value is `'ignore'`.
+
+  - `'allow'` No special treatment for dotfiles.
+  - `'deny'` Send a 403 for any request for a dotfile.
+  - `'ignore'` Pretend like the dotfile does not exist and 404.
 
 #### index
 
