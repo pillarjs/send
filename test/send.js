@@ -888,7 +888,7 @@ describe('send(file, options)', function(){
 
         request(app)
         .get('/pets/../../send.js')
-        .expect(403, 'Forbidden', done)
+        .expect(403, done)
       })
 
       it('should allow .. in root', function(done){
@@ -899,7 +899,7 @@ describe('send(file, options)', function(){
 
         request(app)
         .get('/pets/../../send.js')
-        .expect(403, 'Forbidden', done)
+        .expect(403, done)
       })
     })
 
@@ -912,7 +912,7 @@ describe('send(file, options)', function(){
 
         request(app)
         .get('/../send.js')
-        .expect(403, 'Forbidden', done)
+        .expect(403, done)
       })
 
       it('should still serve files with dots in name', function(done){
