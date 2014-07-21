@@ -1,5 +1,5 @@
-unreleased
-==========
+0.7.0 / 2014-07-20
+==================
 
  * Deprecate `hidden` option; use `dotfiles` option
  * Add `dotfiles` option
