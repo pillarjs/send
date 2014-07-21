@@ -4,6 +4,11 @@ unreleased
  * Deprecate `hidden` option; use `dotfiles` option
  * Add `dotfiles` option
  * deps: debug@1.0.4
+ * deps: depd@0.4.2
+   - Add `TRACE_DEPRECATION` environment variable
+   - Remove non-standard grey color from color output
+   - Support `--no-deprecation` argument
+   - Support `--trace-deprecation` argument
 
 0.6.0 / 2014-07-11
 ==================
