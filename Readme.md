@@ -90,6 +90,12 @@ var app = http.createServer(function(req, res){
   set `false` or to supply a new index pass a string or an array
   in preferred order.
 
+#### extensions
+
+  If a given file doesn't exist, try appending one of the given extensions, in
+  the given order. The default value is [ ".html", ".js", ".css", ".htm" ]
+  To disable this set `false`.
+
 #### maxAge
 
   Provide a max-age in milliseconds for http caching, defaults to 0.

@@ -317,7 +317,7 @@ describe('send(file).pipe(res)', function(){
       var app = http.createServer(function(req, res){
         send(req, 'test/fixtures' + req.url).pipe(res);
       });
-      
+
       request(app)
       .get('/foobar')
       .expect(404, 'Not Found', done)
@@ -362,14 +362,14 @@ describe('send(file).pipe(res)', function(){
       .set('Range', 'bytes=0-4')
       .expect(206, '12345', done);
     })
-    
+
     it('should be inclusive', function(done){
       request(app)
       .get('/nums')
       .set('Range', 'bytes=0-0')
       .expect(206, '1', done);
     })
-    
+
     it('should set Content-Range', function(done){
       request(app)
       .get('/nums')
@@ -384,7 +384,7 @@ describe('send(file).pipe(res)', function(){
       .set('Range', 'bytes=-3')
       .expect(206, '789', done);
     })
-    
+
     it('should support n-', function(done){
       request(app)
       .get('/nums')
@@ -633,6 +633,81 @@ describe('send(file).pipe(res)', function(){
       request(app)
       .get('/pets/')
       .expect(200, fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'), done)
+    })
+  })
+
+  describe('.extensions', function(){
+    it('should work by default', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/tobi')
+      .expect(200, '<p>tobi</p>', function(err,res) {
+        if (err) return done(err);
+
+        request(app)
+        .get('/do..ts')
+        .expect(404, done)
+      })
+    })
+
+    it('should be configurable', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, extensions: [".txt"]})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/do..ts')
+      .expect(200, '...', done);
+    })
+
+    it('should support disabling', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, extensions: false})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/name')
+      .expect(404, done);
+    })
+
+    it('should support fallbacks', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, extensions: [".txt", ".html"]})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/tobi')
+      .expect(200, '<p>tobi</p>', function(err,res) {
+        if (err) return done(err);
+
+        request(app)
+        .get('/name')
+        .expect(200, 'tobi', done)
+      })
+    })
+
+    it('should be order-sensitive', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, extensions: [".txt", ".html"]})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/name')
+      .expect(200, 'tobi', function(err,res) {
+        if (err) return done(err);
+
+        request(app)
+        .get('/name.html')
+        .expect(200, '<p>tobi</p>', done)
+      })
     })
   })
 
@@ -933,7 +1008,7 @@ describe('send(file, options)', function(){
         send(req, 'test/fixtures/name.txt', {maxAge: Infinity})
         .pipe(res);
       });
-      
+
       request(app)
       .get('/name.txt')
       .expect('Cache-Control', 'public, max-age=31536000', done)
