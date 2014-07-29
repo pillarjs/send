@@ -84,6 +84,12 @@ var app = http.createServer(function(req, res){
   - `'deny'` Send a 403 for any request for a dotfile.
   - `'ignore'` Pretend like the dotfile does not exist and 404.
 
+#### extensions
+
+  If a given file doesn't exist, try appending one of the given extensions,
+  in the given order. By default, this is disabled (set to `false`). An
+  example value that will serve extension-less HTML files: `['html', 'htm']`.
+
 #### index
 
   By default send supports "index.html" files, to disable this

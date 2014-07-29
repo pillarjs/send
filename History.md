@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Add `extensions` option
+
 0.7.4 / 2014-08-04
 ==================
 

@@ -719,6 +719,56 @@ describe('send(file, options)', function(){
     })
   })
 
+  describe('extensions', function () {
+    it('should be not be enabled by default', function (done) {
+      var server = createServer({root: fixtures});
+
+      request(server)
+      .get('/tobi')
+      .expect(404, done)
+    })
+
+    it('should be configurable', function (done) {
+      var server = createServer({extensions: 'txt', root: fixtures})
+
+      request(server)
+      .get('/name')
+      .expect(200, 'tobi', done)
+    })
+
+    it('should support disabling extensions', function (done) {
+      var server = createServer({extensions: false, root: fixtures})
+
+      request(server)
+      .get('/name')
+      .expect(404, done)
+    })
+
+    it('should support fallbacks', function (done) {
+      var server = createServer({extensions: ['htm', 'html', 'txt'], root: fixtures})
+
+      request(server)
+      .get('/name')
+      .expect(200, '<p>tobi</p>', done)
+    })
+
+    it('should 404 if nothing found', function (done) {
+      var server = createServer({extensions: ['htm', 'html', 'txt'], root: fixtures})
+
+      request(server)
+      .get('/bob')
+      .expect(404, done)
+    })
+
+    it('should skip directories', function (done) {
+      var server = createServer({extensions: ['file', 'dir'], root: fixtures})
+
+      request(server)
+      .get('/name')
+      .expect(404, done)
+    })
+  })
+
   describe('from', function(){
     it('should set with deprecated from', function(done){
       var app = http.createServer(function(req, res){
