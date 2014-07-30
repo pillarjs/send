@@ -1,5 +1,5 @@
-unreleased
-==========
+0.7.3 / 2014-07-29
+==================
 
   * Fix incorrect 403 on Windows and Node.js 0.11
 
