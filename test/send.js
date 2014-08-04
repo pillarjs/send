@@ -1012,6 +1012,18 @@ describe('send(file, options)', function(){
       .get('/')
       .expect(200, 'tobi', done)
     })
+
+    it('should work without root', function (done) {
+      var server = http.createServer(function(req, res){
+        var p = path.join(fixtures, 'pets').replace(/\\/g, '/') + '/';
+        send(req, p, {index: ['index.html']})
+        .pipe(res);
+      });
+
+      request(server)
+      .get('/')
+      .expect(200, /tobi/, done)
+    })
   })
 
   describe('root', function(){

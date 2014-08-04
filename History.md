@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Fix serving index files without root dir
+
 0.7.3 / 2014-07-29
 ==================
 
