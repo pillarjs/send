@@ -637,7 +637,7 @@ describe('send(file).pipe(res)', function(){
   })
 
   describe('.extensions', function(){
-    it('should work by default', function(done){
+    it('should not work by default', function(done){
       var app = http.createServer(function(req, res){
         send(req, req.url, {root: fixtures})
         .pipe(res);
@@ -645,7 +645,7 @@ describe('send(file).pipe(res)', function(){
 
       request(app)
       .get('/tobi')
-      .expect(200, '<p>tobi</p>', function(err,res) {
+      .expect(404, function(err,res) {
         if (err) return done(err);
 
         request(app)

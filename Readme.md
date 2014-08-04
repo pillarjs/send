@@ -93,8 +93,8 @@ var app = http.createServer(function(req, res){
 #### extensions
 
   If a given file doesn't exist, try appending one of the given extensions, in
-  the given order. The default value is [ ".html", ".js", ".css", ".htm" ]
-  To disable this set `false`.
+  the given order. By default, this is disabled.
+  A typical value could be [ ".html", ".js", ".css", ".htm" ]
 
 #### maxAge
 
