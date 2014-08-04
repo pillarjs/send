@@ -1,5 +1,5 @@
-unreleased
-==========
+0.7.4 / 2014-08-04
+==================
 
   * Fix serving index files without root dir
 
