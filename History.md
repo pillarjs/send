@@ -1,5 +1,5 @@
-unreleased
-==========
+0.8.1 / 2014-08-05
+==================
 
   * Fix `extensions` behavior when file already has extension
 
