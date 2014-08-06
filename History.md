@@ -1,5 +1,5 @@
-unreleased
-==========
+0.8.0 / 2014-08-05
+==================
 
   * Add `extensions` option
 
