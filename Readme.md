@@ -89,6 +89,7 @@ var app = http.createServer(function(req, res){
   If a given file doesn't exist, try appending one of the given extensions,
   in the given order. By default, this is disabled (set to `false`). An
   example value that will serve extension-less HTML files: `['html', 'htm']`.
+  This is skipped if the requested file already has an extension.
 
 #### index
 

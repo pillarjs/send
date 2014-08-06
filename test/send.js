@@ -767,6 +767,14 @@ describe('send(file, options)', function(){
       .get('/name')
       .expect(404, done)
     })
+
+    it('should not search if file has extension', function (done) {
+      var server = createServer({extensions: 'html', root: fixtures})
+
+      request(server)
+      .get('/thing.html')
+      .expect(404, done)
+    })
   })
 
   describe('from', function(){
