@@ -115,6 +115,7 @@ var app = http.createServer(function(req, res){
   - `headers` the headers are about to be set on a file `(res, path, stat)`
   - `stream` file streaming has started `(stream)`
   - `end` streaming has completed
+  - `lastchunk` last chunk of file has sent
 
 ## Error-handling
 
