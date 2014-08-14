@@ -1,3 +1,9 @@
+unreleased
+==========
+
+  * Work around `fd` leak in Node.js 0.10 for `fs.ReadStream`
+  * deps: dethroy@1.0.2
+
 0.8.1 / 2014-08-05
 ==================
 
