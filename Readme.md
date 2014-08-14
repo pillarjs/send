@@ -3,6 +3,7 @@
 [![NPM version](https://badge.fury.io/js/send.svg)](https://badge.fury.io/js/send)
 [![Build Status](https://travis-ci.org/visionmedia/send.svg?branch=master)](https://travis-ci.org/visionmedia/send)
 [![Coverage Status](https://img.shields.io/coveralls/visionmedia/send.svg?branch=master)](https://coveralls.io/r/visionmedia/send)
+[![Gittip](http://img.shields.io/gittip/dougwilson.svg)](https://www.gittip.com/dougwilson/)
 
   Send is Connect's `static()` extracted for generalized use, a streaming static file
   server supporting partial responses (Ranges), conditional-GET negotiation, high test coverage, and granular events which may be leveraged to take appropriate actions in your application or framework.
