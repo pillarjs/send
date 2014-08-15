@@ -16,7 +16,7 @@
   "dependencies": {
     "debug": "1.0.4",
     "depd": "0.4.4",
-    "dethroy": "1.0.2",
+    "destroy": "1.0.3",
     "escape-html": "1.0.1",
     "finished": "1.2.2",
     "fresh": "0.2.2",

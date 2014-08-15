@@ -1,3 +1,9 @@
+unreleased
+==========
+
+  * deps: destroy@1.0.3
+    - renamed from dethroy
+
 0.8.2 / 2014-08-14
 ==================
 
