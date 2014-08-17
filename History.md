@@ -3,6 +3,7 @@ unreleased
 
   * deps: destroy@1.0.3
     - renamed from dethroy
+  * deps: on-finished@2.1.0
 
 0.8.2 / 2014-08-14
 ==================
