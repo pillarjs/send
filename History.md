@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Use `etag` to generate `ETag` header
+
 0.8.3 / 2014-08-16
 ==================
 
