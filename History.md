@@ -1,5 +1,5 @@
-unreleased
-==========
+0.8.4 / 2014-09-04
+==================
 
   * Fix a path traversal issue when using `root`
 
