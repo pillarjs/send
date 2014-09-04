@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Fix a path traversal issue when using `root`
+
 0.8.3 / 2014-08-16
 ==================
 

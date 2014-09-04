@@ -1097,6 +1097,17 @@ describe('send(file, options)', function(){
         .expect(200, 'tobi', done)
       })
 
+      it('should with with trailing slash', function(done){
+        var app = http.createServer(function(req, res){
+          send(req, req.url, {root: __dirname + '/fixtures/'})
+          .pipe(res);
+        });
+
+        request(app)
+        .get('/name.txt')
+        .expect(200, 'tobi', done)
+      })
+
       it('should restrict paths to within root', function(done){
         var app = http.createServer(function(req, res){
           send(req, req.url, {root: __dirname + '/fixtures'})
@@ -1116,6 +1127,17 @@ describe('send(file, options)', function(){
 
         request(app)
         .get('/pets/../../send.js')
+        .expect(403, done)
+      })
+
+      it('should not allow root transversal', function(done){
+        var app = http.createServer(function(req, res){
+          send(req, req.url, {root: __dirname + '/fixtures/name.d'})
+          .pipe(res);
+        });
+
+        request(app)
+        .get('/../name.dir/name.txt')
         .expect(403, done)
       })
     })
