@@ -415,7 +415,7 @@ SendStream.prototype.pipe = function(res){
     root = normalize(root)
 
     // malicious path
-    if (path.substr(0, root.length) !== root) {
+    if (path !== root && path.substr(0, root.length + 1) !== root + sep) {
       debug('malicious path "%s"', path)
       return this.error(403)
     }
