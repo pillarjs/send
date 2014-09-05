@@ -1097,7 +1097,7 @@ describe('send(file, options)', function(){
         .expect(200, 'tobi', done)
       })
 
-      it('should with with trailing slash', function(done){
+      it('should work with trailing slash', function(done){
         var app = http.createServer(function(req, res){
           send(req, req.url, {root: __dirname + '/fixtures/'})
           .pipe(res);
@@ -1106,6 +1106,17 @@ describe('send(file, options)', function(){
         request(app)
         .get('/name.txt')
         .expect(200, 'tobi', done)
+      })
+
+      it('should work with empty path', function(done){
+        var app = http.createServer(function(req, res){
+          send(req, '', {root: __dirname + '/fixtures'})
+          .pipe(res);
+        });
+
+        request(app)
+        .get('/name.txt')
+        .expect(301, /Redirecting to/, done)
       })
 
       it('should restrict paths to within root', function(done){
