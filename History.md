@@ -1,5 +1,5 @@
-unreleased
-==========
+0.8.5 / 2014-09-04
+==================
 
   * Fix malicious path detection for empty string path
 
