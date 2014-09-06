@@ -777,6 +777,23 @@ describe('send(file, options)', function(){
     })
   })
 
+  describe('lastModified', function () {
+    it('should support disabling last-modified', function (done) {
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {lastModified: false, root: fixtures})
+        .pipe(res)
+      })
+
+      request(app)
+      .get('/nums')
+      .expect(200, function (err, res) {
+        if (err) return done(err)
+        res.headers.should.not.have.property('last-modified')
+        done()
+      })
+    })
+  })
+
   describe('from', function(){
     it('should set with deprecated from', function(done){
       var app = http.createServer(function(req, res){

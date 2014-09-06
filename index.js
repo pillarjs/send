@@ -28,6 +28,7 @@ var extname = path.extname
 var maxMaxAge = 60 * 60 * 24 * 365 * 1000; // 1 year
 var resolve = path.resolve
 var sep = path.sep
+var toString = Object.prototype.toString
 var upPathRegexp = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/
 
 /**
@@ -110,6 +111,10 @@ function SendStream(req, path, options) {
   this._index = options.index !== undefined
     ? normalizeList(options.index)
     : ['index.html']
+
+  this._lastModified = options.lastModified !== undefined
+    ? Boolean(options.lastModified)
+    : true
 
   this._maxage = options.maxAge || options.maxage
   this._maxage = typeof this._maxage === 'string'
@@ -715,7 +720,12 @@ SendStream.prototype.setHeader = function setHeader(path, stat){
   if (!res.getHeader('Accept-Ranges')) res.setHeader('Accept-Ranges', 'bytes');
   if (!res.getHeader('Date')) res.setHeader('Date', new Date().toUTCString());
   if (!res.getHeader('Cache-Control')) res.setHeader('Cache-Control', 'public, max-age=' + Math.floor(this._maxage / 1000));
-  if (!res.getHeader('Last-Modified')) res.setHeader('Last-Modified', stat.mtime.toUTCString());
+
+  if (this._lastModified && !res.getHeader('Last-Modified')) {
+    var modified = stat.mtime.toUTCString()
+    debug('modified %s', modified)
+    res.setHeader('Last-Modified', modified)
+  }
 
   if (this._etag && !res.getHeader('ETag')) {
     var val = etag(stat)

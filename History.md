@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Add `lastMofified` option
   * Use `etag` to generate `ETag` header
   * deps: debug@~2.0.0
 

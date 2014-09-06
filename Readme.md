@@ -61,6 +61,11 @@ not the actual file-system path).
   set `false` or to supply a new index pass a string or an array
   in preferred order.
 
+##### lastModified
+
+  Enable or disable `Last-Modified` header, defaults to true. Uses the file
+  system's last modified value.
+
 ##### maxAge
 
   Provide a max-age in milliseconds for http caching, defaults to 0.
