@@ -2,6 +2,7 @@ unreleased
 ==========
 
   * Use `etag` to generate `ETag` header
+  * deps: debug@~2.0.0
 
 0.8.5 / 2014-09-04
 ==================
