@@ -669,13 +669,6 @@ SendStream.prototype.stream = function(path, options){
     finished = true;
     destroy(stream);
 
-    // no hope in responding
-    if (res._header) {
-      console.error(err.stack);
-      req.destroy();
-      return;
-    }
-
     // error
     self.onStatError(err);
   });
