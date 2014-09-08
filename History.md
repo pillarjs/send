@@ -1,5 +1,5 @@
-unreleased
-==========
+0.9.0 / 2014-09-07
+==================
 
   * Add `lastMofified` option
   * Use `etag` to generate `ETag` header
