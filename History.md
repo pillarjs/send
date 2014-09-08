@@ -6,7 +6,7 @@
 0.9.0 / 2014-09-07
 ==================
 
-  * Add `lastMofified` option
+  * Add `lastModified` option
   * Use `etag` to generate `ETag` header
   * deps: debug@~2.0.0
 
