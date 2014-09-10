@@ -78,7 +78,7 @@ not the actual file-system path).
 
 ### Events
 
-The `SendStream` is an event emitter and will emeit the following events:
+The `SendStream` is an event emitter and will emit the following events:
 
   - `error` an error occurred `(err)`
   - `directory` a directory was requested
