@@ -23,7 +23,7 @@
     "mime": "1.2.11",
     "ms": "0.6.2",
     "on-finished": "2.1.0",
-    "range-parser": "~1.0.0"
+    "range-parser": "~1.0.2"
   },
   "devDependencies": {
     "istanbul": "0.3.2",

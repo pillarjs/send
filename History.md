@@ -2,6 +2,7 @@ unreleased
 ==========
 
   * deps: depd@0.4.5
+  * deps: range-parser@~1.0.2
 
 0.9.1 / 2014-09-07
 ==================
