@@ -1,3 +1,9 @@
+unreleased
+==========
+
+  * deps: etag@~1.4.0
+    - Support "fake" stats objects
+
 0.9.2 / 2014-09-15
 ==================
 
