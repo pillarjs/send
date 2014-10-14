@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * deps: depd@~1.0.0
   * deps: etag@~1.5.0
     - Improve string performance
     - Slightly improve speed for weak ETags over 1KB
