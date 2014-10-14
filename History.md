@@ -1,3 +1,10 @@
+unreleased
+==========
+
+  * deps: etag@~1.5.0
+    - Improve string performance
+    - Slightly improve speed for weak ETags over 1KB
+
 0.9.3 / 2014-09-24
 ==================
 
