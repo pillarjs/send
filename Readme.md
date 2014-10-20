@@ -172,10 +172,10 @@ var app = http.createServer(function(req, res){
 
 [npm-image]: https://img.shields.io/npm/v/send.svg?style=flat
 [npm-url]: https://npmjs.org/package/send
-[travis-image]: https://img.shields.io/travis/visionmedia/send.svg?style=flat
-[travis-url]: https://travis-ci.org/visionmedia/send
-[coveralls-image]: https://img.shields.io/coveralls/visionmedia/send.svg?style=flat
-[coveralls-url]: https://coveralls.io/r/visionmedia/send?branch=master
+[travis-image]: https://img.shields.io/travis/tj/send.svg?style=flat
+[travis-url]: https://travis-ci.org/tj/send
+[coveralls-image]: https://img.shields.io/coveralls/tj/send.svg?style=flat
+[coveralls-url]: https://coveralls.io/r/tj/send?branch=master
 [downloads-image]: https://img.shields.io/npm/dm/send.svg?style=flat
 [downloads-url]: https://npmjs.org/package/send
 [gittip-image]: https://img.shields.io/gittip/dougwilson.svg?style=flat
