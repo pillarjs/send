@@ -22,7 +22,7 @@
     "fresh": "0.2.4",
     "mime": "1.2.11",
     "ms": "0.6.2",
-    "on-finished": "2.1.0",
+    "on-finished": "~2.1.1",
     "range-parser": "~1.0.2"
   },
   "devDependencies": {

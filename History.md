@@ -1,3 +1,9 @@
+unreleased
+==========
+
+  * deps: on-finished@~2.1.1
+    - Fix handling of pipelined requests
+
 0.10.0 / 2014-10-15
 ===================
 
