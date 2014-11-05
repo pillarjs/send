@@ -38,7 +38,9 @@ not the actual file-system path).
   checked (i.e. the root itself can be within a dotfile when when set
   to "deny").
 
-  The default value is `'ignore'`.
+  The default value is `'ignore'` with the exception that this default
+  will not ignore the files within a directory that begins with a dot,
+  for backward-compatibility.
 
   - `'allow'` No special treatment for dotfiles.
   - `'deny'` Send a 403 for any request for a dotfile.
