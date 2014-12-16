@@ -1194,6 +1194,70 @@ describe('send(file, options)', function(){
       })
     })
   })
+
+  describe('fs', function() {
+    describe('when given', function() {
+      it('should work on standard case', function(done) {
+        var app = http.createServer(function(req, res) {
+          send(req, req.url, {
+            fs: require('fs'),
+            root: fixtures
+          })
+          .pipe(res);
+        });
+ 
+        request(app)
+          .get('/pets/../name.txt')
+          .expect(200, 'tobi', done)
+      })
+ 
+      it('should work with root in option', function(done) {
+        var app = http.createServer(function(req, res) {
+          send(req, req.url, {
+            fs: require('fs'),
+            root: fixtures + '/pets'
+          })
+          .pipe(res);
+        });
+ 
+        request(app)
+          .get('/')
+          .expect(200, 'tobi\nloki\njane', done)
+      })
+
+      it('should use my own fs', function(done) {
+        var fs = require('fs');
+        var _fs = {
+          statCounter: 0,
+          readCounter: 0,
+          stat: function() {
+            _fs.statCounter = _fs.statCounter + 1;
+            fs.stat.apply(fs, arguments);
+          },
+          createReadStream: function() {
+            _fs.readCounter = _fs.readCounter + 1;
+            return fs.createReadStream.apply(fs, arguments);
+          }
+        };
+ 
+        var app = http.createServer(function(req, res) {
+          send(req, req.url, {
+            fs: _fs,
+            root: fixtures + '/pets'
+          })
+          .pipe(res);
+        });
+ 
+        request(app)
+          .get('/')
+          .expect(200, 'tobi\nloki\njane', function(err) {
+            assert.notEqual(_fs.statCounter, 0);
+            assert.notEqual(_fs.readCounter, 0);
+            done(err);
+        })
+      })
+    })
+  })
 })
 
 function createServer(opts) {
