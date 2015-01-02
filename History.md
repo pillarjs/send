@@ -4,6 +4,13 @@ unreleased
   * deps: debug@~2.1.1
   * deps: etag@~1.5.1
     - deps: crc@3.2.1
+  * deps: ms@0.7.0
+    - Add `milliseconds`
+    - Add `msecs`
+    - Add `secs`
+    - Add `mins`
+    - Add `hrs`
+    - Add `yrs`
 
 0.10.1 / 2014-10-22
 ===================
