@@ -11,6 +11,7 @@ unreleased
     - Add `mins`
     - Add `hrs`
     - Add `yrs`
+  * deps: on-finished@~2.2.0
 
 0.10.1 / 2014-10-22
 ===================
