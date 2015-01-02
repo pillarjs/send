@@ -31,52 +31,52 @@ not the actual file-system path).
 
 ##### dotfiles
 
-  Set how "dotfiles" are treated when encountered. A dotfile is a file
-  or directory that begins with a dot ("."). Note this check is done on
-  the path itself without checking if the path actually exists on the
-  disk. If `root` is specified, only the dotfiles above the root are
-  checked (i.e. the root itself can be within a dotfile when when set
-  to "deny").
+Set how "dotfiles" are treated when encountered. A dotfile is a file
+or directory that begins with a dot ("."). Note this check is done on
+the path itself without checking if the path actually exists on the
+disk. If `root` is specified, only the dotfiles above the root are
+checked (i.e. the root itself can be within a dotfile when when set
+to "deny").
 
   - `'allow'` No special treatment for dotfiles.
   - `'deny'` Send a 403 for any request for a dotfile.
   - `'ignore'` Pretend like the dotfile does not exist and 404.
 
-  The default value is _similar_ to `'ignore'`, with the exception that
-  this default will not ignore the files within a directory that begins
-  with a dot, for backward-compatibility.
+The default value is _similar_ to `'ignore'`, with the exception that
+this default will not ignore the files within a directory that begins
+with a dot, for backward-compatibility.
 
 ##### etag
 
-  Enable or disable etag generation, defaults to true.
+Enable or disable etag generation, defaults to true.
 
 ##### extensions
 
-  If a given file doesn't exist, try appending one of the given extensions,
-  in the given order. By default, this is disabled (set to `false`). An
-  example value that will serve extension-less HTML files: `['html', 'htm']`.
-  This is skipped if the requested file already has an extension.
+If a given file doesn't exist, try appending one of the given extensions,
+in the given order. By default, this is disabled (set to `false`). An
+example value that will serve extension-less HTML files: `['html', 'htm']`.
+This is skipped if the requested file already has an extension.
 
 ##### index
 
-  By default send supports "index.html" files, to disable this
-  set `false` or to supply a new index pass a string or an array
-  in preferred order.
+By default send supports "index.html" files, to disable this
+set `false` or to supply a new index pass a string or an array
+in preferred order.
 
 ##### lastModified
 
-  Enable or disable `Last-Modified` header, defaults to true. Uses the file
-  system's last modified value.
+Enable or disable `Last-Modified` header, defaults to true. Uses the file
+system's last modified value.
 
 ##### maxAge
 
-  Provide a max-age in milliseconds for http caching, defaults to 0.
-  This can also be a string accepted by the
-  [ms](https://www.npmjs.org/package/ms#readme) module.
+Provide a max-age in milliseconds for http caching, defaults to 0.
+This can also be a string accepted by the
+[ms](https://www.npmjs.org/package/ms#readme) module.
 
 ##### root
 
-  Serve files relative to `path`.
+Serve files relative to `path`.
 
 ### Events
 
@@ -96,16 +96,20 @@ object, typically `send(req, path, options).pipe(res)`.
 
 ## Error-handling
 
-  By default when no `error` listeners are present an automatic response will be made, otherwise you have full control over the response, aka you may show a 5xx page etc.
+By default when no `error` listeners are present an automatic response will be
+made, otherwise you have full control over the response, aka you may show a 5xx
+page etc.
 
 ## Caching
 
-  It does _not_ perform internal caching, you should use a reverse proxy cache such
-  as Varnish for this, or those fancy things called CDNs. If your application is small enough that it would benefit from single-node memory caching, it's small enough that it does not need caching at all ;).
+It does _not_ perform internal caching, you should use a reverse proxy cache
+such as Varnish for this, or those fancy things called CDNs. If your
+application is small enough that it would benefit from single-node memory
+caching, it's small enough that it does not need caching at all ;).
 
 ## Debugging
 
- To enable `debug()` instrumentation output export __DEBUG__:
+To enable `debug()` instrumentation output export __DEBUG__:
 
 ```
 $ DEBUG=send node app
@@ -120,7 +124,7 @@ $ npm test
 
 ## Examples
 
-  Small:
+### Small example
 
 ```js
 var http = require('http');
@@ -131,7 +135,7 @@ var app = http.createServer(function(req, res){
 }).listen(3000);
 ```
 
-  Serving from a root directory with custom error-handling:
+Serving from a root directory with custom error-handling:
 
 ```js
 var http = require('http');
