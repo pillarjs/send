@@ -14,7 +14,7 @@
     "server"
   ],
   "dependencies": {
-    "debug": "~2.1.0",
+    "debug": "~2.1.1",
     "depd": "~1.0.0",
     "destroy": "1.0.3",
     "escape-html": "1.0.1",
