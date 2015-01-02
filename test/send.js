@@ -1,13 +1,13 @@
 
 process.env.NO_DEPRECATION = 'send';
 
+var after = require('after');
 var assert = require('assert');
 var fs = require('fs');
 var http = require('http');
 var path = require('path');
 var request = require('supertest');
 var send = require('..')
-var should = require('should');
 
 // test server
 
@@ -193,91 +193,105 @@ describe('send(file).pipe(res)', function(){
   })
 
   describe('"headers" event', function () {
-    var args
-    var fn
-    var headers
-    var server
-    before(function () {
-      server = http.createServer(function (req, res) {
+    it('should fire when sending file', function (done) {
+      var cb = after(2, done)
+      var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
-        .on('headers', function () {
-          args = arguments
-          headers = true
-          fn && fn.apply(this, arguments)
-        })
+        .on('headers', function () { cb() })
         .pipe(res)
       })
-    })
-    beforeEach(function () {
-      args = undefined
-      fn = undefined
-      headers = false
-    })
 
-    it('should fire when sending file', function (done) {
       request(server)
       .get('/nums')
-      .expect(200, '123456789', function (err, res) {
-        if (err) return done(err)
-        headers.should.be.true
-        done()
-      })
+      .expect(200, '123456789', cb)
     })
 
     it('should not fire on 404', function (done) {
+      var cb = after(1, done)
+      var server = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('headers', function () { cb() })
+        .pipe(res)
+      })
+
       request(server)
       .get('/bogus')
-      .expect(404, function (err, res) {
-        if (err) return done(err)
-        headers.should.be.false
-        done()
-      })
+      .expect(404, cb)
     })
 
     it('should fire on index', function (done) {
+      var cb = after(2, done)
+      var server = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('headers', function () { cb() })
+        .pipe(res)
+      })
+
       request(server)
       .get('/pets/')
-      .expect(200, /tobi/, function (err, res) {
-        if (err) return done(err)
-        headers.should.be.true
-        done()
-      })
+      .expect(200, /tobi/, cb)
     })
 
     it('should not fire on redirect', function (done) {
+      var cb = after(1, done)
+      var server = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('headers', function () { cb() })
+        .pipe(res)
+      })
+
       request(server)
       .get('/pets')
-      .expect(301, function (err, res) {
-        if (err) return done(err)
-        headers.should.be.false
-        done()
-      })
+      .expect(301, cb)
     })
 
     it('should provide path', function (done) {
+      var cb = after(2, done)
+      var server = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('headers', onHeaders)
+        .pipe(res)
+      })
+
+      function onHeaders(res, filePath) {
+        assert.ok(filePath)
+        assert.equal(path.normalize(filePath), path.normalize(path.join(fixtures, 'nums')))
+        cb()
+      }
+
       request(server)
       .get('/nums')
-      .expect(200, '123456789', function (err, res) {
-        if (err) return done(err)
-        headers.should.be.true
-        args[1].should.endWith('nums')
-        done()
-      })
+      .expect(200, '123456789', cb)
     })
 
     it('should provide stat', function (done) {
+      var cb = after(2, done)
+      var server = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('headers', onHeaders)
+        .pipe(res)
+      })
+
+      function onHeaders(res, path, stat) {
+        assert.ok(stat)
+        assert.ok('ctime' in stat)
+        assert.ok('mtime' in stat)
+        cb()
+      }
+
       request(server)
       .get('/nums')
-      .expect(200, '123456789', function (err, res) {
-        if (err) return done(err)
-        headers.should.be.true
-        args[2].should.have.property('mtime')
-        done()
-      })
+      .expect(200, '123456789', cb)
     })
 
     it('should allow altering headers', function (done) {
-      fn = function (res, path, stat) {
+      var server = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('headers', onHeaders)
+        .pipe(res)
+      })
+
+      function onHeaders(res, path, stat) {
         res.setHeader('Cache-Control', 'no-cache')
         res.setHeader('Content-Type', 'text/x-custom')
         res.setHeader('ETag', 'W/"everything"')
