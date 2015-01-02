@@ -333,12 +333,9 @@ describe('send(file).pipe(res)', function(){
         request(app)
         .get('/name.txt')
         .set('If-None-Match', res.headers.etag)
-        .expect(304, function(err, res){
-          if (err) return done(err)
-          res.headers.should.not.have.property('content-type');
-          res.headers.should.not.have.property('content-length');
-          done();
-        });
+        .expect(shouldNotHaveHeader('Content-Length'))
+        .expect(shouldNotHaveHeader('Content-Type'))
+        .expect(304, done)
       })
     })
 
@@ -562,11 +559,8 @@ describe('send(file).pipe(res)', function(){
 
       request(app)
       .get('/nums')
-      .expect(200, function(err, res){
-        if (err) return done(err);
-        res.headers.should.not.have.property('etag');
-        done();
-      });
+      .expect(shouldNotHaveHeader('ETag'))
+      .expect(200, done)
     })
   })
 
@@ -711,11 +705,8 @@ describe('send(file, options)', function(){
 
       request(app)
       .get('/nums')
-      .expect(200, function(err, res){
-        if (err) return done(err);
-        res.headers.should.not.have.property('etag');
-        done();
-      });
+      .expect(shouldNotHaveHeader('ETag'))
+      .expect(200, done)
     })
   })
 
@@ -786,11 +777,8 @@ describe('send(file, options)', function(){
 
       request(app)
       .get('/nums')
-      .expect(200, function (err, res) {
-        if (err) return done(err)
-        res.headers.should.not.have.property('last-modified')
-        done()
-      })
+      .expect(shouldNotHaveHeader('Last-Modified'))
+      .expect(200, done)
     })
   })
 
@@ -1205,4 +1193,10 @@ function createServer(opts) {
       res.end(err.message)
     }
   })
+}
+
+function shouldNotHaveHeader(header) {
+  return function (res) {
+    assert.ok(!(header.toLowerCase() in res.headers), 'should not have header ' + header)
+  }
 }
