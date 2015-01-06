@@ -6,8 +6,12 @@
 [![Test Coverage][coveralls-image]][coveralls-url]
 [![Gittip][gittip-image]][gittip-url]
 
-  Send is Connect's `static()` extracted for generalized use, a streaming static file
-  server supporting partial responses (Ranges), conditional-GET negotiation, high test coverage, and granular events which may be leveraged to take appropriate actions in your application or framework.
+Send is a library for streaming files from the file system as a http response
+supporting partial responses (Ranges), conditional-GET negotiation, high test
+coverage, and granular events which may be leveraged to take appropriate actions
+in your application or framework.
+
+Looking to serve up entire folders mapped to URLs? Try [serve-static](https://www.npmjs.org/package/serve-static).
 
 ## Installation
 
