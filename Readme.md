@@ -84,16 +84,20 @@ Serve files relative to `path`.
 
 ## Transform
 
-Set the transform property to a function that consumes a Node.js stream parameter and produces a new (transformed) stream:
- function(stream) {return stream.pipe(replaceStream('tobi', 'peter'))}
+A function that consumes a Node.js stream parameter and produces a new (transformed) stream:
+```javascript
+function(stream) {return stream.pipe(replaceStream('tobi', 'peter'))}
+```
  
 Multiple transformations are possible: 
+```javascript
 var transformFunc = function(stream) {
   return stream
   .pipe(replaceStream('tobi', 'peter'))
   .pipe(replaceStream('peter', 'hans'))
   .pipe(...)
 }
+```
 
 ### Events
 
