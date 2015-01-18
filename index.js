@@ -89,10 +89,10 @@ function SendStream(req, path, options) {
     ? options.dotfiles
     : 'ignore'
 	
-  this.transform = typeof options.transform === 'object'
+  this.transform = typeof options.transform === 'function'
     ? options.transform
     : undefined
-
+	
   if (['allow', 'deny', 'ignore'].indexOf(this._dotfiles) === -1) {
     throw new TypeError('dotfiles option must be "allow", "deny", or "ignore"')
   }
@@ -557,9 +557,11 @@ SendStream.prototype.send = function(path, stat){
   }
 
   // content-length
-  // don't set content-length for transform
   if(this.transform === undefined){
 	res.setHeader('Content-Length', len);
+  }else{
+    //we don't know the content-length of the transformed data beforehand
+    res.setHeader('Transfer-Encoding', 'chunked');
   }
 
   // HEAD support
@@ -662,7 +664,7 @@ SendStream.prototype.stream = function(path, options){
   this.emit('stream', stream);
   
   if(this.transform !== undefined){
-    stream = stream.pipe(this.transform);
+    stream = this.transform(stream);
   }
   
   stream.pipe(res);

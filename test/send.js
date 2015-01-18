@@ -1107,13 +1107,31 @@ describe('send(file, options)', function(){
   describe('transform', function(){
 	it('should transform the file contents', function(done){
 	  var app = http.createServer(function(req, res){
-        send(req, 'test/fixtures/name.txt', {transform: replaceStream('tobi', 'peter')})
+        send(req, 'test/fixtures/name.txt', {transform: function(stream) {return stream.pipe(replaceStream('tobi', 'peter'))}})
         .pipe(res)
       });
 	  
 	  request(app)
       .get('/name.txt')
 	  .expect(200, "peter", done)
+	  
+    })
+	
+	it('should be possible to do mulitple transformations', function(done){
+	  var transformFunc = function(stream) {
+		return stream
+		.pipe(replaceStream('tobi', 'peter'))
+		.pipe(replaceStream('peter', 'hans'))
+	  }
+	  
+	  var app = http.createServer(function(req, res){
+		send(req, 'test/fixtures/name.txt', {transform: transformFunc})
+        .pipe(res)
+      });
+	  
+	  request(app)
+      .get('/name.txt')
+	  .expect(200, "hans", done)
 	  
     })
   })
