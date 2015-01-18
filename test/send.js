@@ -8,6 +8,7 @@ var http = require('http');
 var path = require('path');
 var request = require('supertest');
 var send = require('..')
+var replaceStream = require('replacestream')
 
 // test server
 
@@ -693,7 +694,7 @@ describe('send(file).pipe(res)', function(){
       .expect('Cache-Control', 'public, max-age=31536000', done)
     })
   })
-
+  
   describe('.root()', function(){
     it('should set root', function(done){
       var app = http.createServer(function(req, res){
@@ -1100,6 +1101,20 @@ describe('send(file, options)', function(){
       request(server)
       .get('/')
       .expect(200, /tobi/, done)
+    })
+  })
+  
+  describe('transform', function(){
+	it('should transform the file contents', function(done){
+	  var app = http.createServer(function(req, res){
+        send(req, 'test/fixtures/name.txt', {transform: replaceStream('tobi', 'peter')})
+        .pipe(res)
+      });
+	  
+	  request(app)
+      .get('/name.txt')
+	  .expect(200, "peter", done)
+	  
     })
   })
 

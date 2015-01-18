@@ -82,6 +82,11 @@ This can also be a string accepted by the
 
 Serve files relative to `path`.
 
+## Transform
+
+Set the transform property to a Node.js stream for manipulating the data before sending it, e.g. replaceStream('searchthis', 'replacewiththis')
+Multiple transforms are possible using pipe: replaceStream('searchthis', 'replacewiththis').pipe(replaceStream('searchanother', 'replacewithanother')).pipe(...)
+
 ### Events
 
 The `SendStream` is an event emitter and will emit the following events:

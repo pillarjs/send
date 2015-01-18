@@ -80,7 +80,7 @@ function SendStream(req, path, options) {
   this.req = req;
   this.path = path;
   this.options = options;
-
+	
   this._etag = options.etag !== undefined
     ? Boolean(options.etag)
     : true
@@ -88,6 +88,10 @@ function SendStream(req, path, options) {
   this._dotfiles = options.dotfiles !== undefined
     ? options.dotfiles
     : 'ignore'
+	
+  this.transform = typeof options.transform === 'object'
+    ? options.transform
+    : undefined
 
   if (['allow', 'deny', 'ignore'].indexOf(this._dotfiles) === -1) {
     throw new TypeError('dotfiles option must be "allow", "deny", or "ignore"')
@@ -553,7 +557,10 @@ SendStream.prototype.send = function(path, stat){
   }
 
   // content-length
-  res.setHeader('Content-Length', len);
+  // don't set content-length for transform
+  if(this.transform === undefined){
+	res.setHeader('Content-Length', len);
+  }
 
   // HEAD support
   if ('HEAD' == req.method) return res.end();
@@ -651,9 +658,15 @@ SendStream.prototype.stream = function(path, options){
 
   // pipe
   var stream = fs.createReadStream(path, options);
+  
   this.emit('stream', stream);
+  
+  if(this.transform !== undefined){
+    stream = stream.pipe(this.transform);
+  }
+  
   stream.pipe(res);
-
+  
   // response finished, done with the fd
   onFinished(res, function onfinished(){
     finished = true;
