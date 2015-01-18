@@ -91,7 +91,7 @@ function(stream) {return stream.pipe(replaceStream('tobi', 'peter'))}
  
 Multiple transformations are possible: 
 ```javascript
-var transformFunc = function(stream) {
+function(stream) {
   return stream
   .pipe(replaceStream('tobi', 'peter'))
   .pipe(replaceStream('peter', 'hans'))
