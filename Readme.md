@@ -82,7 +82,7 @@ This can also be a string accepted by the
 
 Serve files relative to `path`.
 
-## Transform
+##### Transform
 
 A function that consumes a Node.js stream parameter and produces a new (transformed) stream:
 ```javascript
