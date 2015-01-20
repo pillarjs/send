@@ -416,7 +416,8 @@ SendStream.prototype.pipe = function(res){
   var parts
   if (root !== null) {
     // join / normalize from optional root dir
-    path = normalize(join(root, path))
+    rawPath = root + path
+    path = join(root, path)
     root = normalize(root + sep)
 
     // malicious traversal
