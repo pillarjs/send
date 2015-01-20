@@ -415,15 +415,15 @@ SendStream.prototype.pipe = function(res){
 
   var parts
   if (root !== null) {
-    // join / normalize from optional root dir
-    path = normalize(join(root, path))
-    root = normalize(root + sep)
-
     // malicious path
-    if ((path + sep).substr(0, root.length) !== root) {
+    if (upPathRegexp.test(normalize('.' + sep + path))) {
       debug('malicious path "%s"', path)
       return this.error(403)
     }
+
+    // join / normalize from optional root dir
+    path = normalize(join(root, path))
+    root = normalize(root + sep)
 
     // explode path parts
     parts = path.substr(root.length).split(sep)
