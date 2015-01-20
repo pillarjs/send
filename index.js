@@ -416,14 +416,20 @@ SendStream.prototype.pipe = function(res){
   var parts
   if (root !== null) {
     // join / normalize from optional root dir
-    rawPath = root + path
+    var rawPath = path
     path = join(root, path)
     root = normalize(root + sep)
 
-    // malicious traversal
-    if(rawPath !== path){
-      debug('malicious path "%s"', path)
-      return this.error(403)
+    // check for exiting current dir
+    var traversalCheck = rawPath.split(sep);
+    var topLevel = '';
+    for (var i = 0; i < traversalCheck.length; i++) {
+      topLevel += traversalCheck[i];
+      var topLevelPath = join(root, topLevel);
+      if((topLevelPath + sep).substr(0, root.length) !== root){
+        debug('malicious path "%s"', path)
+        return this.error(403)
+      }
     }
 
     // malicious path
