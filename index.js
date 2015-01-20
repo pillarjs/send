@@ -421,7 +421,7 @@ SendStream.prototype.pipe = function(res){
     root = normalize(root + sep)
 
     // check for exiting current dir
-    var traversalCheck = rawPath.split(sep);
+    var traversalCheck = rawPath.split('/');
     var topLevel = '';
     for (var i = 0; i < traversalCheck.length; i++) {
       topLevel += traversalCheck[i];
