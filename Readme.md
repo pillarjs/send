@@ -4,7 +4,7 @@
 [![NPM Downloads][downloads-image]][downloads-url]
 [![Build Status][travis-image]][travis-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
-[![Gittip][gittip-image]][gittip-url]
+[![Gratipay][gratipay-image]][gratipay-url]
 
 Send is a library for streaming files from the file system as a http response
 supporting partial responses (Ranges), conditional-GET negotiation, high test
@@ -188,5 +188,5 @@ var app = http.createServer(function(req, res){
 [coveralls-url]: https://coveralls.io/r/pillarjs/send?branch=master
 [downloads-image]: https://img.shields.io/npm/dm/send.svg?style=flat
 [downloads-url]: https://npmjs.org/package/send
-[gittip-image]: https://img.shields.io/gittip/dougwilson.svg?style=flat
-[gittip-url]: https://www.gittip.com/dougwilson/
+[gratipay-image]: https://img.shields.io/gratipay/dougwilson.svg?style=flat
+[gratipay-url]: https://www.gratipay.com/dougwilson/
