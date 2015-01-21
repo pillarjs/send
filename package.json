@@ -7,7 +7,7 @@
     "Douglas Christopher Wilson <doug@somethingdoug.com>"
   ],
   "license": "MIT",
-  "repository": "tj/send",
+  "repository": "pillarjs/send",
   "keywords": [
     "static",
     "file",
