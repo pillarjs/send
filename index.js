@@ -80,19 +80,19 @@ function SendStream(req, path, options) {
   this.req = req;
   this.path = path;
   this.options = options;
-	
+
+  this._transform = typeof options.transform === 'function'
+      ? options.transform
+      : undefined
+
   this._etag = options.etag !== undefined
     ? Boolean(options.etag)
-    : true
+    : (this._transform !== undefined ? false : true)
 
   this._dotfiles = options.dotfiles !== undefined
     ? options.dotfiles
     : 'ignore'
-	
-  this.transform = typeof options.transform === 'function'
-    ? options.transform
-    : undefined
-	
+
   if (['allow', 'deny', 'ignore'].indexOf(this._dotfiles) === -1) {
     throw new TypeError('dotfiles option must be "allow", "deny", or "ignore"')
   }
@@ -118,7 +118,7 @@ function SendStream(req, path, options) {
 
   this._lastModified = options.lastModified !== undefined
     ? Boolean(options.lastModified)
-    : true
+    : (this._transform !== undefined ? false : true)
 
   this._maxage = options.maxAge || options.maxage
   this._maxage = typeof this._maxage === 'string'
@@ -557,7 +557,7 @@ SendStream.prototype.send = function(path, stat){
   }
 
   // content-length
-  if(this.transform === undefined){
+  if(this._transform === undefined){
 	res.setHeader('Content-Length', len);
   }else{
     //we don't know the content-length of the transformed data beforehand
@@ -663,8 +663,8 @@ SendStream.prototype.stream = function(path, options){
   
   this.emit('stream', stream);
   
-  if(this.transform !== undefined){
-    stream = this.transform(stream);
+  if(this._transform !== undefined){
+    stream = this._transform(stream);
   }
   
   stream.pipe(res);
