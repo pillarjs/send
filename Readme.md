@@ -52,7 +52,7 @@ with a dot, for backward-compatibility.
 
 ##### etag
 
-Enable or disable etag generation, defaults to true.
+Enable or disable etag generation, defaults to `true` unless the transform options is set.
 
 ##### extensions
 
@@ -69,8 +69,10 @@ in preferred order.
 
 ##### lastModified
 
-Enable or disable `Last-Modified` header, defaults to true. Uses the file
+Enable or disable `Last-Modified` header, defaults to `true`. Uses the file
 system's last modified value.
+
+If the `transform` option is set then the default is `false`.
 
 ##### maxAge
 
@@ -84,7 +86,7 @@ Serve files relative to `path`.
 
 ##### Transform
 
-A function that consumes a Node.js stream parameter and produces a new (transformed) stream:
+A function that consumes the file stream and produces a new (transformed) stream:
 ```javascript
 function(stream) {return stream.pipe(replaceStream('tobi', 'peter'))}
 ```
@@ -98,6 +100,9 @@ function(stream) {
   .pipe(...)
 }
 ```
+
+With transform the last-modified and etag defaults to `false` but can be overridden when
+a transform on the file's stream is expected to always generate the same result. 
 
 ### Events
 
