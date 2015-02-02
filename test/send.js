@@ -694,7 +694,7 @@ describe('send(file).pipe(res)', function(){
       .expect('Cache-Control', 'public, max-age=31536000', done)
     })
   })
-  
+
   describe('.root()', function(){
     it('should set root', function(done){
       var app = http.createServer(function(req, res){
@@ -1110,11 +1110,12 @@ describe('send(file, options)', function(){
         send(req, 'test/fixtures/name.txt', {transform: function(stream) {return stream.pipe(replaceStream('tobi', 'peter'))}})
         .pipe(res)
       });
-	  
+
 	  request(app)
       .get('/name.txt')
+      .expect(shouldNotHaveHeader('Last-Modified'))
+      .expect(shouldNotHaveHeader('ETag'))
 	  .expect(200, "peter", done)
-	  
     })
 	
 	it('should be possible to do mulitple transformations', function(done){
@@ -1132,7 +1133,18 @@ describe('send(file, options)', function(){
 	  request(app)
       .get('/name.txt')
 	  .expect(200, "hans", done)
-	  
+    })
+
+    it('should be able to override last modified', function(done){
+      var app = http.createServer(function(req, res){
+        send(req, 'test/fixtures/name.txt', {lastModified: true, transform: function(stream) {return stream.pipe(replaceStream('tobi', 'peter'))}})
+        .pipe(res)
+      });
+
+      request(app)
+        .get('/name.txt')
+          .expect('last-modified', dateRegExp)
+        .expect(200, "peter", done)
     })
   })
 
