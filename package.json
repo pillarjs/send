@@ -1,13 +1,13 @@
 {
   "name": "send",
   "description": "Better streaming static file server with Range and conditional-GET support",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "author": "TJ Holowaychuk <tj@vision-media.ca>",
   "contributors": [
     "Douglas Christopher Wilson <doug@somethingdoug.com>"
   ],
   "license": "MIT",
-  "repository": "tj/send",
+  "repository": "pillarjs/send",
   "keywords": [
     "static",
     "file",
@@ -33,8 +33,9 @@
     "replacestream": "~1.0.2"
   },
   "files": [
-    "History.md",
+    "HISTORY.md",
     "LICENSE",
+    "README.md",
     "index.js"
   ],
   "engines": {
@@ -42,7 +43,7 @@
   },
   "scripts": {
     "test": "mocha --check-leaks --reporter spec --bail",
-    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --check-leaks --reporter dot",
-    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --check-leaks --reporter spec"
+    "test-ci": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --check-leaks --reporter spec",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --check-leaks --reporter dot"
   }
 }

@@ -1215,6 +1215,17 @@ describe('send(file, options)', function(){
         .get('/../name.dir/name.txt')
         .expect(403, done)
       })
+
+      it('should not allow root path disclosure', function(done){
+        var app = http.createServer(function(req, res){
+          send(req, req.url, {root: __dirname + '/fixtures'})
+          .pipe(res);
+        });
+
+        request(app)
+        .get('/pets/../../fixtures/name.txt')
+        .expect(403, done)
+      })
     })
 
     describe('when missing', function(){
