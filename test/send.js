@@ -1103,36 +1103,36 @@ describe('send(file, options)', function(){
       .expect(200, /tobi/, done)
     })
   })
-  
+
   describe('transform', function(){
-	it('should transform the file contents', function(done){
-	  var app = http.createServer(function(req, res){
+    it('should transform the file contents', function(done){
+      var app = http.createServer(function(req, res){
         send(req, 'test/fixtures/name.txt', {transform: function(stream) {return stream.pipe(replaceStream('tobi', 'peter'))}})
         .pipe(res)
       });
 
-	  request(app)
+      request(app)
       .get('/name.txt')
       .expect(shouldNotHaveHeader('Last-Modified'))
       .expect(shouldNotHaveHeader('ETag'))
-	  .expect(200, "peter", done)
+      .expect(200, "peter", done)
     })
-	
-	it('should be possible to do mulitple transformations', function(done){
-	  var transformFunc = function(stream) {
-		return stream
-		.pipe(replaceStream('tobi', 'peter'))
-		.pipe(replaceStream('peter', 'hans'))
-	  }
+
+    it('should be possible to do mulitple transformations', function(done){
+      var transformFunc = function(stream) {
+        return stream
+        .pipe(replaceStream('tobi', 'peter'))
+        .pipe(replaceStream('peter', 'hans'))
+      }
 	  
-	  var app = http.createServer(function(req, res){
-		send(req, 'test/fixtures/name.txt', {transform: transformFunc})
+      var app = http.createServer(function(req, res){
+        send(req, 'test/fixtures/name.txt', {transform: transformFunc})
         .pipe(res)
       });
 	  
-	  request(app)
+      request(app)
       .get('/name.txt')
-	  .expect(200, "hans", done)
+      .expect(200, "hans", done)
     })
 
     it('should be able to override last modified', function(done){
@@ -1142,9 +1142,9 @@ describe('send(file, options)', function(){
       });
 
       request(app)
-        .get('/name.txt')
-          .expect('last-modified', dateRegExp)
-        .expect(200, "peter", done)
+      .get('/name.txt')
+      .expect('last-modified', dateRegExp)
+      .expect(200, "peter", done)
     })
   })
 
