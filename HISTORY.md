@@ -2,6 +2,7 @@ unreleased
 ==========
 
   * Always read the stat size from the file
+  * Fix mutating passed-in `options`
   * deps: mime@1.3.4
 
 0.11.1 / 2015-01-20

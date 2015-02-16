@@ -62,7 +62,7 @@ var listenerCount = EventEmitter.listenerCount
  *
  * @param {Request} req
  * @param {String} path
- * @param {Object} options
+ * @param {object} [options]
  * @return {SendStream}
  * @api public
  */
@@ -76,53 +76,53 @@ function send(req, path, options) {
  *
  * @param {Request} req
  * @param {String} path
- * @param {Object} options
+ * @param {object} [options]
  * @api private
  */
 
 function SendStream(req, path, options) {
-  var self = this;
-  options = options || {};
-  this.req = req;
-  this.path = path;
-  this.options = options;
+  var opts = options || {}
 
-  this._etag = options.etag !== undefined
-    ? Boolean(options.etag)
+  this.options = opts
+  this.path = path
+  this.req = req
+
+  this._etag = opts.etag !== undefined
+    ? Boolean(opts.etag)
     : true
 
-  this._dotfiles = options.dotfiles !== undefined
-    ? options.dotfiles
+  this._dotfiles = opts.dotfiles !== undefined
+    ? opts.dotfiles
     : 'ignore'
 
   if (['allow', 'deny', 'ignore'].indexOf(this._dotfiles) === -1) {
     throw new TypeError('dotfiles option must be "allow", "deny", or "ignore"')
   }
 
-  this._hidden = Boolean(options.hidden)
+  this._hidden = Boolean(opts.hidden)
 
-  if ('hidden' in options) {
+  if (opts.hidden !== undefined) {
     deprecate('hidden: use dotfiles: \'' + (this._hidden ? 'allow' : 'ignore') + '\' instead')
   }
 
   // legacy support
-  if (!('dotfiles' in options)) {
+  if (opts.dotfiles === undefined) {
     this._dotfiles = undefined
   }
 
-  this._extensions = options.extensions !== undefined
-    ? normalizeList(options.extensions)
+  this._extensions = opts.extensions !== undefined
+    ? normalizeList(opts.extensions)
     : []
 
-  this._index = options.index !== undefined
-    ? normalizeList(options.index)
+  this._index = opts.index !== undefined
+    ? normalizeList(opts.index)
     : ['index.html']
 
-  this._lastModified = options.lastModified !== undefined
-    ? Boolean(options.lastModified)
+  this._lastModified = opts.lastModified !== undefined
+    ? Boolean(opts.lastModified)
     : true
 
-  this._maxage = options.maxAge || options.maxage
+  this._maxage = opts.maxAge || opts.maxage
   this._maxage = typeof this._maxage === 'string'
     ? ms(this._maxage)
     : Number(this._maxage)
@@ -130,12 +130,12 @@ function SendStream(req, path, options) {
     ? Math.min(Math.max(0, this._maxage), maxMaxAge)
     : 0
 
-  this._root = options.root
-    ? resolve(options.root)
+  this._root = opts.root
+    ? resolve(opts.root)
     : null
 
-  if (!this._root && options.from) {
-    this.from(options.from);
+  if (!this._root && opts.from) {
+    this.from(opts.from)
   }
 }
 
@@ -488,8 +488,9 @@ SendStream.prototype.pipe = function(res){
  */
 
 SendStream.prototype.send = function(path, stat){
-  var options = this.options;
   var len = stat.size;
+  var options = this.options
+  var opts = {}
   var res = this.res;
   var req = this.req;
   var ranges = req.headers.range;
@@ -557,9 +558,14 @@ SendStream.prototype.send = function(path, stat){
     }
   }
 
-  // read options
-  options.start = offset;
-  options.end = offset + len - 1;
+  // clone options
+  for (var prop in options) {
+    opts[prop] = options[prop]
+  }
+
+  // set read options
+  opts.start = offset
+  opts.end = offset + len - 1
 
   // content-length
   res.setHeader('Content-Length', len);
@@ -567,7 +573,7 @@ SendStream.prototype.send = function(path, stat){
   // HEAD support
   if ('HEAD' == req.method) return res.end();
 
-  this.stream(path, options);
+  this.stream(path, opts)
 };
 
 /**
