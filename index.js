@@ -1,3 +1,9 @@
+/*!
+ * send
+ * Copyright(c) 2012 TJ Holowaychuk
+ * Copyright(c) 2014-2015 Douglas Christopher Wilson
+ * MIT Licensed
+ */
 
 /**
  * Module dependencies.
@@ -537,9 +543,6 @@ SendStream.prototype.send = function(path, stat){
     if (-2 != ranges && ranges.length === 1) {
       debug('range %j', ranges);
 
-      options.start = offset + ranges[0].start;
-      options.end = offset + ranges[0].end;
-
       // Content-Range
       res.statusCode = 206;
       res.setHeader('Content-Range', 'bytes '
@@ -548,9 +551,15 @@ SendStream.prototype.send = function(path, stat){
         + ranges[0].end
         + '/'
         + len);
-      len = options.end - options.start + 1;
+
+      offset += ranges[0].start;
+      len = ranges[0].end - ranges[0].start + 1;
     }
   }
+
+  // read options
+  options.start = offset;
+  options.end = offset + len - 1;
 
   // content-length
   res.setHeader('Content-Length', len);

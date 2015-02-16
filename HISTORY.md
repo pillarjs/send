@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Always read the stat size from the file
+
 0.11.1 / 2015-01-20
 ===================
 
