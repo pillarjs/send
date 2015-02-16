@@ -81,9 +81,13 @@ function SendStream(req, path, options) {
   this.path = path;
   this.options = options;
 
+  this._transform = typeof options.transform === 'function'
+      ? options.transform
+      : undefined
+
   this._etag = options.etag !== undefined
     ? Boolean(options.etag)
-    : true
+    : (this._transform !== undefined ? false : true)
 
   this._dotfiles = options.dotfiles !== undefined
     ? options.dotfiles
@@ -114,7 +118,7 @@ function SendStream(req, path, options) {
 
   this._lastModified = options.lastModified !== undefined
     ? Boolean(options.lastModified)
-    : true
+    : (this._transform !== undefined ? false : true)
 
   this._maxage = options.maxAge || options.maxage
   this._maxage = typeof this._maxage === 'string'
@@ -553,7 +557,12 @@ SendStream.prototype.send = function(path, stat){
   }
 
   // content-length
-  res.setHeader('Content-Length', len);
+  if(this._transform === undefined){
+	res.setHeader('Content-Length', len);
+  }else{
+    //we don't know the content-length of the transformed data beforehand
+    res.setHeader('Transfer-Encoding', 'chunked');
+  }
 
   // HEAD support
   if ('HEAD' == req.method) return res.end();
@@ -651,9 +660,15 @@ SendStream.prototype.stream = function(path, options){
 
   // pipe
   var stream = fs.createReadStream(path, options);
+  
   this.emit('stream', stream);
+  
+  if(this._transform !== undefined){
+    stream = this._transform(stream);
+  }
+  
   stream.pipe(res);
-
+  
   // response finished, done with the fd
   onFinished(res, function onfinished(){
     finished = true;
