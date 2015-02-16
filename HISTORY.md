@@ -1,5 +1,5 @@
-unreleased
-==========
+0.12.0 / 2015-02-16
+===================
 
   * Always read the stat size from the file
   * Fix mutating passed-in `options`
