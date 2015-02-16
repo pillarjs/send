@@ -181,15 +181,15 @@ var app = http.createServer(function(req, res){
 
 [MIT](LICENSE)
 
-[npm-image]: https://img.shields.io/npm/v/send.svg?style=flat
+[npm-image]: https://img.shields.io/npm/v/send.svg
 [npm-url]: https://npmjs.org/package/send
-[travis-image]: https://img.shields.io/travis/pillarjs/send/master.svg?label=linux&style=flat
+[travis-image]: https://img.shields.io/travis/pillarjs/send/master.svg?label=linux
 [travis-url]: https://travis-ci.org/pillarjs/send
-[appveyor-image]: https://img.shields.io/appveyor/ci/dougwilson/send/master.svg?label=windows&style=flat
+[appveyor-image]: https://img.shields.io/appveyor/ci/dougwilson/send/master.svg?label=windows
 [appveyor-url]: https://ci.appveyor.com/project/dougwilson/send
-[coveralls-image]: https://img.shields.io/coveralls/pillarjs/send/master.svg?style=flat
+[coveralls-image]: https://img.shields.io/coveralls/pillarjs/send/master.svg
 [coveralls-url]: https://coveralls.io/r/pillarjs/send?branch=master
-[downloads-image]: https://img.shields.io/npm/dm/send.svg?style=flat
+[downloads-image]: https://img.shields.io/npm/dm/send.svg
 [downloads-url]: https://npmjs.org/package/send
-[gratipay-image]: https://img.shields.io/gratipay/dougwilson.svg?style=flat
+[gratipay-image]: https://img.shields.io/gratipay/dougwilson.svg
 [gratipay-url]: https://www.gratipay.com/dougwilson/
