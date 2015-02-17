@@ -567,6 +567,10 @@ SendStream.prototype.send = function(path, stat){
   opts.start = offset
   opts.end = offset + len - 1
 
+  if (opts.end === -1) {
+    opts.end = 0;
+  }
+
   // content-length
   res.setHeader('Content-Length', len);
 
