@@ -803,6 +803,14 @@ describe('send(file, options)', function(){
     })
   })
 
+  describe('empty files', function () {
+    it('should support empty files', function (done) {
+      request(createServer({root: fixtures}))
+          .get('/empty')
+          .expect(200, '', done)
+    })
+  })
+
   describe('from', function(){
     it('should set with deprecated from', function(done){
       var app = http.createServer(function(req, res){
