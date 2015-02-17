@@ -45,6 +45,13 @@ describe('send(file).pipe(res)', function(){
     .expect(200, 'tobi', done)
   })
 
+  it('should stream a zero-length file', function (done) {
+    request(app)
+    .get('/empty.txt')
+    .expect('Content-Length', '0')
+    .expect(200, '', done)
+  })
+
   it('should decode the given path as a URI', function(done){
     request(app)
     .get('/some%20thing.txt')

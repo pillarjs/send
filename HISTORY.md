@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Fix regression sending zero-length files
+
 0.12.0 / 2015-02-16
 ===================
 

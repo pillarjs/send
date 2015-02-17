@@ -565,7 +565,7 @@ SendStream.prototype.send = function(path, stat){
 
   // set read options
   opts.start = offset
-  opts.end = offset + len - 1
+  opts.end = Math.max(offset, offset + len - 1)
 
   // content-length
   res.setHeader('Content-Length', len);
