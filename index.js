@@ -9,7 +9,6 @@
  * Module dependencies.
  */
 
-var debug = require('debug')('send')
 var deprecate = require('depd')('send')
 var destroy = require('destroy')
 var escapeHtml = require('escape-html')
@@ -155,7 +154,6 @@ SendStream.prototype.__proto__ = Stream.prototype;
 
 SendStream.prototype.etag = deprecate.function(function etag(val) {
   val = Boolean(val);
-  debug('etag %s', val);
   this._etag = val;
   return this;
 }, 'send.etag: pass etag as option');
@@ -170,7 +168,6 @@ SendStream.prototype.etag = deprecate.function(function etag(val) {
 
 SendStream.prototype.hidden = deprecate.function(function hidden(val) {
   val = Boolean(val);
-  debug('hidden %s', val);
   this._hidden = val;
   this._dotfiles = undefined
   return this;
@@ -187,7 +184,6 @@ SendStream.prototype.hidden = deprecate.function(function hidden(val) {
 
 SendStream.prototype.index = deprecate.function(function index(paths) {
   var index = !paths ? [] : normalizeList(paths);
-  debug('index %o', paths);
   this._index = index;
   return this;
 }, 'send.index: pass index as option');
@@ -226,7 +222,6 @@ SendStream.prototype.maxage = deprecate.function(function maxage(maxAge) {
     : Number(maxAge);
   if (isNaN(maxAge)) maxAge = 0;
   if (Infinity == maxAge) maxAge = 60 * 60 * 24 * 365 * 1000;
-  debug('max-age %d', maxAge);
   this._maxage = maxAge;
   return this;
 }, 'send.maxage: pass maxAge as option');
@@ -303,7 +298,6 @@ SendStream.prototype.removeContentHeaderFields = function(){
 
 SendStream.prototype.notModified = function(){
   var res = this.res;
-  debug('not modified');
   this.removeContentHeaderFields();
   res.statusCode = 304;
   res.end();
@@ -317,7 +311,6 @@ SendStream.prototype.notModified = function(){
 
 SendStream.prototype.headersAlreadySent = function headersAlreadySent(){
   var err = new Error('Can\'t set headers after they are sent.');
-  debug('headers already sent');
   this.error(500, err);
 };
 
@@ -423,7 +416,6 @@ SendStream.prototype.pipe = function(res){
   if (root !== null) {
     // malicious path
     if (upPathRegexp.test(normalize('.' + sep + path))) {
-      debug('malicious path "%s"', path)
       return this.error(403)
     }
 
@@ -436,7 +428,6 @@ SendStream.prototype.pipe = function(res){
   } else {
     // ".." is malicious without "root"
     if (upPathRegexp.test(path)) {
-      debug('malicious path "%s"', path)
       return this.error(403)
     }
 
@@ -458,7 +449,6 @@ SendStream.prototype.pipe = function(res){
         : 'allow'
     }
 
-    debug('%s dotfile "%s"', access, path)
     switch (access) {
       case 'allow':
         break
@@ -501,8 +491,6 @@ SendStream.prototype.send = function(path, stat){
     return this.headersAlreadySent();
   }
 
-  debug('pipe "%s"', path)
-
   // set header fields
   this.setHeader(path, stat);
 
@@ -529,21 +517,17 @@ SendStream.prototype.send = function(path, stat){
 
     // If-Range support
     if (!this.isRangeFresh()) {
-      debug('range stale');
       ranges = -2;
     }
 
     // unsatisfiable
     if (-1 == ranges) {
-      debug('range unsatisfiable');
       res.setHeader('Content-Range', 'bytes */' + stat.size);
       return this.error(416);
     }
 
     // valid (syntactically invalid/multiple ranges are treated as a regular response)
     if (-2 != ranges && ranges.length === 1) {
-      debug('range %j', ranges);
-
       // Content-Range
       res.statusCode = 206;
       res.setHeader('Content-Range', 'bytes '
@@ -586,7 +570,6 @@ SendStream.prototype.sendFile = function sendFile(path) {
   var i = 0
   var self = this
 
-  debug('stat "%s"', path);
   fs.stat(path, function onstat(err, stat) {
     if (err && err.code === 'ENOENT'
       && !extname(path)
@@ -609,7 +592,6 @@ SendStream.prototype.sendFile = function sendFile(path) {
 
     var p = path + '.' + self._extensions[i++]
 
-    debug('stat "%s"', p)
     fs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
@@ -637,7 +619,6 @@ SendStream.prototype.sendIndex = function sendIndex(path){
 
     var p = join(path, self._index[i]);
 
-    debug('stat "%s"', p);
     fs.stat(p, function(err, stat){
       if (err) return next(err);
       if (stat.isDirectory()) return next();
@@ -707,7 +688,6 @@ SendStream.prototype.type = function(path){
   if (res.getHeader('Content-Type')) return;
   var type = mime.lookup(path);
   var charset = mime.charsets.lookup(type);
-  debug('content-type %s', type);
   res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
 };
 
@@ -731,13 +711,11 @@ SendStream.prototype.setHeader = function setHeader(path, stat){
 
   if (this._lastModified && !res.getHeader('Last-Modified')) {
     var modified = stat.mtime.toUTCString()
-    debug('modified %s', modified)
     res.setHeader('Last-Modified', modified)
   }
 
   if (this._etag && !res.getHeader('ETag')) {
     var val = etag(stat)
-    debug('etag %s', val)
     res.setHeader('ETag', val)
   }
 };
