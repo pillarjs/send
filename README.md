@@ -112,14 +112,6 @@ such as Varnish for this, or those fancy things called CDNs. If your
 application is small enough that it would benefit from single-node memory
 caching, it's small enough that it does not need caching at all ;).
 
-## Debugging
-
-To enable `debug()` instrumentation output export __DEBUG__:
-
-```
-$ DEBUG=send node app
-```
-
 ## Running tests
 
 ```
