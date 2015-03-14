@@ -732,6 +732,22 @@ describe('send(file, options)', function(){
   })
 
   describe('extensions', function () {
+    it('should reject numbers', function (done) {
+      var server = createServer({extensions: 42, root: fixtures})
+
+      request(server)
+      .get('/pets/')
+      .expect(500, /TypeError: extensions option/, done);
+    })
+
+    it('should reject true', function (done) {
+      var server = createServer({extensions: true, root: fixtures})
+
+      request(server)
+      .get('/pets/')
+      .expect(500, /TypeError: extensions option/, done);
+    })
+
     it('should be not be enabled by default', function (done) {
       var server = createServer({root: fixtures});
 
@@ -1025,6 +1041,22 @@ describe('send(file, options)', function(){
   })
 
   describe('index', function(){
+    it('should reject numbers', function (done) {
+      var server = createServer({root: fixtures, index: 42});
+
+      request(server)
+      .get('/pets/')
+      .expect(500, /TypeError: index option/, done);
+    })
+
+    it('should reject true', function (done) {
+      var server = createServer({root: fixtures, index: true});
+
+      request(server)
+      .get('/pets/')
+      .expect(500, /TypeError: index option/, done);
+    })
+
     it('should default to index.html', function(done){
       request(app)
       .get('/pets/')
@@ -1222,7 +1254,7 @@ function createServer(opts) {
       send(req, req.url, opts).pipe(res)
     } catch (err) {
       res.statusCode = 500
-      res.end(err.message)
+      res.end(String(err))
     }
   })
 }

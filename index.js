@@ -111,11 +111,11 @@ function SendStream(req, path, options) {
   }
 
   this._extensions = opts.extensions !== undefined
-    ? normalizeList(opts.extensions)
+    ? normalizeList(opts.extensions, 'extensions option')
     : []
 
   this._index = opts.index !== undefined
-    ? normalizeList(opts.index)
+    ? normalizeList(opts.index, 'index option')
     : ['index.html']
 
   this._lastModified = opts.lastModified !== undefined
@@ -186,7 +186,7 @@ SendStream.prototype.hidden = deprecate.function(function hidden(val) {
  */
 
 SendStream.prototype.index = deprecate.function(function index(paths) {
-  var index = !paths ? [] : normalizeList(paths);
+  var index = !paths ? [] : normalizeList(paths, 'paths argument');
   debug('index %o', paths);
   this._index = index;
   return this;
@@ -780,9 +780,18 @@ function decode(path) {
  * Normalize the index option into an array.
  *
  * @param {boolean|string|array} val
- * @api private
+ * @param {string} name
+ * @private
  */
 
-function normalizeList(val){
-  return [].concat(val || [])
+function normalizeList(val, name) {
+  var list = [].concat(val || [])
+
+  for (var i = 0; i < list.length; i++) {
+    if (typeof list[i] !== 'string') {
+      throw new TypeError(name + ' must be array of strings or false')
+    }
+  }
+
+  return list
 }
