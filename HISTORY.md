@@ -1,5 +1,5 @@
-unreleased
-==========
+0.12.2 / 2015-03-13
+===================
 
   * Throw errors early for invalid `extensions` or `index` options
   * deps: debug@~2.1.3
