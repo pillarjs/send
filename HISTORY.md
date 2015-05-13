@@ -3,6 +3,7 @@ unreleased
 
   * deps: debug@~2.2.0
     - deps: ms@0.7.1
+  * deps: depd@~1.0.1
   * deps: ms@0.7.1
     - Prevent extraordinarily long inputs
 
