@@ -6,6 +6,7 @@ unreleased
   * deps: depd@~1.0.1
   * deps: ms@0.7.1
     - Prevent extraordinarily long inputs
+  * deps: on-finished@~2.2.1
 
 0.12.2 / 2015-03-13
 ===================
