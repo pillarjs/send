@@ -4,6 +4,7 @@ unreleased
   * deps: escape-html@1.0.2
   * deps: etag@~1.7.0
     - Improve stat performance by removing hashing
+  * perf: enable strict mode
 
 0.12.3 / 2015-05-13
 ===================
