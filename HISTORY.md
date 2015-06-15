@@ -6,6 +6,10 @@ unreleased
     - Improve stat performance by removing hashing
   * deps: fresh@0.3.0
     - Add weak `ETag` matching support
+  * deps: on-finished@~2.3.0
+    - Add defined behavior for HTTP `CONNECT` requests
+    - Add defined behavior for HTTP `Upgrade` requests
+    - deps: ee-first@1.1.1
   * perf: enable strict mode
 
 0.12.3 / 2015-05-13
