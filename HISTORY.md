@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Allow Node.js HTTP server to set `Date` response header
   * deps: escape-html@1.0.2
   * deps: etag@~1.7.0
     - Improve stat performance by removing hashing

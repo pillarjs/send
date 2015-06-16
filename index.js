@@ -728,7 +728,6 @@ SendStream.prototype.setHeader = function setHeader(path, stat){
   this.emit('headers', res, path, stat);
 
   if (!res.getHeader('Accept-Ranges')) res.setHeader('Accept-Ranges', 'bytes');
-  if (!res.getHeader('Date')) res.setHeader('Date', new Date().toUTCString());
   if (!res.getHeader('Cache-Control')) res.setHeader('Cache-Control', 'public, max-age=' + Math.floor(this._maxage / 1000));
 
   if (this._lastModified && !res.getHeader('Last-Modified')) {
