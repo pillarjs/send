@@ -191,6 +191,7 @@ describe('send(file).pipe(res)', function(){
 
     request(app)
     .get('/name.txt')
+    .expect('Content-Type', /plain/)
     .expect(404, done);
   })
 

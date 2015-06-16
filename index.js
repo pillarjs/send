@@ -255,9 +255,13 @@ SendStream.prototype.error = function error(status, error) {
   var msg = statuses[status]
 
   // wipe all existing headers
-  res._headers = undefined
+  res._headers = null
 
+  // send basic response
   res.statusCode = status
+  res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
+  res.setHeader('Content-Length', Buffer.byteLength(msg))
+  res.setHeader('X-Content-Type-Options', 'nosniff')
   res.end(msg)
 }
 
