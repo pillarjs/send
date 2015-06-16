@@ -2,6 +2,7 @@ unreleased
 ==========
 
   * Allow Node.js HTTP server to set `Date` response header
+  * Fix incorrectly removing some headers on 304 response
   * Send appropriate headers on default error response
   * Use `http-errors` for standard emitted errors
   * Use `statuses` instead of `http` module for status messages

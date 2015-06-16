@@ -348,11 +348,7 @@ describe('send(file).pipe(res)', function(){
 
   describe('when no "error" listeners are present', function(){
     it('should respond to errors directly', function(done){
-      var app = http.createServer(function(req, res){
-        send(req, 'test/fixtures' + req.url).pipe(res);
-      });
-      
-      request(app)
+      request(createServer({root: fixtures}))
       .get('/foobar')
       .expect(404, 'Not Found', done)
     })
@@ -367,8 +363,6 @@ describe('send(file).pipe(res)', function(){
         request(app)
         .get('/name.txt')
         .set('If-None-Match', res.headers.etag)
-        .expect(shouldNotHaveHeader('Content-Length'))
-        .expect(shouldNotHaveHeader('Content-Type'))
         .expect(304, done)
       })
     })
@@ -382,6 +376,27 @@ describe('send(file).pipe(res)', function(){
         .get('/name.txt')
         .set('If-None-Match', '"123"')
         .expect(200, 'tobi', done)
+      })
+    })
+
+    it('should remove Content headers', function (done) {
+      var app = createServer({root: fixtures}, function (req, res) {
+        res.setHeader('Content-Language', 'en-US')
+        res.setHeader('Contents', 'foo')
+      })
+
+      request(app)
+      .get('/name.txt')
+      .expect(200, function (err, res) {
+        if (err) return done(err)
+        request(app)
+        .get('/name.txt')
+        .set('If-None-Match', res.headers.etag)
+        .expect(shouldNotHaveHeader('Content-Language'))
+        .expect(shouldNotHaveHeader('Content-Length'))
+        .expect(shouldNotHaveHeader('Content-Type'))
+        .expect('Contents', 'foo')
+        .expect(304, done)
       })
     })
   })
@@ -1261,9 +1276,10 @@ describe('send(file, options)', function(){
   })
 })
 
-function createServer(opts) {
+function createServer(opts, fn) {
   return http.createServer(function onRequest(req, res) {
     try {
+      fn && fn(req, res)
       send(req, req.url, opts).pipe(res)
     } catch (err) {
       res.statusCode = 500

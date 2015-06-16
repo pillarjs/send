@@ -287,17 +287,20 @@ SendStream.prototype.isConditionalGET = function(){
 /**
  * Strip content-* header fields.
  *
- * @api private
+ * @private
  */
 
-SendStream.prototype.removeContentHeaderFields = function(){
-  var res = this.res;
-  Object.keys(res._headers).forEach(function(field){
-    if (0 == field.indexOf('content')) {
-      res.removeHeader(field);
+SendStream.prototype.removeContentHeaderFields = function removeContentHeaderFields() {
+  var res = this.res
+  var headers = Object.keys(res._headers || {})
+
+  for (var i = 0; i < headers.length; i++) {
+    var header = headers[i]
+    if (header.substr(0, 8) === 'content-') {
+      res.removeHeader(header)
     }
-  });
-};
+  }
+}
 
 /**
  * Respond with 304 not modified.
