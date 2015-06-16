@@ -133,6 +133,18 @@ describe('send(file).pipe(res)', function(){
     .expect(404, 'Not Found', done)
   })
 
+  it('should emit ENOENT if the file does not exist', function (done) {
+    var app = http.createServer(function (req, res) {
+      send(req, req.url, {root: fixtures})
+      .on('error', function (err) { res.end(err.statusCode + ' ' + err.code) })
+      .pipe(res)
+    })
+
+    request(app)
+    .get('/meow')
+    .expect(200, '404 ENOENT', done)
+  })
+
   it('should 301 if the directory exists', function(done){
     request(app)
     .get('/pets')

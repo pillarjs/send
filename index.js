@@ -12,6 +12,7 @@
  * @private
  */
 
+var createError = require('http-errors')
 var debug = require('debug')('send')
 var deprecate = require('depd')('send')
 var destroy = require('destroy')
@@ -243,23 +244,22 @@ SendStream.prototype.maxage = deprecate.function(function maxage(maxAge) {
  */
 
 SendStream.prototype.error = function error(status, error) {
-  var res = this.res;
-  var msg = statuses[status];
-
-  var err = error || new Error(msg);
-  err.status = status;
-
   // emit if listeners instead of responding
   if (listenerCount(this, 'error') !== 0) {
-    return this.emit('error', err);
+    return this.emit('error', createError(error, status, {
+      expose: false
+    }))
   }
 
-  // wipe all existing headers
-  res._headers = undefined;
+  var res = this.res
+  var msg = statuses[status]
 
-  res.statusCode = err.status;
-  res.end(msg);
-};
+  // wipe all existing headers
+  res._headers = undefined
+
+  res.statusCode = status
+  res.end(msg)
+}
 
 /**
  * Check if the pathname ends with "/".
