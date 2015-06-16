@@ -15,6 +15,7 @@ unreleased
     - Add defined behavior for HTTP `Upgrade` requests
     - deps: ee-first@1.1.1
   * perf: enable strict mode
+  * perf: remove unnecessary array allocations
 
 0.12.3 / 2015-05-13
 ===================

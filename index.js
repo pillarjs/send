@@ -42,16 +42,12 @@ var toString = Object.prototype.toString
 var upPathRegexp = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/
 
 /**
- * Expose `send`.
+ * Module exports.
+ * @public
  */
 
-exports = module.exports = send;
-
-/**
- * Expose mime module.
- */
-
-exports.mime = mime;
+module.exports = send
+module.exports.mime = mime
 
 /**
  * Shim EventEmitter.listenerCount for node.js < 0.10
@@ -64,11 +60,11 @@ var listenerCount = EventEmitter.listenerCount
 /**
  * Return a `SendStream` for `req` and `path`.
  *
- * @param {Request} req
- * @param {String} path
+ * @param {object} req
+ * @param {string} path
  * @param {object} [options]
  * @return {SendStream}
- * @api public
+ * @public
  */
 
 function send(req, path, options) {
@@ -81,7 +77,7 @@ function send(req, path, options) {
  * @param {Request} req
  * @param {String} path
  * @param {object} [options]
- * @api private
+ * @private
  */
 
 function SendStream(req, path, options) {
@@ -99,7 +95,7 @@ function SendStream(req, path, options) {
     ? opts.dotfiles
     : 'ignore'
 
-  if (['allow', 'deny', 'ignore'].indexOf(this._dotfiles) === -1) {
+  if (this._dotfiles !== 'ignore' && this._dotfiles !== 'allow' && this._dotfiles !== 'deny') {
     throw new TypeError('dotfiles option must be "allow", "deny", or "ignore"')
   }
 
@@ -345,15 +341,22 @@ SendStream.prototype.isCachable = function(){
 /**
  * Handle stat() error.
  *
- * @param {Error} err
- * @api private
+ * @param {Error} error
+ * @private
  */
 
-SendStream.prototype.onStatError = function(err){
-  var notfound = ['ENOENT', 'ENAMETOOLONG', 'ENOTDIR'];
-  if (~notfound.indexOf(err.code)) return this.error(404, err);
-  this.error(500, err);
-};
+SendStream.prototype.onStatError = function onStatError(error) {
+  switch (error.code) {
+    case 'ENAMETOOLONG':
+    case 'ENOENT':
+    case 'ENOTDIR':
+      this.error(404, error)
+      break
+    default:
+      this.error(500, error)
+      break
+  }
+}
 
 /**
  * Check if the cache is fresh.
