@@ -9,6 +9,7 @@
 
 /**
  * Module dependencies.
+ * @private
  */
 
 var debug = require('debug')('send')
@@ -20,7 +21,6 @@ var escapeHtml = require('escape-html')
   , mime = require('mime')
   , fresh = require('fresh')
   , path = require('path')
-  , http = require('http')
   , fs = require('fs')
   , normalize = path.normalize
   , join = path.join
@@ -28,6 +28,7 @@ var etag = require('etag')
 var EventEmitter = require('events').EventEmitter;
 var ms = require('ms');
 var onFinished = require('on-finished')
+var statuses = require('statuses')
 
 /**
  * Variables.
@@ -236,15 +237,16 @@ SendStream.prototype.maxage = deprecate.function(function maxage(maxAge) {
 /**
  * Emit error with `status`.
  *
- * @param {Number} status
- * @api private
+ * @param {number} status
+ * @param {Error} [error]
+ * @private
  */
 
-SendStream.prototype.error = function(status, err){
+SendStream.prototype.error = function error(status, error) {
   var res = this.res;
-  var msg = http.STATUS_CODES[status];
+  var msg = statuses[status];
 
-  err = err || new Error(msg);
+  var err = error || new Error(msg);
   err.status = status;
 
   // emit if listeners instead of responding

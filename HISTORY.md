@@ -2,6 +2,7 @@ unreleased
 ==========
 
   * Allow Node.js HTTP server to set `Date` response header
+  * Use `statuses` instead of `http` module for status messages
   * deps: escape-html@1.0.2
   * deps: etag@~1.7.0
     - Improve stat performance by removing hashing
