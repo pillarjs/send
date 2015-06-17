@@ -341,7 +341,7 @@ describe('send(file).pipe(res)', function(){
       request(server)
       .get('/pets')
       .expect('Location', '/pets/')
-      .expect('Content-Type', 'text/html; charset=utf-8')
+      .expect('Content-Type', /html/)
       .expect(301, 'Redirecting to <a href="/pets/">/pets/</a>\n', done)
     })
   })

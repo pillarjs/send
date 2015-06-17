@@ -3,6 +3,7 @@ unreleased
 
   * Allow Node.js HTTP server to set `Date` response header
   * Fix incorrectly removing `Content-Location` on 304 response
+  * Improve the default redirect response headers
   * Send appropriate headers on default error response
   * Use `http-errors` for standard emitted errors
   * Use `statuses` instead of `http` module for status messages

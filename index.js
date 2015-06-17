@@ -390,25 +390,35 @@ SendStream.prototype.isRangeFresh = function isRangeFresh(){
 };
 
 /**
- * Redirect to `path`.
+ * Redirect to path.
  *
- * @param {String} path
- * @api private
+ * @param {string} path
+ * @private
  */
 
-SendStream.prototype.redirect = function(path){
+SendStream.prototype.redirect = function redirect(path) {
   if (listenerCount(this, 'directory') !== 0) {
-    return this.emit('directory');
+    this.emit('directory')
+    return
   }
 
-  if (this.hasTrailingSlash()) return this.error(403);
-  var res = this.res;
-  path += '/';
-  res.statusCode = 301;
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Location', path);
-  res.end('Redirecting to <a href="' + escapeHtml(path) + '">' + escapeHtml(path) + '</a>\n');
-};
+  if (this.hasTrailingSlash()) {
+    this.error(403)
+    return
+  }
+
+  var loc = path + '/'
+  var msg = 'Redirecting to <a href="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</a>\n'
+  var res = this.res
+
+  // redirect
+  res.statusCode = 301
+  res.setHeader('Content-Type', 'text/html; charset=UTF-8')
+  res.setHeader('Content-Length', Buffer.byteLength(msg))
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('Location', loc)
+  res.end(msg)
+}
 
 /**
  * Pipe to `res.
