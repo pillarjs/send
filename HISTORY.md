@@ -1,5 +1,5 @@
-unreleased
-==========
+0.13.0 / 2015-06-16
+===================
 
   * Allow Node.js HTTP server to set `Date` response header
   * Fix incorrectly removing `Content-Location` on 304 response
