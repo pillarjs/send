@@ -382,6 +382,7 @@ describe('send(file).pipe(res)', function(){
     it('should remove Content headers', function (done) {
       var app = createServer({root: fixtures}, function (req, res) {
         res.setHeader('Content-Language', 'en-US')
+        res.setHeader('Content-Location', 'http://localhost/name.txt')
         res.setHeader('Contents', 'foo')
       })
 
@@ -395,6 +396,7 @@ describe('send(file).pipe(res)', function(){
         .expect(shouldNotHaveHeader('Content-Language'))
         .expect(shouldNotHaveHeader('Content-Length'))
         .expect(shouldNotHaveHeader('Content-Type'))
+        .expect('Content-Location', 'http://localhost/name.txt')
         .expect('Contents', 'foo')
         .expect(304, done)
       })

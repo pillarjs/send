@@ -296,7 +296,7 @@ SendStream.prototype.removeContentHeaderFields = function removeContentHeaderFie
 
   for (var i = 0; i < headers.length; i++) {
     var header = headers[i]
-    if (header.substr(0, 8) === 'content-') {
+    if (header.substr(0, 8) === 'content-' && header !== 'content-location') {
       res.removeHeader(header)
     }
   }
