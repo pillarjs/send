@@ -87,8 +87,28 @@ Serve files relative to `path`.
 
 Use a filesystem other than the node-js built-in `fs` module. It must support the following methods:
 
- * stat(path)
- * createReadStream(path)
+ * stat(path, callback)
+ * createReadStream(path, options)
+
+The resulting stat object from `stat` must (at least) look like:
+
+```javascript
+{
+    mtime: Date,
+    ctime: Date,
+    ino: Number,
+    size: Number
+}
+```
+
+The resulting readable stream must (at least) support the options:
+
+```javascript
+{
+    start: Number,
+    end: Number
+}
+```
 
 ### Events
 
