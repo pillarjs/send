@@ -7,7 +7,7 @@ var fs = require('fs');
 var http = require('http');
 var path = require('path');
 var request = require('supertest');
-var stream = require('stream');
+var ReadableStream = require('readable-stream');
 var send = require('..')
 
 // test server
@@ -1298,7 +1298,7 @@ describe('send(file, options)', function(){
               },
               createReadStream: function() {
                   createReadStreamCalled = true
-                  var bam = stream.Readable()
+                  var bam = new ReadableStream()
                   bam.push(res)
                   bam.push(null)
                   return bam;

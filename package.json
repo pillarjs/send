@@ -31,7 +31,8 @@
     "after": "0.8.1",
     "istanbul": "0.3.9",
     "mocha": "2.2.5",
-    "supertest": "1.0.1"
+    "supertest": "1.0.1",
+    "readable-stream": "2.0.1"
   },
   "files": [
     "HISTORY.md",
