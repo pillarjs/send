@@ -83,6 +83,13 @@ This can also be a string accepted by the
 
 Serve files relative to `path`.
 
+##### fs
+
+Use a filesystem other than the node-js built-in `fs` module. It must support the following methods:
+
+ * stat(path)
+ * createReadStream(path)
+
 ### Events
 
 The `SendStream` is an event emitter and will emit the following events:
@@ -177,7 +184,7 @@ var app = http.createServer(function(req, res){
 }).listen(3000);
 ```
 
-## License 
+## License
 
 [MIT](LICENSE)
 
