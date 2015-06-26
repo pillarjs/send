@@ -1280,13 +1280,14 @@ describe('send(file, options)', function(){
 
   describe('fs', function() {
       it('should invoke correct fs methods', function(done) {
+          var cb = after(3, done);
           var statCalled = false
           var createReadStreamCalled = false
           var res = new Buffer('hello')
           var fs = {
-              stat: function(file, cb) {
-                  statCalled = true
-                  cb(null, {
+              stat: function(file, next) {
+                  cb();
+                  next(null, {
                       size: res.length,
                       ctime: new Date(),
                       mtime: new Date(),
@@ -1297,7 +1298,7 @@ describe('send(file, options)', function(){
                   })
               },
               createReadStream: function() {
-                  createReadStreamCalled = true
+                  cb();
                   var bam = new ReadableStream()
                   bam.push(res)
                   bam.push(null)
@@ -1313,9 +1314,7 @@ describe('send(file, options)', function(){
           .get('/some/dir')
           .expect(200, 'hello', function(err) {
               if (err) return done(err)
-              assert.ok(statCalled)
-              assert.ok(createReadStreamCalled)
-              done()
+              cb();
           })
       })
   })
