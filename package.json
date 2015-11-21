@@ -15,7 +15,7 @@
   ],
   "dependencies": {
     "debug": "~2.2.0",
-    "depd": "~1.0.1",
+    "depd": "~1.1.0",
     "destroy": "1.0.3",
     "escape-html": "~1.0.3",
     "etag": "~1.7.0",
