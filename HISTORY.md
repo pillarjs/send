@@ -1,3 +1,11 @@
+unreleased
+==========
+
+  * deps: escape-html@~1.0.3
+    - perf: enable strict mode
+    - perf: optimize string replacement
+    - perf: use faster string coercion
+
 0.13.0 / 2015-06-16
 ===================
 
