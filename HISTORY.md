@@ -5,6 +5,8 @@ unreleased
     - perf: enable strict mode
     - perf: optimize string replacement
     - perf: use faster string coercion
+  * deps: range-parser@~1.0.3
+    - perf: enable strict mode
 
 0.13.0 / 2015-06-16
 ===================
