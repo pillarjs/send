@@ -83,6 +83,52 @@ This can also be a string accepted by the
 
 Serve files relative to `path`.
 
+##### fs
+
+Use a filesystem other than the node-js built-in `fs` module. It must support the following methods:
+
+ * `stat(path, callback)`
+ * `createReadStream(path, options)``
+
+The `callback` given to `stat` has two parameters: `(err, result)`.
+
+`err`: The `err` parameter should be an object with a `code` property containing error information.
+
+```javascript
+{
+    code: String // Error code.
+}
+```
+
+The following codes are respected: 'ENAMETOOLONG', 'ENOENT', and 'ENOTDIR'. Descriptions of these errors can be found [here](https://github.com/rvagg/node-errno/blob/master/errno.js).
+
+`result`: The `result` stat object from `stat` must (at least) look like:
+
+```javascript
+{
+    mtime: Date, // Modification date
+    ctime: Date, // Creation date
+    ino: Number, // Unique id
+    size: Number, // Length of object, in bytes
+    isDirectory: Function // Returns true if object is directory
+}
+```
+
+NOTE: The `ino` property represents the file-system inode, which is unique to the given _filesystem_ meaning that for `fs` where it's possible to access multiple mounted filesystems `ino` is not unique, but for any virtual driver it would be reasonable to ensure that `ino` numbers are.
+
+For complete details about these (and other) properties on the `stat` object be sure to see the [documentation](https://nodejs.org/api/fs.html#fs_class_fs_stats).
+
+The `createReadStream` method must (at least) support the options:
+
+```javascript
+{
+    start: Number, // Start offset of data to read
+    end: Number // End offset of data to read
+}
+```
+
+For complete details about these (and other) options of the `createReadStream` method be sure to see the [documentation](https://nodejs.org/api/fs.html#fs_fs_createreadstream_path_options).
+
 ### Events
 
 The `SendStream` is an event emitter and will emit the following events:
@@ -177,7 +223,7 @@ var app = http.createServer(function(req, res){
 }).listen(3000);
 ```
 
-## License 
+## License
 
 [MIT](LICENSE)
 

@@ -95,6 +95,10 @@ function SendStream(req, path, options) {
     ? opts.dotfiles
     : 'ignore'
 
+  this._fs = opts.fs !== undefined
+    ? opts.fs
+    : fs;
+
   if (this._dotfiles !== 'ignore' && this._dotfiles !== 'allow' && this._dotfiles !== 'deny') {
     throw new TypeError('dotfiles option must be "allow", "deny", or "ignore"')
   }
@@ -611,7 +615,7 @@ SendStream.prototype.sendFile = function sendFile(path) {
   var self = this
 
   debug('stat "%s"', path);
-  fs.stat(path, function onstat(err, stat) {
+  self._fs.stat(path, function onstat(err, stat) {
     if (err && err.code === 'ENOENT'
       && !extname(path)
       && path[path.length - 1] !== sep) {
@@ -634,7 +638,7 @@ SendStream.prototype.sendFile = function sendFile(path) {
     var p = path + '.' + self._extensions[i++]
 
     debug('stat "%s"', p)
-    fs.stat(p, function (err, stat) {
+    self._fs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
       self.emit('file', p, stat)
@@ -662,7 +666,7 @@ SendStream.prototype.sendIndex = function sendIndex(path){
     var p = join(path, self._index[i]);
 
     debug('stat "%s"', p);
-    fs.stat(p, function(err, stat){
+    self._fs.stat(p, function(err, stat){
       if (err) return next(err);
       if (stat.isDirectory()) return next();
       self.emit('file', p, stat);
@@ -689,7 +693,7 @@ SendStream.prototype.stream = function(path, options){
   var req = this.req;
 
   // pipe
-  var stream = fs.createReadStream(path, options);
+  var stream = this._fs.createReadStream(path, options);
   this.emit('stream', stream);
   stream.pipe(res);
 
