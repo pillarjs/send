@@ -79,6 +79,22 @@ module.exports.mime = mime
 var listenerCount = EventEmitter.listenerCount ||
   function (emitter, type) { return emitter.listeners(type).length }
 
+
+function responseStatus(res, code, msg)
+{
+  if(msg == null)
+  {
+    msg = statuses[code]
+
+    res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
+  }
+
+  res.statusCode = code
+  res.setHeader('Content-Length', Buffer.byteLength(msg))
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.end(msg)
+}
+
 /**
  * Return a `SendStream` for `req` and `path`.
  *
@@ -278,7 +294,6 @@ SendStream.prototype.error = function error (status, error) {
   }
 
   var res = this.res
-  var msg = statuses[status]
 
   // clear existing headers
   clearHeaders(res)
@@ -289,11 +304,7 @@ SendStream.prototype.error = function error (status, error) {
   }
 
   // send basic response
-  res.statusCode = status
-  res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
-  res.setHeader('Content-Length', Buffer.byteLength(msg))
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.end(msg)
+  responseStatus(res, status)
 }
 
 /**
