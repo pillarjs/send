@@ -460,13 +460,11 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
 
 SendStream.prototype.redirectDirectory = function redirectDirectory(path) {
   if (listenerCount(this, 'directory') !== 0) {
-    this.emit('directory')
-    return
+    return this.emit('directory')
   }
 
   if (this.hasTrailingSlash()) {
-    this.error(403)
-    return
+    return this.error(403)
   }
 
   redirect(this.res, path + '/')
@@ -717,9 +715,8 @@ SendStream.prototype.sendFile = function sendFile (path) {
 
   function next (err) {
     if (self._extensions.length <= i) {
-      return err
-        ? self.onStatError(err)
-        : self.error(404)
+      if (err) return self.onStatError(err);
+      return self.error(404);
     }
 
     var p = path + '.' + self._extensions[i++]
@@ -727,7 +724,9 @@ SendStream.prototype.sendFile = function sendFile (path) {
     debug('stat "%s"', p)
     fs.stat(p, function (err, stat) {
       if (err) return next(err)
+
       if (stat.isDirectory()) return next()
+
       self.emit('file', p, stat)
       self.send(p, stat)
     })
@@ -740,25 +739,27 @@ SendStream.prototype.sendFile = function sendFile (path) {
  * @param {String} path
  * @api private
  */
-SendStream.prototype.sendIndex = function sendIndex (path) {
-  var i = -1
-  var self = this
+SendStream.prototype.sendIndex = function sendIndex(path){
+  var i = 0;
+  var self = this;
 
-  function next (err) {
-    if (++i >= self._index.length) {
-      if (err) return self.onStatError(err)
-      return self.error(404)
+  function next(err){
+    if (self._index.length <= i) {
+      if (err) return self.onStatError(err);
+      return self.error(404);
     }
 
-    var p = join(path, self._index[i])
+    var p = join(path, self._index[i++]);
 
-    debug('stat "%s"', p)
-    fs.stat(p, function (err, stat) {
-      if (err) return next(err)
-      if (stat.isDirectory()) return next()
-      self.emit('file', p, stat)
-      self.send(p, stat)
-    })
+    debug('stat "%s"', p);
+    fs.stat(p, function(err, stat){
+      if (err) return next(err);
+
+      if (stat.isDirectory()) return next();
+
+      self.emit('file', p, stat);
+      self.send(p, stat);
+    });
   }
 
   next()
