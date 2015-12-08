@@ -95,6 +95,19 @@ function responseStatus(res, code, msg)
   res.end(msg)
 }
 
+function redirect(res, loc)
+{
+  // redirect
+  res.setHeader('Content-Type', 'text/html; charset=UTF-8')
+  res.setHeader('Location', loc)
+
+  loc = escapeHtml(loc)
+  var msg = 'Redirecting to <a href="' + loc + '">' + loc + '</a>\n'
+
+  responseStatus(res, 301, msg)
+}
+
+
 /**
  * Return a `SendStream` for `req` and `path`.
  *
@@ -456,17 +469,7 @@ SendStream.prototype.redirect = function redirect (path) {
     return
   }
 
-  var loc = encodeUrl(collapseLeadingSlashes(path + '/'))
-  var msg = 'Redirecting to <a href="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</a>\n'
-  var res = this.res
-
-  // redirect
-  res.statusCode = 301
-  res.setHeader('Content-Type', 'text/html; charset=UTF-8')
-  res.setHeader('Content-Length', Buffer.byteLength(msg))
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.setHeader('Location', loc)
-  res.end(msg)
+  redirect(this.res, path + '/')
 }
 
 /**
