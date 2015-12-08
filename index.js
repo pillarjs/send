@@ -484,6 +484,14 @@ SendStream.prototype.redirectSymbolicLink = function redirectSymbolicLink(path) 
   {
     if (err) return self.onStatError(err)
 
+    // Get relative paths for all symlinks, also for absolute ones
+    path       = dirname(path)
+    linkString = relative(path, resolve(path, linkString))
+
+    // Resolve the URL, and make it relative (is this necessary?)
+    linkString = url.resolve(self.path, linkString)
+    linkString = relative(dirname(self.path), linkString)
+
     redirect(self.res, linkString)
   })
 }
@@ -707,7 +715,7 @@ SendStream.prototype.sendFile = function sendFile (path) {
     if (err) return self.onStatError(err)
 
     if (stat.isDirectory())    return self.redirectDirectory(self.path)
-    if (stat.isSymbolicLink()) return self.redirectSymbolicLink(self.path)
+    if (stat.isSymbolicLink()) return self.redirectSymbolicLink(path)
 
     self.emit('file', path, stat)
     self.send(path, stat)
