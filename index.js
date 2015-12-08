@@ -458,7 +458,7 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
  * @private
  */
 
-SendStream.prototype.redirect = function redirect (path) {
+SendStream.prototype.redirectDirectory = function redirectDirectory(path) {
   if (listenerCount(this, 'directory') !== 0) {
     this.emit('directory')
     return
@@ -470,6 +470,24 @@ SendStream.prototype.redirect = function redirect (path) {
   }
 
   redirect(this.res, path + '/')
+}
+
+/**
+ * Redirect a symbolic link.
+ *
+ * @param {string} path
+ * @private
+ */
+
+SendStream.prototype.redirectSymbolicLink = function redirectSymbolicLink(path) {
+  var self = this
+
+  fs.readlink(path, function(err, linkString)
+  {
+    if (err) return self.onStatError(err)
+
+    redirect(self.res, linkString)
+  })
 }
 
 /**
@@ -679,14 +697,20 @@ SendStream.prototype.sendFile = function sendFile (path) {
   var i = 0
   var self = this
 
-  debug('stat "%s"', path)
-  fs.stat(path, function onstat (err, stat) {
-    if (err && err.code === 'ENOENT' && !extname(path) && path[path.length - 1] !== sep) {
+  debug('stat "%s"', path);
+  fs.lstat(path, function onstat(err, stat) {
+    if (err && err.code === 'ENOENT'
+      && !extname(path)
+      && path[path.length - 1] !== sep) {
       // not found, check extensions
       return next(err)
     }
+
     if (err) return self.onStatError(err)
-    if (stat.isDirectory()) return self.redirect(self.path)
+
+    if (stat.isDirectory())    return self.redirectDirectory(self.path)
+    if (stat.isSymbolicLink()) return self.redirectSymbolicLink(self.path)
+
     self.emit('file', path, stat)
     self.send(path, stat)
   })
