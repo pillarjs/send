@@ -410,14 +410,14 @@ describe('send(file).pipe(res)', function(){
       .set('Range', 'bytes=0-4')
       .expect(206, '12345', done);
     })
-    
+
     it('should be inclusive', function(done){
       request(app)
       .get('/nums')
       .set('Range', 'bytes=0-0')
       .expect(206, '1', done);
     })
-    
+
     it('should set Content-Range', function(done){
       request(app)
       .get('/nums')
@@ -432,7 +432,7 @@ describe('send(file).pipe(res)', function(){
       .set('Range', 'bytes=-3')
       .expect(206, '789', done);
     })
-    
+
     it('should support n-', function(done){
       request(app)
       .get('/nums')
@@ -1063,7 +1063,7 @@ describe('send(file, options)', function(){
         send(req, 'test/fixtures/name.txt', {maxAge: Infinity})
         .pipe(res);
       });
-      
+
       request(app)
       .get('/name.txt')
       .expect('Cache-Control', 'public, max-age=31536000', done)
@@ -1096,6 +1096,23 @@ describe('send(file, options)', function(){
     it('should be configurable', function(done){
       var app = http.createServer(function(req, res){
         send(req, req.url, {root: fixtures, index: 'tobi.html'})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/')
+      .expect(200, '<p>tobi</p>', done);
+    })
+
+    it('should support function', function(done){
+      function index(path) {
+        var res = this.res;
+
+        res.end('<p>tobi</p>')
+      }
+
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, index: index})
         .pipe(res);
       });
 
