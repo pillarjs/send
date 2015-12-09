@@ -31,6 +31,10 @@ var statuses = require('statuses')
 var Stream = require('stream')
 var util = require('util')
 
+var dirname  = path.dirname
+var relative = path.relative
+var url = require('url')
+
 /**
  * Path function references.
  * @private

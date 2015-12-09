@@ -139,7 +139,33 @@ describe('send(file).pipe(res)', function () {
     .expect(301, 'Redirecting to /pets/', done)
   })
 
-  it("should 301 if it's a symbolic link", function(done){
+  it("should not redirect on symbolic links", function(done){
+    var destination = 'name.txt'
+    var path2 = path.join(fixtures, 'symlink')
+
+    fs.symlink(destination, path2, function(error)
+    {
+      if(error && error.code !== 'EEXIST') return done(error)
+
+      request(app)
+      .get('/symlink')
+      .expect(200, 'tobi', function(error)
+      {
+        fs.unlink(path2, function(error2)
+        {
+          done(error || error2)
+        })
+      })
+    })
+  })
+
+  it("should 301 if it's a symbolic link and we want to redirect", function(done){
+    var app = http.createServer(function (req, res) {
+      send(req, req.url, {root: fixtures, redirectSymlinks: true})
+      .on('error', function (err) { res.end(err.statusCode + ' ' + err.code) })
+      .pipe(res)
+    })
+
     var destination = 'name.txt'
     var path2 = path.join(fixtures, 'symlink')
 
