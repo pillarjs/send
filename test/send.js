@@ -1115,6 +1115,23 @@ describe('send(file, options)', function () {
       .expect(200, '<p>tobi</p>', done)
     })
 
+    it('should support function', function(done){
+      function index(path) {
+        var res = this.res;
+
+        res.end('<p>tobi</p>')
+      }
+
+      var app = http.createServer(function(req, res){
+        send(req, req.url, {root: fixtures, index: index})
+        .pipe(res);
+      });
+
+      request(app)
+      .get('/')
+      .expect(200, '<p>tobi</p>', done);
+    })
+
     it('should support disabling', function (done) {
       request(createServer({root: fixtures, index: false}))
       .get('/pets/')
