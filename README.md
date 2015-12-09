@@ -81,9 +81,14 @@ This is skipped if the requested file already has an extension.
 
 ##### index
 
-By default send supports "index.html" files, to disable this
-set `false` or to supply a new index pass a string or an array
-in preferred order.
+By default *send* supports "index.html" files. To disable this, set index option
+to `false`, or you can be able to supply a new index passing a string with the
+filename or an array in the preferred order.
+
+Alternatively, you can pass a function that will generate the index. The
+function will receive the filesystem absolute path and will have the
+`SendStream` instance as `this` object. You should call internally to the
+`this.send()` method or try to mimic its behaviour.
 
 ##### lastModified
 
@@ -229,7 +234,7 @@ var app = http.createServer(function onRequest (req, res) {
 }).listen(3000)
 ```
 
-## License 
+## License
 
 [MIT](LICENSE)
 
