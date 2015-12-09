@@ -96,6 +96,11 @@ Provide a max-age in milliseconds for http caching, defaults to 0.
 This can also be a string accepted by the
 [ms](https://www.npmjs.org/package/ms#readme) module.
 
+##### redirectSymlinks
+
+When `true`, return symlinks as `301 Redirect` instead of the file they are
+pointing. Default is `false`.
+
 ##### root
 
 Serve files relative to `path`.
@@ -229,7 +234,7 @@ var app = http.createServer(function onRequest (req, res) {
 }).listen(3000)
 ```
 
-## License 
+## License
 
 [MIT](LICENSE)
 

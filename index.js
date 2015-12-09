@@ -192,6 +192,8 @@ function SendStream (req, path, options) {
     ? resolve(opts.root)
     : null
 
+  this._redirectSymlinks = opts.redirectSymlinks
+
   if (!this._root && opts.from) {
     this.from(opts.from)
   }
@@ -713,7 +715,9 @@ SendStream.prototype.sendFile = function sendFile (path) {
     if (err) return self.onStatError(err)
 
     if (stat.isDirectory()) return self.redirect(self.path)
-    if (stat.isSymbolicLink()) return self.redirectSymbolicLink(path)
+
+    if (stat.isSymbolicLink() && self._redirectSymlinks)
+      return self.redirectSymbolicLink(path)
 
     self.emit('file', path, stat)
     self.send(path, stat)
