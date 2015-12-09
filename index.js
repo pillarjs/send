@@ -112,9 +112,11 @@ function SendStream(req, path, options) {
 
   this._extensions = normalizeList(opts.extensions, 'extensions option')
 
-  this._index = opts.index !== undefined
-    ? normalizeList(opts.index, 'index option')
-    : ['index.html']
+  this._index = opts.index instanceof Function
+    ? opts.index
+    : opts.index !== undefined
+      ? normalizeList(opts.index, 'index option')
+      : ['index.html']
 
   this._lastModified = opts.lastModified !== undefined
     ? Boolean(opts.lastModified)
@@ -493,6 +495,10 @@ SendStream.prototype.pipe = function(res){
   }
 
   // index file support
+  if (this._index instanceof Function) {
+    this._index(path);
+    return res;
+  }
   if (this._index.length && this.path[this.path.length - 1] === '/') {
     this.sendIndex(path);
     return res;
