@@ -110,9 +110,7 @@ function SendStream(req, path, options) {
     this._dotfiles = undefined
   }
 
-  this._extensions = opts.extensions !== undefined
-    ? normalizeList(opts.extensions, 'extensions option')
-    : []
+  this._extensions = normalizeList(opts.extensions, 'extensions option')
 
   this._index = opts.index !== undefined
     ? normalizeList(opts.index, 'index option')
@@ -186,7 +184,7 @@ SendStream.prototype.hidden = deprecate.function(function hidden(val) {
  */
 
 SendStream.prototype.index = deprecate.function(function index(paths) {
-  var index = !paths ? [] : normalizeList(paths, 'paths argument');
+  var index = normalizeList(paths, 'paths argument');
   debug('index %o', paths);
   this._index = index;
   return this;
