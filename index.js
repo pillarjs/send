@@ -142,9 +142,7 @@ function SendStream (req, path, options) {
     this._dotfiles = undefined
   }
 
-  this._extensions = opts.extensions !== undefined
-    ? normalizeList(opts.extensions, 'extensions option')
-    : []
+  this._extensions = normalizeList(opts.extensions, 'extensions option')
 
   this._index = opts.index !== undefined
     ? normalizeList(opts.index, 'index option')
