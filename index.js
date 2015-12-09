@@ -110,13 +110,13 @@ function SendStream(req, path, options) {
     this._dotfiles = undefined
   }
 
-  this._extensions = opts.extensions !== undefined
-    ? normalizeList(opts.extensions, 'extensions option')
-    : []
+  this._extensions = normalizeList(opts.extensions, 'extensions option')
 
-  this._index = opts.index !== undefined
-    ? normalizeList(opts.index, 'index option')
-    : ['index.html']
+  this._index = opts.index instanceof Function
+    ? opts.index
+    : opts.index !== undefined
+      ? normalizeList(opts.index, 'index option')
+      : ['index.html']
 
   this._lastModified = opts.lastModified !== undefined
     ? Boolean(opts.lastModified)
@@ -186,7 +186,7 @@ SendStream.prototype.hidden = deprecate.function(function hidden(val) {
  */
 
 SendStream.prototype.index = deprecate.function(function index(paths) {
-  var index = !paths ? [] : normalizeList(paths, 'paths argument');
+  var index = normalizeList(paths, 'paths argument');
   debug('index %o', paths);
   this._index = index;
   return this;
@@ -495,6 +495,10 @@ SendStream.prototype.pipe = function(res){
   }
 
   // index file support
+  if (this._index instanceof Function) {
+    this._index(path);
+    return res;
+  }
   if (this._index.length && this.path[this.path.length - 1] === '/') {
     this.sendIndex(path);
     return res;
