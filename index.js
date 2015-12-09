@@ -455,7 +455,7 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
  * @private
  */
 
-SendStream.prototype.redirectDirectory = function redirectDirectory(path) {
+SendStream.prototype.redirect = function redirectDirectory(path) {
   if (listenerCount(this, 'directory') !== 0) {
     return this.emit('directory')
   }
@@ -711,7 +711,7 @@ SendStream.prototype.sendFile = function sendFile (path) {
 
     if (err) return self.onStatError(err)
 
-    if (stat.isDirectory())    return self.redirectDirectory(self.path)
+    if (stat.isDirectory()) return self.redirect(self.path)
     if (stat.isSymbolicLink()) return self.redirectSymbolicLink(path)
 
     self.emit('file', path, stat)
