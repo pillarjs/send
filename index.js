@@ -80,10 +80,8 @@ var listenerCount = EventEmitter.listenerCount ||
   function (emitter, type) { return emitter.listeners(type).length }
 
 
-function responseStatus(res, code, msg)
-{
-  if(msg == null)
-  {
+function responseStatus(res, code, msg) {
+  if(msg == null) {
     msg = statuses[code]
 
     res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
@@ -95,8 +93,7 @@ function responseStatus(res, code, msg)
   res.end(msg)
 }
 
-function redirect(res, loc)
-{
+function redirect(res, loc) {
   // redirect
   res.setHeader('Content-Type', 'text/html; charset=UTF-8')
   res.setHeader('Location', loc)
