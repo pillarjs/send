@@ -85,8 +85,9 @@ var listenerCount = EventEmitter.listenerCount ||
 
 
 function responseStatus(res, code, msg) {
-  if(msg == null) {
-    msg = statuses[code]
+  var errMsg = msg
+  if(errMsg == null) {
+    errMsg = statuses[code]
 
     res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
   }
@@ -94,7 +95,7 @@ function responseStatus(res, code, msg) {
   res.statusCode = code
   res.setHeader('Content-Length', Buffer.byteLength(msg))
   res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.end(msg)
+  res.end(errMsg)
 }
 
 function redirect(res, loc) {
@@ -102,8 +103,8 @@ function redirect(res, loc) {
   res.setHeader('Content-Type', 'text/html; charset=UTF-8')
   res.setHeader('Location', loc)
 
-  loc = escapeHtml(loc)
-  var msg = 'Redirecting to <a href="' + loc + '">' + loc + '</a>\n'
+  var escLoc = escapeHtml(loc)
+  var msg = 'Redirecting to <a href="' + escLoc + '">' + escLoc + '</a>\n'
 
   responseStatus(res, 301, msg)
 }
@@ -468,7 +469,8 @@ SendStream.prototype.redirect = function redirectDirectory(path) {
   }
 
   if (this.hasTrailingSlash()) {
-    return this.error(403)
+    this.error(403)
+    return
   }
 
   redirect(this.res, path + '/')
