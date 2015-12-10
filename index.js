@@ -144,11 +144,9 @@ function SendStream (req, path, options) {
 
   this._extensions = normalizeList(opts.extensions, 'extensions option')
 
-  this._index = opts.index instanceof Function
-    ? opts.index
-    : opts.index !== undefined
-      ? normalizeList(opts.index, 'index option')
-      : ['index.html']
+  this._index = opts.index !== undefined
+    ? normalizeList(opts.index, 'index option')
+    : ['index.html']
 
   this._lastModified = opts.lastModified !== undefined
     ? Boolean(opts.lastModified)
@@ -707,8 +705,20 @@ SendStream.prototype.sendFile = function sendFile (path) {
  * @api private
  */
 SendStream.prototype.sendIndex = function sendIndex (path) {
-  var i = -1
-  var self = this
+  if (listenerCount(this, 'index')) {
+    this.emit('index', path)
+    return
+  }
+
+  // We don't want to render an index, process it as a `file`. Probably it will
+  // return a 404 error.
+  if (!this._index.length) {
+    this.sendFile(path);
+    return this.res;
+  }
+
+  var i = -1;
+  var self = this;
 
   function next (err) {
     if (++i >= self._index.length) {

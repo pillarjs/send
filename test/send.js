@@ -1123,7 +1123,8 @@ describe('send(file, options)', function () {
       }
 
       var app = http.createServer(function(req, res){
-        send(req, req.url, {root: fixtures, index: index})
+        send(req, req.url, {root: fixtures})
+        .on('index', index)
         .pipe(res);
       });
 
