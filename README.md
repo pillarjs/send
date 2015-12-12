@@ -42,7 +42,7 @@ or directory that begins with a dot (".").
 Note: This check is performed on the url pathname.
 It doesn't affect `root` and doesn't actually check if the path existence on disk.
 
-  - `undefined` (legacy) Ignore child dotfiles, but treat parents normally
+  - **default behavior** Ignore child dotfiles, but treat parents normally.
     - 404 `/.well-known`, `/.foo/.bar`
     - 200 `/.well-known/existing-file`
   - `'allow'` No special treatment for dotfiles.
