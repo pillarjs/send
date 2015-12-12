@@ -938,6 +938,18 @@ describe('send(file, options)', function(){
         .expect(403, done)
       })
 
+      it('should 403 for dotfile in directory', function (done) {
+        request(createServer({dotfiles: 'deny', root: fixtures}))
+        .get('/pets/.hidden')
+        .expect(403, done)
+      })
+
+      it('should 403 for dotfile in dotfile directory', function (done) {
+        request(createServer({dotfiles: 'deny', root: fixtures}))
+        .get('/.mine/.hidden')
+        .expect(403, done)
+      })
+
       it('should send files in root dotfile directory', function (done) {
         request(createServer({dotfiles: 'deny', root: path.join(fixtures, '.mine')}))
         .get('/name.txt')
