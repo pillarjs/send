@@ -39,8 +39,8 @@ not the actual file-system path).
 Set how "dotfiles" are treated when encountered. A dotfile is a file
 or directory that begins with a dot (".").
 
-Note: This check is performed on the url pathname.
-It doesn't affect `root` and doesn't actually check if the path existence on disk.
+Note: This check is only performed on the path (of the url).
+It doesn't affect `root` (of the filesystem) and doesn't actually check for dotfiles on disk.
 
   - **default behavior** Ignore child dotfiles, but treat parents normally.
     - 404 `/.well-known`, `/.foo/.bar`
