@@ -1,5 +1,5 @@
-unreleased
-==========
+0.13.1 / 2016-01-16
+===================
 
   * deps: depd@~1.1.0
     - Support web browser loading
