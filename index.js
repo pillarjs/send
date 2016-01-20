@@ -137,6 +137,8 @@ function SendStream(req, path, options) {
   if (!this._root && opts.from) {
     this.from(opts.from)
   }
+
+  mime.default_type = opts.defaultType || null;
 }
 
 /**
@@ -730,9 +732,13 @@ SendStream.prototype.type = function(path){
   var res = this.res;
   if (res.getHeader('Content-Type')) return;
   var type = mime.lookup(path);
-  var charset = mime.charsets.lookup(type);
-  debug('content-type %s', type);
-  res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
+  if (type) {
+    var charset = mime.charsets.lookup(type);
+    debug('content-type %s', type);
+  	res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
+  } else {
+    debug('content-type %s', "NONE");
+  }
 };
 
 /**
