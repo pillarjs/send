@@ -86,7 +86,7 @@ Serve files relative to `path`.
 ##### defaultType
 
 The default value for the `content-type` header when send failed to resolve it from file path.
-By default, no content-type header is set.
+By default, the `content-type` header is not set.
 
 ### Events
 
