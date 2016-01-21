@@ -490,9 +490,15 @@ SendStream.prototype.redirectSymbolicLink = function redirectSymbolicLink(path) 
   {
     if (err) return self.onStatError(err)
 
+    // Get absolute path on the real filesystem of the destination
+    path = dirname(path)
+    var to = resolve(path, linkString)
+
+    // Check destination is not out of files root
+    if(to.indexOf(self._root) !== 0) return this.error(403)
+
     // Get relative paths for all symlinks, also for absolute ones
-    path       = dirname(path)
-    linkString = relative(path, resolve(path, linkString))
+    linkString = relative(path, to)
 
     // Resolve the URL, and make it relative (is this necessary?)
     linkString = url.resolve(self.path, linkString)
