@@ -19,7 +19,9 @@ var destroy = require('destroy')
 var escapeHtml = require('escape-html')
   , parseRange = require('range-parser')
   , Stream = require('stream')
-  , mime = require('mime')
+  , Mime = new require('mime').Mime
+  , charsets = new require('mime').charsets
+  , mime = new Mime()
   , fresh = require('fresh')
   , path = require('path')
   , fs = require('fs')
@@ -733,11 +735,11 @@ SendStream.prototype.type = function(path){
   if (res.getHeader('Content-Type')) return;
   var type = mime.lookup(path);
   if (type) {
-    var charset = mime.charsets.lookup(type);
+    var charset = charsets.lookup(type);
     debug('content-type %s', type);
   	res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
   } else {
-    debug('content-type %s', "NONE");
+    debug('content-type %s', 'NONE');
   }
 };
 
