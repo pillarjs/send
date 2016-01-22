@@ -140,7 +140,7 @@ function SendStream(req, path, options) {
     this.from(opts.from)
   }
 
-  mime.default_type = opts.defaultType || null;
+  this._defaultType = opts.defaultType;
 }
 
 /**
@@ -733,7 +733,7 @@ SendStream.prototype.stream = function(path, options){
 SendStream.prototype.type = function(path){
   var res = this.res;
   if (res.getHeader('Content-Type')) return;
-  var type = mime.lookup(path);
+  var type = mime.lookup(path) || this._defaultType;
   if (type) {
     var charset = charsets.lookup(type);
     debug('content-type %s', type);
