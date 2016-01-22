@@ -32,11 +32,12 @@ var onFinished = require('on-finished')
 var statuses = require('statuses')
 
 /**
- * create _mime instance not sharing default_type with main instance
+ * create a dedicated mime instance that don't share default_type with the main instance
  */
 var _mime = new mime.Mime();
 _mime.types = mime.types;
 _mime.extensions = mime.extensions;
+_mime.charsets = mime.charsets;
 _mime.default_type = null;
 
 /**
@@ -55,7 +56,7 @@ var upPathRegexp = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/
  */
 
 module.exports = send
-module.exports.mime = mime
+module.exports.mime = _mime
 
 /**
  * Shim EventEmitter.listenerCount for node.js < 0.10
@@ -741,7 +742,7 @@ SendStream.prototype.type = function(path){
   if (res.getHeader('Content-Type')) return;
   var type = _mime.lookup(path) || this._defaultType;
   if (type) {
-    var charset = mime.charsets.lookup(type);
+    var charset = _mime.charsets.lookup(type);
     debug('content-type %s', type);
   	res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
   } else {
