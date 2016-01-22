@@ -140,7 +140,7 @@ function SendStream(req, path, options) {
     this.from(opts.from)
   }
 
-  this._defaultType = opts.defaultType;
+  this._defaultType = typeof(opts.defaultType) === 'undefined' ? 'text/plain' : opts.defaultType;
 }
 
 /**
