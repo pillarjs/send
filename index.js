@@ -19,9 +19,7 @@ var destroy = require('destroy')
 var escapeHtml = require('escape-html')
   , parseRange = require('range-parser')
   , Stream = require('stream')
-  , Mime = new require('mime').Mime
-  , charsets = new require('mime').charsets
-  , mime = new Mime()
+  , mime = require('mime')
   , fresh = require('fresh')
   , path = require('path')
   , fs = require('fs')
@@ -32,6 +30,14 @@ var EventEmitter = require('events').EventEmitter;
 var ms = require('ms');
 var onFinished = require('on-finished')
 var statuses = require('statuses')
+
+/**
+ * create _mime instance not sharing default_type with main instance
+ */
+var _mime = new mime.Mime();
+_mime.types = mime.types;
+_mime.extensions = mime.extensions;
+_mime.default_type = null;
 
 /**
  * Variables.
@@ -733,9 +739,9 @@ SendStream.prototype.stream = function(path, options){
 SendStream.prototype.type = function(path){
   var res = this.res;
   if (res.getHeader('Content-Type')) return;
-  var type = mime.lookup(path) || this._defaultType;
+  var type = _mime.lookup(path) || this._defaultType;
   if (type) {
-    var charset = charsets.lookup(type);
+    var charset = mime.charsets.lookup(type);
     debug('content-type %s', type);
   	res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
   } else {
