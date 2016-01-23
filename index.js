@@ -32,6 +32,15 @@ var onFinished = require('on-finished')
 var statuses = require('statuses')
 
 /**
+ * create a dedicated mime instance that don't share default_type with the main instance
+ */
+var _mime = new mime.Mime();
+_mime.types = mime.types;
+_mime.extensions = mime.extensions;
+_mime.charsets = mime.charsets;
+_mime.default_type = null;
+
+/**
  * Variables.
  */
 var extname = path.extname
@@ -47,7 +56,7 @@ var upPathRegexp = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/
  */
 
 module.exports = send
-module.exports.mime = mime
+module.exports.mime = _mime
 
 /**
  * Shim EventEmitter.listenerCount for node.js < 0.10
@@ -137,6 +146,8 @@ function SendStream(req, path, options) {
   if (!this._root && opts.from) {
     this.from(opts.from)
   }
+
+  this._defaultType = typeof(opts.defaultType) === 'undefined' ? 'text/plain' : opts.defaultType;
 }
 
 /**
@@ -729,10 +740,14 @@ SendStream.prototype.stream = function(path, options){
 SendStream.prototype.type = function(path){
   var res = this.res;
   if (res.getHeader('Content-Type')) return;
-  var type = mime.lookup(path);
-  var charset = mime.charsets.lookup(type);
-  debug('content-type %s', type);
-  res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
+  var type = _mime.lookup(path) || this._defaultType;
+  if (type) {
+    var charset = _mime.charsets.lookup(type);
+    debug('content-type %s', type);
+  	res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
+  } else {
+    debug('content-type %s', 'NONE');
+  }
 };
 
 /**

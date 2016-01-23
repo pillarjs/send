@@ -83,6 +83,12 @@ This can also be a string accepted by the
 
 Serve files relative to `path`.
 
+##### defaultType
+
+The default value for the `Content-Type` header when send failed to resolve it from file path.
+Default: 'text/plain'
+If null, false or empty string, the `Content-Type` header is not set.
+
 ### Events
 
 The `SendStream` is an event emitter and will emit the following events:

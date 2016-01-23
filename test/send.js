@@ -1288,6 +1288,78 @@ describe('send(file, options)', function(){
       })
     })
   })
+  
+  describe('defaultType', function(){
+    describe('when not given', function(){
+      it('should set Content-Type with default', function(done){
+        request(app)
+        .get('/nums')
+        .expect('Content-Type', 'text/plain; charset=UTF-8')
+        .expect(200, function(err){
+          if (err) return done(err)
+          request(app)
+          .get('/un.known')
+          .expect('Content-Type', 'text/plain; charset=UTF-8')
+          .expect(200, done)
+        });
+      });
+    });
+    describe('when not null', function(){
+      it('should set Content-Type with defaultType value', function(done){
+        var app = http.createServer(function(req, res){
+          send(req, req.url, {
+            root: fixtures,
+            defaultType: 'application/x-custom'
+          })
+          .pipe(res);
+        });
+
+        request(app)
+        .get('/nums')
+        .expect('Content-Type', 'application/x-custom')
+        .expect(200, function(err){
+          if (err) return done(err)
+          request(app)
+          .get('/un.known')
+          .expect('Content-Type', 'application/x-custom')
+          .expect(200, done)
+        });
+      });
+    });
+    describe('when null', function(){
+      it('should not set Content-Type header', function(done){
+        var app = http.createServer(function(req, res){
+          send(req, req.url, {
+            root: fixtures,
+            defaultType: null
+          })
+          .pipe(res);
+        });
+
+        request(app)
+        .get('/nums')
+        .expect(function(res) {
+          if (res.headers['content-type'])
+            throw new Error('Expecting no Content-Type header, found "'+res.headers['content-type']+'"');
+        })
+        .expect(200)
+        .end(function(err, res){
+          if (err) return done(err)
+          request(app)
+          .get('/un.known')
+          .expect(function(res) {
+            if (res.headers['content-type'])
+              throw new Error('Expecting no Content-Type header, found "'+res.headers['content-type']+'"');
+          })
+          .expect(200)
+          .end(done);
+        });
+      });
+    });
+    
+  });
+  
+  
 })
 
 function createServer(opts, fn) {
