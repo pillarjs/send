@@ -1306,6 +1306,15 @@ describe('send.mime', function () {
       .expect('Content-Type', 'text/plain; charset=UTF-8')
       .expect(200, done)
     })
+
+    it('should not add Content-Type for undefined default', function (done) {
+      send.mime.default_type = undefined
+
+      request(createServer({root: fixtures}))
+      .get('/nums')
+      .expect(shouldNotHaveHeader('Content-Type'))
+      .expect(200, done)
+    })
   })
 })
 

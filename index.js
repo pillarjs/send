@@ -726,11 +726,20 @@ SendStream.prototype.stream = function(path, options){
  * @api private
  */
 
-SendStream.prototype.type = function(path){
+SendStream.prototype.type = function type(path) {
   var res = this.res;
+
   if (res.getHeader('Content-Type')) return;
+
   var type = mime.lookup(path);
+
+  if (!type) {
+    debug('no content-type');
+    return;
+  }
+
   var charset = mime.charsets.lookup(type);
+
   debug('content-type %s', type);
   res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''));
 };
