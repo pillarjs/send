@@ -31,12 +31,6 @@ var app = http.createServer(function(req, res){
   .pipe(res);
 });
 
-describe('send.mime', function(){
-  it('should be exposed', function(){
-    assert(send.mime);
-  })
-})
-
 describe('send(file).pipe(res)', function(){
   it('should stream the file contents', function(done){
     request(app)
@@ -1286,6 +1280,31 @@ describe('send(file, options)', function(){
         .get('/do..ts.txt')
         .expect(200, '...', done);
       })
+    })
+  })
+})
+
+describe('send.mime', function () {
+  it('should be exposed', function () {
+    assert.ok(send.mime)
+  })
+
+  describe('.default_type', function () {
+    before(function () {
+      this.default_type = send.mime.default_type
+    })
+
+    afterEach(function () {
+      send.mime.default_type = this.default_type
+    })
+
+    it('should change the default type', function (done) {
+      send.mime.default_type = 'text/plain'
+
+      request(createServer({root: fixtures}))
+      .get('/nums')
+      .expect('Content-Type', 'text/plain; charset=UTF-8')
+      .expect(200, done)
     })
   })
 })
