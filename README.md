@@ -83,7 +83,7 @@ This can also be a string accepted by the
 
 Serve files relative to `path`.
 
-### Events
+#### Events
 
 The `SendStream` is an event emitter and will emit the following events:
 
@@ -94,7 +94,7 @@ The `SendStream` is an event emitter and will emit the following events:
   - `stream` file streaming has started `(stream)`
   - `end` streaming has completed
 
-### .pipe
+#### .pipe
 
 The `pipe` method is used to pipe the response into the Node.js HTTP response
 object, typically `send(req, path, options).pipe(res)`.
@@ -140,7 +140,7 @@ var app = http.createServer(function(req, res){
 }).listen(3000);
 ```
 
-Serving from a root directory with custom error-handling:
+### Serving from a root directory with custom error-handling
 
 ```js
 var http = require('http');
