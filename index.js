@@ -561,7 +561,7 @@ SendStream.prototype.send = function(path, stat){
     // unsatisfiable
     if (-1 == ranges) {
       if (stat.growing) {
-        return this.error(404);
+        return this.error(202);
       }
       debug('range unsatisfiable');
       res.setHeader('Content-Range', 'bytes */' + stat.size);
