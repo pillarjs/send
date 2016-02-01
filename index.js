@@ -83,6 +83,7 @@ function send(req, path, options) {
 function SendStream(req, path, options) {
   var opts = options || {}
 
+  this.fs = opts.fs || fs
   this.options = opts
   this.path = path
   this.req = req
@@ -559,6 +560,9 @@ SendStream.prototype.send = function(path, stat){
 
     // unsatisfiable
     if (-1 == ranges) {
+      if (stat.growing) {
+        return this.error(404);
+      }
       debug('range unsatisfiable');
       res.setHeader('Content-Range', 'bytes */' + stat.size);
       return this.error(416);
@@ -611,7 +615,7 @@ SendStream.prototype.sendFile = function sendFile(path) {
   var self = this
 
   debug('stat "%s"', path);
-  fs.stat(path, function onstat(err, stat) {
+  this.fs.stat(path, function onstat(err, stat) {
     if (err && err.code === 'ENOENT'
       && !extname(path)
       && path[path.length - 1] !== sep) {
@@ -634,7 +638,7 @@ SendStream.prototype.sendFile = function sendFile(path) {
     var p = path + '.' + self._extensions[i++]
 
     debug('stat "%s"', p)
-    fs.stat(p, function (err, stat) {
+    this.fs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
       self.emit('file', p, stat)
@@ -662,7 +666,7 @@ SendStream.prototype.sendIndex = function sendIndex(path){
     var p = join(path, self._index[i]);
 
     debug('stat "%s"', p);
-    fs.stat(p, function(err, stat){
+    this.fs.stat(p, function(err, stat){
       if (err) return next(err);
       if (stat.isDirectory()) return next();
       self.emit('file', p, stat);
@@ -689,7 +693,7 @@ SendStream.prototype.stream = function(path, options){
   var req = this.req;
 
   // pipe
-  var stream = fs.createReadStream(path, options);
+  var stream = this.fs.createReadStream(path, options);
   this.emit('stream', stream);
   stream.pipe(res);
 
