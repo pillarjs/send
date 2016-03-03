@@ -51,6 +51,12 @@ The default value is _similar_ to `'ignore'`, with the exception that
 this default will not ignore the files within a directory that begins
 with a dot, for backward-compatibility.
 
+##### end
+
+Byte offset at which the stream ends, defaults to the length of the file
+minus 1. The end is inclusive in the stream, meaning `end: 3` will include
+the 4th byte in the stream.
+
 ##### etag
 
 Enable or disable etag generation, defaults to true.
@@ -82,6 +88,11 @@ This can also be a string accepted by the
 ##### root
 
 Serve files relative to `path`.
+
+##### start
+
+Byte offset at which the stream starts, defaults to 0. The start is inclusive,
+meaning `start: 2` will include the 3rd byte in the stream.
 
 #### Events
 
