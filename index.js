@@ -88,7 +88,7 @@ function SendStream(req, path, options) {
   this.req = req
 
   this._etag = opts.etag !== undefined
-    ? Boolean(opts.etag)
+    ? opts.etag
     : true
 
   this._dotfiles = opts.dotfiles !== undefined
@@ -768,7 +768,12 @@ SendStream.prototype.setHeader = function setHeader(path, stat){
   }
 
   if (this._etag && !res.getHeader('ETag')) {
-    var val = etag(stat)
+    var val = null;
+    if(typeof this._etag == 'function') {
+        val = this._etag(stat);
+    } else {
+        val = etag(stat, {weak: this._etag == 'weak' || this._etag === true})
+    }
     debug('etag %s', val)
     res.setHeader('ETag', val)
   }

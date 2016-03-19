@@ -59,7 +59,9 @@ the 4th byte in the stream.
 
 ##### etag
 
-Enable or disable etag generation, defaults to true.
+Accepts `'weak'`, `'strong'`, custom function `function(data){ return etag}`,
+`true` for weak, `false` for disabled.
+Default is true.  
 
 ##### extensions
 
