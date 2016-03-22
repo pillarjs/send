@@ -755,8 +755,9 @@ SendStream.prototype.type = function type(path) {
 
 SendStream.prototype.setHeader = function setHeader(path, stat){
   var res = this.res;
+  var req = this.req;
 
-  this.emit('headers', res, path, stat);
+  this.emit('headers', res, path, stat, req);
 
   if (!res.getHeader('Accept-Ranges')) res.setHeader('Accept-Ranges', 'bytes');
   if (!res.getHeader('Cache-Control')) res.setHeader('Cache-Control', 'public, max-age=' + Math.floor(this._maxage / 1000));
