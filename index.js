@@ -612,14 +612,16 @@ SendStream.prototype.sendFile = function sendFile(path) {
 
   debug('stat "%s"', path);
   fs.stat(path, function onstat(err, stat) {
-    if (err && err.code === 'ENOENT'
+    var isDirectory = stat && stat.isDirectory();
+    if ((err && err.code === 'ENOENT'
       && !extname(path)
-      && path[path.length - 1] !== sep) {
-      // not found, check extensions
+      && path[path.length - 1] !== sep) ||
+      isDirectory) {
+      // not found or is directory, check extensions first
       return next(err)
     }
     if (err) return self.onStatError(err)
-    if (stat.isDirectory()) return self.redirect(self.path)
+    if (isDirectory) return self.redirect(self.path)
     self.emit('file', path, stat)
     self.send(path, stat)
   })
