@@ -812,12 +812,20 @@ describe('send(file, options)', function(){
       .expect(404, done)
     })
 
-    it('should skip directories', function (done) {
+    it('should skip directories if file with same name is not present', function (done) {
       var server = createServer({extensions: ['file', 'dir'], root: fixtures})
 
       request(server)
       .get('/name')
       .expect(404, done)
+    })
+
+    it('should return file with same name as directory given extension', function (done) {
+      var server = createServer({extensions: ['txt'], root: fixtures})
+
+      request(server)
+      .get('/crunchy')
+      .expect(200, 'crunchy', done)
     })
 
     it('should not search if file has extension', function (done) {
