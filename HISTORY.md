@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Send precompressed variant of content based on `Accept-Encoding`
+
 0.15.1 / 2017-03-04
 ===================
 

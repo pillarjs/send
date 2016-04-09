@@ -1232,6 +1232,113 @@ describe('send(file, options)', function () {
     })
   })
 
+  describe('precompressed', function () {
+    it('should not include vary header when no precompressed variants exist', function (done) {
+      request(createServer({precompressed: true, root: fixtures}))
+      .get('/name.txt')
+      .set('Accept-Encoding', 'gzip')
+      .expect(shouldNotHaveHeader('Vary'))
+      .expect(shouldNotHaveHeader('Content-Encoding'))
+      .expect(200, done)
+    })
+
+    it('should include vary header when precompressed variants exist even when accept-encoding not present', function (done) {
+      request(createServer({precompressed: true, root: fixtures}))
+      .get('/name.html')
+      .set('Accept-Encoding', '')
+      .expect('Content-Length', '11')
+      .expect(shouldNotHaveHeader('Content-Encoding'))
+      .expect('Content-Type', 'text/html; charset=UTF-8')
+      .expect('Vary', 'Accept-Encoding', done)
+    })
+
+    it('should prefer server encoding order (bzip2,gzip) when present with equal weight in accept-encoding', function (done) {
+      request(createServer({precompressed: [{encoding: 'bzip2', extension: '.bz2'}, {encoding: 'gzip', extension: '.gz'}], root: fixtures}))
+      .get('/name.html')
+      .set('Accept-Encoding', 'gzip, deflate, bzip2')
+      .expect('Vary', 'Accept-Encoding')
+      .expect('Content-Encoding', 'bzip2')
+      .expect('Content-Type', 'text/html; charset=UTF-8')
+      .expect('Content-Length', '50', done)
+    })
+
+    it('should prefer server encoding order (gzip,bzip2) when present with equal weight in accept-encoding', function (done) {
+      request(createServer({precompressed: [{encoding: 'gzip', extension: '.gz'}, {encoding: 'bzip2', extension: '.bz2'}], root: fixtures}))
+      .get('/name.html')
+      .set('Accept-Encoding', 'bzip2, deflate, gzip')
+      .expect('Vary', 'Accept-Encoding')
+      .expect('Content-Encoding', 'gzip')
+      .expect('Content-Type', 'text/html; charset=UTF-8')
+      .expect('Content-Length', '31', done)
+    })
+
+    it('should send gzip when preferred in accept-encoding', function (done) {
+      request(createServer({precompressed: true, root: fixtures}))
+      .get('/name.html')
+      .set('Accept-Encoding', ' gzip , deflate')
+      .expect('Vary', 'Accept-Encoding')
+      .expect('Content-Encoding', 'gzip')
+      .expect('Content-Type', 'text/html; charset=UTF-8')
+      .expect('Content-Length', '31', done)
+    })
+
+    it('should not send gzip when no-gzip encoding is used', function (done) {
+      request(createServer({precompressed: true, root: fixtures}))
+      .get('/name.html')
+      .set('Accept-Encoding', 'no-gzip, deflate')
+      .expect('Content-Length', '11')
+      .expect('Vary', 'Accept-Encoding', done)
+    })
+
+    it('should consider empty array of precompressed configuration as disabled', function (done) {
+      request(createServer({precompressed: [], root: fixtures}))
+      .get('/name.html')
+      .set('Accept-Encoding', 'gzip')
+      .expect(shouldNotHaveHeader('Content-Encoding'))
+      .expect('Content-Length', '11', done)
+    })
+
+    it('should append to existing Vary header', function (done) {
+      request(http.createServer(function (req, res) {
+        res.setHeader('Vary', 'custom')
+        send(req, req.url, {precompressed: true, root: fixtures})
+        .pipe(res)
+      }))
+      .get('/name.html')
+      .expect('Vary', 'custom, Accept-Encoding', done)
+    })
+
+    it('should honour accept-encoding quality values', function (done) {
+      request(createServer({precompressed: true, root: fixtures}))
+      .get('/name.html')
+      .set('Accept-Encoding', 'gzip;q=0.9, deflate;q=1, bzip2;q=0.1')
+      .expect('Vary', 'Accept-Encoding')
+      .expect('Content-Encoding', 'gzip')
+      .expect('Content-Type', 'text/html; charset=UTF-8')
+      .expect('Content-Length', '31', done)
+    })
+
+    it('should return no encoding if identity encoding preferred in accept-encoding', function (done) {
+      request(createServer({precompressed: true, root: fixtures}))
+      .get('/name.html')
+      .set('Accept-Encoding', 'gzip;q=0.8, identity')
+      .expect('Vary', 'Accept-Encoding')
+      .expect(shouldNotHaveHeader('Content-Encoding'))
+      .expect('Content-Type', 'text/html; charset=UTF-8')
+      .expect('Content-Length', '11', done)
+    })
+
+    it('should return server preferred format for accept-encoding *', function (done) {
+      request(createServer({precompressed: [{encoding: 'bzip2', extension: '.bz2'}, {encoding: 'gzip', extension: '.gz'}], root: fixtures}))
+      .get('/name.html')
+      .set('Accept-Encoding', '*;q=0.9; gzip;q=0.8')
+      .expect('Vary', 'Accept-Encoding')
+      .expect('Content-Encoding', 'bzip2')
+      .expect('Content-Type', 'text/html; charset=UTF-8')
+      .expect('Content-Length', '50', done)
+    })
+  })
+
   describe('index', function () {
     it('should reject numbers', function (done) {
       request(createServer({root: fixtures, index: 42}))
