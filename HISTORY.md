@@ -11,6 +11,9 @@ unreleased
   * deps: range-parser@~1.2.0
     - Fix incorrectly returning -1 when there is at least one valid range
     - perf: remove internal function
+  * deps: statuses@~1.3.0
+    - Add `421 Misdirected Request`
+    - perf: enable strict mode
 
 0.13.2 / 2016-03-05
 ===================
