@@ -1,3 +1,14 @@
+unreleased
+==========
+
+  * deps: http-errors@~1.5.0
+    - Add `HttpError` export, for `err instanceof createError.HttpError`
+    - Support new code `421 Misdirected Request`
+    - Use `setprototypeof` module to replace `__proto__` setting
+    - deps: inherits@2.0.1
+    - deps: statuses@'>= 1.3.0 < 2'
+    - perf: enable strict mode
+
 0.13.2 / 2016-03-05
 ===================
 
