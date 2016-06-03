@@ -8,6 +8,9 @@ unreleased
     - deps: inherits@2.0.1
     - deps: statuses@'>= 1.3.0 < 2'
     - perf: enable strict mode
+  * deps: range-parser@~1.2.0
+    - Fix incorrectly returning -1 when there is at least one valid range
+    - perf: remove internal function
 
 0.13.2 / 2016-03-05
 ===================
