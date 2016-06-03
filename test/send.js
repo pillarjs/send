@@ -404,7 +404,14 @@ describe('send(file).pipe(res)', function(){
       .set('Range', 'bytes=0-4')
       .expect(206, '12345', done);
     })
-    
+
+    it('should ignore non-byte ranges', function (done) {
+      request(app)
+      .get('/nums')
+      .set('Range', 'items=0-4')
+      .expect(200, '123456789', done)
+    })
+
     it('should be inclusive', function(done){
       request(app)
       .get('/nums')

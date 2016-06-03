@@ -34,6 +34,7 @@ var statuses = require('statuses')
 /**
  * Variables.
  */
+var bytesRangeRegexp = /^ *bytes=/
 var extname = path.extname
 var maxMaxAge = 60 * 60 * 24 * 365 * 1000; // 1 year
 var resolve = path.resolve
@@ -546,7 +547,7 @@ SendStream.prototype.send = function(path, stat){
   }
 
   // Range support
-  if (ranges) {
+  if (bytesRangeRegexp.test(ranges)) {
     // parse
     ranges = parseRange(len, ranges, {
       combine: true
