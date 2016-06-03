@@ -491,7 +491,16 @@ describe('send(file).pipe(res)', function(){
         request(app)
         .get('/nums')
         .set('Range', 'bytes=1-1,3-')
+        .expect(shouldNotHaveHeader('Content-Range'))
         .expect(200, '123456789', done);
+      })
+
+      it('should respond with 206 is all ranges can be combined', function (done) {
+        request(app)
+        .get('/nums')
+        .set('Range', 'bytes=1-2,3-5')
+        .expect('Content-Range', 'bytes 1-5/9')
+        .expect(206, '23456', done)
       })
     })
 

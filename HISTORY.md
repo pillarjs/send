@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Attempt to combine multiple ranges into single range
   * deps: http-errors@~1.5.0
     - Add `HttpError` export, for `err instanceof createError.HttpError`
     - Support new code `421 Misdirected Request`

@@ -547,7 +547,10 @@ SendStream.prototype.send = function(path, stat){
 
   // Range support
   if (ranges) {
-    ranges = parseRange(len, ranges);
+    // parse
+    ranges = parseRange(len, ranges, {
+      combine: true
+    })
 
     // If-Range support
     if (!this.isRangeFresh()) {
