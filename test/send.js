@@ -608,6 +608,24 @@ describe('send(file).pipe(res)', function(){
       .set('Range', 'bytes=-2')
       .expect(206, '23', done)
     })
+
+    it('should support start/end with unsatisfiable Range request', function (done) {
+      var app = http.createServer(function (req, res) {
+        var i = parseInt(req.url.slice(1))
+        send(req, 'test/fixtures/nums', { start:i*3, end:i*3+2 })
+        .on('error', function (err) {
+           res.statusCode = err.status
+           res.end(http.STATUS_CODES[err.status])
+        })
+        .pipe(res)
+      })
+
+      request(app)
+      .get('/0')
+      .set('Range', 'bytes=5-9')
+      .expect('Content-Range', 'bytes */3')
+      .expect(416, done)
+    })
   })
 
   describe('.etag()', function(){

@@ -2,6 +2,7 @@ unreleased
 ==========
 
   * Attempt to combine multiple ranges into single range
+  * Fix `Content-Range` header in 416 responses when using `start`/`end` options
   * Ignore non-byte `Range` headers
   * deps: http-errors@~1.5.0
     - Add `HttpError` export, for `err instanceof createError.HttpError`
