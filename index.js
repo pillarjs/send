@@ -38,7 +38,6 @@ var extname = path.extname
 var maxMaxAge = 60 * 60 * 24 * 365 * 1000; // 1 year
 var resolve = path.resolve
 var sep = path.sep
-var toString = Object.prototype.toString
 var upPathRegexp = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/
 
 /**
@@ -429,9 +428,8 @@ SendStream.prototype.redirect = function redirect(path) {
  */
 
 SendStream.prototype.pipe = function(res){
-  var self = this
-    , args = arguments
-    , root = this._root;
+  // root path
+  var root = this._root
 
   // references
   this.res = res;
@@ -686,7 +684,6 @@ SendStream.prototype.stream = function(path, options){
   var finished = false;
   var self = this;
   var res = this.res;
-  var req = this.req;
 
   // pipe
   var stream = fs.createReadStream(path, options);
