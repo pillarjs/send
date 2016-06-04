@@ -253,8 +253,13 @@ SendStream.prototype.error = function error(status, error) {
   var res = this.res
   var msg = statuses[status]
 
-  // wipe all existing headers
-  res._headers = null
+  // clear existing headers
+  clearHeaders(res)
+
+  // add error headers
+  if (error && error.headers) {
+    setHeaders(res, error.headers)
+  }
 
   // send basic response
   res.statusCode = status
@@ -565,8 +570,14 @@ SendStream.prototype.send = function(path, stat){
     // unsatisfiable
     if (-1 == ranges) {
       debug('range unsatisfiable');
-      res.setHeader('Content-Range', 'bytes */' + len);
-      return this.error(416);
+
+      // Content-Range
+      res.setHeader('Content-Range', contentRange('bytes', len))
+
+      // 416 Requested Range Not Satisfiable
+      return this.error(416, {
+        headers: {'Content-Range': res.getHeader('Content-Range')}
+      })
     }
 
     // valid (syntactically invalid/multiple ranges are treated as a regular response)
@@ -574,13 +585,8 @@ SendStream.prototype.send = function(path, stat){
       debug('range %j', ranges);
 
       // Content-Range
-      res.statusCode = 206;
-      res.setHeader('Content-Range', 'bytes '
-        + ranges[0].start
-        + '-'
-        + ranges[0].end
-        + '/'
-        + len);
+      res.statusCode = 206
+      res.setHeader('Content-Range', contentRange('bytes', len, ranges[0]))
 
       offset += ranges[0].start;
       len = ranges[0].end - ranges[0].start + 1;
@@ -779,6 +785,18 @@ SendStream.prototype.setHeader = function setHeader(path, stat){
 };
 
 /**
+ * Clear all headers from a response.
+ *
+ * @param {object} res
+ * @private
+ */
+
+function clearHeaders (res) {
+  res._headers = {}
+  res._headerNames = {}
+}
+
+/**
  * Determine if path parts contain a dotfile.
  *
  * @api private
@@ -792,6 +810,18 @@ function containsDotFile(parts) {
   }
 
   return false
+}
+
+/**
+ * Create a Content-Range header.
+ *
+ * @param {string} type
+ * @param {number} size
+ * @param {array} [range]
+ */
+
+function contentRange (type, size, range) {
+  return type + ' ' + (range ? range.start + '-' + range.end : '*') + '/' + size
 }
 
 /**
@@ -830,4 +860,21 @@ function normalizeList(val, name) {
   }
 
   return list
+}
+
+/**
+ * Set an object of headers on a response.
+ *
+ * @param {object} res
+ * @param {object} headers
+ * @private
+ */
+
+function setHeaders (res, headers) {
+  var keys = Object.keys(headers)
+
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i]
+    res.setHeader(key, headers[key])
+  }
 }

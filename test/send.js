@@ -419,12 +419,12 @@ describe('send(file).pipe(res)', function(){
       .expect(206, '1', done);
     })
     
-    it('should set Content-Range', function(done){
+    it('should set Content-Range', function (done) {
       request(app)
       .get('/nums')
       .set('Range', 'bytes=2-5')
       .expect('Content-Range', 'bytes 2-5/9')
-      .expect(206, done);
+      .expect(206, done)
     })
 
     it('should support -n', function(done){
@@ -575,53 +575,28 @@ describe('send(file).pipe(res)', function(){
   })
 
   describe('when "options" is specified', function(){
-    it('should support start/end', function(done){
-      var app = http.createServer(function(req, res){
-        var i = parseInt(req.url.slice(1));
-        send(req, 'test/fixtures/nums', { start:i*3, end:i*3+2 }).pipe(res);
-      });
-
-      request(app)
-      .get('/1')
-      .expect(200, '456', done);
+    it('should support start/end', function (done) {
+      request(createServer({root: fixtures, start: 3, end: 5}))
+      .get('/nums')
+      .expect(200, '456', done)
     })
 
-    it('should adjust too large end', function(done){
-      var app = http.createServer(function(req, res){
-        var i = parseInt(req.url.slice(1));
-        send(req, 'test/fixtures/nums', { start:i*3, end:90 }).pipe(res);
-      });
-
-      request(app)
-      .get('/1')
-      .expect(200, '456789', done);
+    it('should adjust too large end', function (done) {
+      request(createServer({root: fixtures, start: 3, end: 90}))
+      .get('/nums')
+      .expect(200, '456789', done)
     })
 
-    it('should support start/end with Range request', function(done){
-      var app = http.createServer(function(req, res){
-        var i = parseInt(req.url.slice(1));
-        send(req, 'test/fixtures/nums', { start:i*3, end:i*3+2 }).pipe(res);
-      });
-
-      request(app)
-      .get('/0')
+    it('should support start/end with Range request', function (done) {
+      request(createServer({root: fixtures, start: 0, end: 2}))
+      .get('/nums')
       .set('Range', 'bytes=-2')
       .expect(206, '23', done)
     })
 
     it('should support start/end with unsatisfiable Range request', function (done) {
-      var app = http.createServer(function (req, res) {
-        var i = parseInt(req.url.slice(1))
-        send(req, 'test/fixtures/nums', { start:i*3, end:i*3+2 })
-        .on('error', function (err) {
-           res.statusCode = err.status
-           res.end(http.STATUS_CODES[err.status])
-        })
-        .pipe(res)
-      })
-
-      request(app)
-      .get('/0')
+      request(createServer({root: fixtures, start: 0, end: 2}))
+      .get('/nums')
       .set('Range', 'bytes=5-9')
       .expect('Content-Range', 'bytes */3')
       .expect(416, done)
