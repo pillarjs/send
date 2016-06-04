@@ -30,6 +30,7 @@ var EventEmitter = require('events').EventEmitter;
 var ms = require('ms');
 var onFinished = require('on-finished')
 var statuses = require('statuses')
+var util = require('util')
 
 /**
  * Variables.
@@ -81,6 +82,8 @@ function send(req, path, options) {
  */
 
 function SendStream(req, path, options) {
+  Stream.call(this)
+
   var opts = options || {}
 
   this.options = opts
@@ -140,10 +143,10 @@ function SendStream(req, path, options) {
 }
 
 /**
- * Inherits from `Stream.prototype`.
+ * Inherits from `Stream`.
  */
 
-SendStream.prototype.__proto__ = Stream.prototype;
+util.inherits(SendStream, Stream)
 
 /**
  * Enable or disable etag generation.
