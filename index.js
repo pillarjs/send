@@ -156,12 +156,11 @@ util.inherits(SendStream, Stream)
  * @api public
  */
 
-SendStream.prototype.etag = deprecate.function(function etag(val) {
-  val = Boolean(val);
-  debug('etag %s', val);
-  this._etag = val;
-  return this;
-}, 'send.etag: pass etag as option');
+SendStream.prototype.etag = deprecate.function(function etag (val) {
+  this._etag = Boolean(val)
+  debug('etag %s', this._etag)
+  return this
+}, 'send.etag: pass etag as option')
 
 /**
  * Enable or disable "hidden" (dot) files.
@@ -171,13 +170,12 @@ SendStream.prototype.etag = deprecate.function(function etag(val) {
  * @api public
  */
 
-SendStream.prototype.hidden = deprecate.function(function hidden(val) {
-  val = Boolean(val);
-  debug('hidden %s', val);
-  this._hidden = val;
+SendStream.prototype.hidden = deprecate.function(function hidden (val) {
+  this._hidden = Boolean(val)
   this._dotfiles = undefined
-  return this;
-}, 'send.hidden: use dotfiles option');
+  debug('hidden %s', this._hidden)
+  return this
+}, 'send.hidden: use dotfiles option')
 
 /**
  * Set index `paths`, set to a falsy
@@ -203,11 +201,11 @@ SendStream.prototype.index = deprecate.function(function index(paths) {
  * @api public
  */
 
-SendStream.prototype.root = function(path){
-  path = String(path);
-  this._root = resolve(path)
-  return this;
-};
+SendStream.prototype.root = function root (path) {
+  this._root = resolve(String(path))
+  debug('root %s', this._root)
+  return this
+}
 
 SendStream.prototype.from = deprecate.function(SendStream.prototype.root,
   'send.from: pass root as option');
@@ -223,16 +221,16 @@ SendStream.prototype.root = deprecate.function(SendStream.prototype.root,
  * @api public
  */
 
-SendStream.prototype.maxage = deprecate.function(function maxage(maxAge) {
-  maxAge = typeof maxAge === 'string'
+SendStream.prototype.maxage = deprecate.function(function maxage (maxAge) {
+  this._maxage = typeof maxAge === 'string'
     ? ms(maxAge)
-    : Number(maxAge);
-  if (isNaN(maxAge)) maxAge = 0;
-  if (Infinity == maxAge) maxAge = 60 * 60 * 24 * 365 * 1000;
-  debug('max-age %d', maxAge);
-  this._maxage = maxAge;
-  return this;
-}, 'send.maxage: pass maxAge as option');
+    : Number(maxAge)
+  this._maxage = !isNaN(this._maxage)
+    ? Math.min(Math.max(0, this._maxage), maxMaxAge)
+    : 0
+  debug('max-age %d', this._maxage)
+  return this
+}, 'send.maxage: pass maxAge as option')
 
 /**
  * Emit error with `status`.

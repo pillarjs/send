@@ -19,6 +19,7 @@ unreleased
   * deps: statuses@~1.3.0
     - Add `421 Misdirected Request`
     - perf: enable strict mode
+  * perf: remove argument reassignment
 
 0.13.2 / 2016-03-05
 ===================
