@@ -34,6 +34,12 @@ not the actual file-system path).
 
 #### Options
 
+##### acceptRanges
+
+Enable or disable accepting ranged requests, defaults to true.
+Disabling this will not send `Accept-Ranges` and ignore the contents
+of the `Range` request header.
+
 ##### dotfiles
 
 Set how "dotfiles" are treated when encountered. A dotfile is a file

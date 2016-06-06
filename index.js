@@ -110,6 +110,10 @@ function SendStream(req, path, options) {
   this.path = path
   this.req = req
 
+  this._acceptRanges = opts.acceptRanges !== undefined
+    ? Boolean(opts.acceptRanges)
+    : true
+
   this._etag = opts.etag !== undefined
     ? Boolean(opts.etag)
     : true
@@ -573,7 +577,7 @@ SendStream.prototype.send = function(path, stat){
   }
 
   // Range support
-  if (BYTES_RANGE_REGEXP.test(ranges)) {
+  if (this._acceptRanges && BYTES_RANGE_REGEXP.test(ranges)) {
     // parse
     ranges = parseRange(len, ranges, {
       combine: true
@@ -581,13 +585,13 @@ SendStream.prototype.send = function(path, stat){
 
     // If-Range support
     if (!this.isRangeFresh()) {
-      debug('range stale');
-      ranges = -2;
+      debug('range stale')
+      ranges = -2
     }
 
     // unsatisfiable
     if (-1 == ranges) {
-      debug('range unsatisfiable');
+      debug('range unsatisfiable')
 
       // Content-Range
       res.setHeader('Content-Range', contentRange('bytes', len))
@@ -600,14 +604,15 @@ SendStream.prototype.send = function(path, stat){
 
     // valid (syntactically invalid/multiple ranges are treated as a regular response)
     if (-2 != ranges && ranges.length === 1) {
-      debug('range %j', ranges);
+      debug('range %j', ranges)
 
       // Content-Range
       res.statusCode = 206
       res.setHeader('Content-Range', contentRange('bytes', len, ranges[0]))
 
-      offset += ranges[0].start;
-      len = ranges[0].end - ranges[0].start + 1;
+      // adjust for requested range
+      offset += ranges[0].start
+      len = ranges[0].end - ranges[0].start + 1
     }
   }
 
@@ -786,7 +791,11 @@ SendStream.prototype.setHeader = function setHeader(path, stat){
 
   this.emit('headers', res, path, stat);
 
-  if (!res.getHeader('Accept-Ranges')) res.setHeader('Accept-Ranges', 'bytes');
+  if (this._acceptRanges && !res.getHeader('Accept-Ranges')) {
+    debug('accept ranges')
+    res.setHeader('Accept-Ranges', 'bytes')
+  }
+
   if (!res.getHeader('Cache-Control')) res.setHeader('Cache-Control', 'public, max-age=' + Math.floor(this._maxage / 1000));
 
   if (this._lastModified && !res.getHeader('Last-Modified')) {

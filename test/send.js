@@ -742,6 +742,24 @@ describe('send(file).pipe(res)', function(){
 })
 
 describe('send(file, options)', function () {
+  describe('acceptRanges', function () {
+    it('should support disabling accept-ranges', function (done) {
+      request(createServer({acceptRanges: false, root: fixtures}))
+      .get('/nums')
+      .expect(shouldNotHaveHeader('Accept-Ranges'))
+      .expect(200, done)
+    })
+
+    it('should ignore requested range', function (done) {
+      request(createServer({acceptRanges: false, root: fixtures}))
+      .get('/nums')
+      .set('Range', 'bytes=0-2')
+      .expect(shouldNotHaveHeader('Accept-Ranges'))
+      .expect(shouldNotHaveHeader('Content-Range'))
+      .expect(200, '123456789', done)
+    })
+  })
+
   describe('etag', function () {
     it('should support disabling etags', function (done) {
       request(createServer({etag: false, root: fixtures}))
