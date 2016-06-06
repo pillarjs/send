@@ -23,8 +23,6 @@ var escapeHtml = require('escape-html')
   , fresh = require('fresh')
   , path = require('path')
   , fs = require('fs')
-  , normalize = path.normalize
-  , join = path.join
 var etag = require('etag')
 var EventEmitter = require('events').EventEmitter;
 var ms = require('ms');
@@ -33,14 +31,36 @@ var statuses = require('statuses')
 var util = require('util')
 
 /**
- * Variables.
+ * Path function references.
+ * @private
  */
-var bytesRangeRegexp = /^ *bytes=/
+
 var extname = path.extname
-var maxMaxAge = 60 * 60 * 24 * 365 * 1000; // 1 year
+var join = path.join
+var normalize = path.normalize
 var resolve = path.resolve
 var sep = path.sep
-var upPathRegexp = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/
+
+/**
+ * Regular expression for identifying a bytes Range header.
+ * @private
+ */
+
+var BYTES_RANGE_REGEXP = /^ *bytes=/
+
+/**
+ * Maximum value allowed for the max age.
+ * @private
+ */
+
+var MAX_MAXAGE = 60 * 60 * 24 * 365 * 1000 // 1 year
+
+/**
+ * Regular expression to match a path with a directory up component.
+ * @private
+ */
+
+var UP_PATH_REGEXP = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/
 
 /**
  * Module exports.
@@ -130,7 +150,7 @@ function SendStream(req, path, options) {
     ? ms(this._maxage)
     : Number(this._maxage)
   this._maxage = !isNaN(this._maxage)
-    ? Math.min(Math.max(0, this._maxage), maxMaxAge)
+    ? Math.min(Math.max(0, this._maxage), MAX_MAXAGE)
     : 0
 
   this._root = opts.root
@@ -226,7 +246,7 @@ SendStream.prototype.maxage = deprecate.function(function maxage (maxAge) {
     ? ms(maxAge)
     : Number(maxAge)
   this._maxage = !isNaN(this._maxage)
-    ? Math.min(Math.max(0, this._maxage), maxMaxAge)
+    ? Math.min(Math.max(0, this._maxage), MAX_MAXAGE)
     : 0
   debug('max-age %d', this._maxage)
   return this
@@ -451,7 +471,7 @@ SendStream.prototype.pipe = function(res){
   var parts
   if (root !== null) {
     // malicious path
-    if (upPathRegexp.test(normalize('.' + sep + path))) {
+    if (UP_PATH_REGEXP.test(normalize('.' + sep + path))) {
       debug('malicious path "%s"', path)
       return this.error(403)
     }
@@ -464,7 +484,7 @@ SendStream.prototype.pipe = function(res){
     parts = path.substr(root.length).split(sep)
   } else {
     // ".." is malicious without "root"
-    if (upPathRegexp.test(path)) {
+    if (UP_PATH_REGEXP.test(path)) {
       debug('malicious path "%s"', path)
       return this.error(403)
     }
@@ -553,7 +573,7 @@ SendStream.prototype.send = function(path, stat){
   }
 
   // Range support
-  if (bytesRangeRegexp.test(ranges)) {
+  if (BYTES_RANGE_REGEXP.test(ranges)) {
     // parse
     ranges = parseRange(len, ranges, {
       combine: true
