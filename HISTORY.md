@@ -1,5 +1,5 @@
-unreleased
-==========
+0.14.0 / 2016-06-06
+===================
 
   * Add `acceptRanges` option
   * Add `cacheControl` option
