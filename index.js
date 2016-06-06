@@ -114,6 +114,10 @@ function SendStream(req, path, options) {
     ? Boolean(opts.acceptRanges)
     : true
 
+  this._cacheControl = opts.cacheControl !== undefined
+    ? Boolean(opts.cacheControl)
+    : true
+
   this._etag = opts.etag !== undefined
     ? Boolean(opts.etag)
     : true
@@ -796,7 +800,11 @@ SendStream.prototype.setHeader = function setHeader(path, stat){
     res.setHeader('Accept-Ranges', 'bytes')
   }
 
-  if (!res.getHeader('Cache-Control')) res.setHeader('Cache-Control', 'public, max-age=' + Math.floor(this._maxage / 1000));
+  if (this._cacheControl && !res.getHeader('Cache-Control')) {
+    var cacheControl = 'public, max-age=' + Math.floor(this._maxage / 1000)
+    debug('cache-control %s', cacheControl)
+    res.setHeader('Cache-Control', cacheControl)
+  }
 
   if (this._lastModified && !res.getHeader('Last-Modified')) {
     var modified = stat.mtime.toUTCString()

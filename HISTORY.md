@@ -2,6 +2,7 @@ unreleased
 ==========
 
   * Add `acceptRanges` option
+  * Add `cacheControl` option
   * Attempt to combine multiple ranges into single range
   * Correctly inherit from `Stream` class
   * Fix `Content-Range` header in 416 responses when using `start`/`end` options

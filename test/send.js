@@ -760,6 +760,22 @@ describe('send(file, options)', function () {
     })
   })
 
+  describe('cacheControl', function () {
+    it('should support disabling cache-control', function (done) {
+      request(createServer({cacheControl: false, root: fixtures}))
+      .get('/nums')
+      .expect(shouldNotHaveHeader('Cache-Control'))
+      .expect(200, done)
+    })
+
+    it('should ignore maxAge option', function (done) {
+      request(createServer({cacheControl: false, maxAge: 1000, root: fixtures}))
+      .get('/nums')
+      .expect(shouldNotHaveHeader('Cache-Control'))
+      .expect(200, done)
+    })
+  })
+
   describe('etag', function () {
     it('should support disabling etags', function (done) {
       request(createServer({etag: false, root: fixtures}))
