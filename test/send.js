@@ -19,15 +19,8 @@ var app = http.createServer(function (req, res) {
     res.end(http.STATUS_CODES[err.status])
   }
 
-  function redirect () {
-    res.statusCode = 301
-    res.setHeader('Location', req.url + '/')
-    res.end('Redirecting to ' + req.url + '/')
-  }
-
   send(req, req.url, {root: fixtures})
   .on('error', error)
-  .on('directory', redirect)
   .pipe(res)
 })
 
@@ -137,13 +130,6 @@ describe('send(file).pipe(res)', function () {
     request(app)
     .get('/meow')
     .expect(200, '404 ENOENT', done)
-  })
-
-  it('should 301 if the directory exists', function (done) {
-    request(app)
-    .get('/pets')
-    .expect('Location', '/pets/')
-    .expect(301, 'Redirecting to /pets/', done)
   })
 
   it('should not override content-type', function (done) {
@@ -322,7 +308,33 @@ describe('send(file).pipe(res)', function () {
     })
   })
 
+  describe('when "directory" listeners are present', function () {
+    it('should emit "directory" event sending directory', function (done) {
+      var server = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('directory', onDirectory)
+        .pipe(res)
+      })
+
+      function onDirectory () {
+        this.res.statusCode = 400
+        this.res.end('No directory for you')
+      }
+
+      request(server)
+      .get('/pets')
+      .expect(400, 'No directory for you', done)
+    })
+  })
+
   describe('when no "directory" listeners are present', function () {
+    it('should redirect directories to trailing slash', function (done) {
+      request(createServer({root: fixtures}))
+      .get('/pets')
+      .expect('Location', '/pets/')
+      .expect(301, done)
+    })
+
     it('should respond with an HTML redirect', function (done) {
       request(createServer({root: fixtures}))
       .get('/pets')
