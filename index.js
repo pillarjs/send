@@ -16,6 +16,7 @@ var createError = require('http-errors')
 var debug = require('debug')('send')
 var deprecate = require('depd')('send')
 var destroy = require('destroy')
+var encodeUrl = require('encodeurl')
 var escapeHtml = require('escape-html')
 var etag = require('etag')
 var EventEmitter = require('events').EventEmitter
@@ -444,7 +445,7 @@ SendStream.prototype.redirect = function redirect (path) {
     return
   }
 
-  var loc = collapseLeadingSlashes(path + '/')
+  var loc = encodeUrl(collapseLeadingSlashes(path + '/'))
   var msg = 'Redirecting to <a href="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</a>\n'
   var res = this.res
 

@@ -349,6 +349,19 @@ describe('send(file).pipe(res)', function () {
       .expect('Location', '/pets/')
       .expect(301, done)
     })
+
+    it('should respond with an HTML redirect', function (done) {
+      var app = http.createServer(function (req, res) {
+        send(req, req.url.replace('/snow', '/snow ☃'), {root: 'test/fixtures'})
+        .pipe(res)
+      })
+
+      request(app)
+      .get('/snow')
+      .expect('Location', '/snow%20%E2%98%83/')
+      .expect('Content-Type', /html/)
+      .expect(301, 'Redirecting to <a href="/snow%20%E2%98%83/">/snow%20%E2%98%83/</a>\n', done)
+    })
   })
 
   describe('when no "error" listeners are present', function () {

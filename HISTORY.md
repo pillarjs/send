@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Fix redirect error when `path` contains raw non-URL characters
   * Fix redirect when `path` starts with multiple forward slashes
 
 0.14.0 / 2016-06-06
