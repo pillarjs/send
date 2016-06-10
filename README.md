@@ -164,10 +164,11 @@ $ npm test
 
 ```js
 var http = require('http')
+var parseUrl = require('parseurl')
 var send = require('send')
 
 var app = http.createServer(function onRequest (req, res) {
-  send(req, req.url).pipe(res)
+  send(req, parseUrl(req).pathname).pipe(res)
 }).listen(3000)
 ```
 
@@ -175,6 +176,7 @@ var app = http.createServer(function onRequest (req, res) {
 
 ```js
 var http = require('http')
+var parseUrl = require('parseurl')
 var send = require('send')
 
 // Default unknown types to text/plain
@@ -186,7 +188,7 @@ send.mime.define({
 })
 
 var app = http.createServer(function onRequest (req, res) {
-  send(req, req.url).pipe(res)
+  send(req, parseUrl(req).pathname).pipe(res)
 }).listen(3000)
 ```
 
@@ -194,8 +196,8 @@ var app = http.createServer(function onRequest (req, res) {
 
 ```js
 var http = require('http')
+var parseUrl = require('parseurl')
 var send = require('send')
-var url = require('url')
 
 var app = http.createServer(function onRequest (req, res) {
   // your custom error-handling logic:
@@ -219,7 +221,7 @@ var app = http.createServer(function onRequest (req, res) {
 
   // transfer arbitrary files from within
   // /www/example.com/public/*
-  send(req, url.parse(req.url).pathname, {root: '/www/example.com/public'})
+  send(req, parseUrl(req).pathname, {root: '/www/example.com/public'})
   .on('error', error)
   .on('directory', redirect)
   .on('headers', headers)
