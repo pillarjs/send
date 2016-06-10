@@ -342,6 +342,13 @@ describe('send(file).pipe(res)', function () {
       .expect('Content-Type', /html/)
       .expect(301, 'Redirecting to <a href="/pets/">/pets/</a>\n', done)
     })
+
+    it('should not redirect to protocol-relative locations', function (done) {
+      request(createServer({root: fixtures}))
+      .get('//pets')
+      .expect('Location', '/pets/')
+      .expect(301, done)
+    })
   })
 
   describe('when no "error" listeners are present', function () {

@@ -444,7 +444,7 @@ SendStream.prototype.redirect = function redirect (path) {
     return
   }
 
-  var loc = path + '/'
+  var loc = collapseLeadingSlashes(path + '/')
   var msg = 'Redirecting to <a href="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</a>\n'
   var res = this.res
 
@@ -843,6 +843,24 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
 function clearHeaders (res) {
   res._headers = {}
   res._headerNames = {}
+}
+
+/**
+ * Collapse all leading slashes into a single slash
+ *
+ * @param {string} str
+ * @private
+ */
+function collapseLeadingSlashes (str) {
+  for (var i = 0; i < str.length; i++) {
+    if (str[i] !== '/') {
+      break
+    }
+  }
+
+  return i > 1
+    ? '/' + str.substr(i)
+    : str
 }
 
 /**

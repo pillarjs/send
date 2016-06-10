@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Fix redirect when `path` starts with multiple forward slashes
+
 0.14.0 / 2016-06-06
 ===================
 
