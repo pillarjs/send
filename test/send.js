@@ -536,32 +536,31 @@ describe('send(file).pipe(res)', function () {
           res.on('data', function (chunk) {
             body += chunk
           })
-          res.on('end', function () {
-            next(null, body)
-          })
         })
         .expect(206)
         .end(function (err, res) {
           if (err) return done(err)
-          var parts = body.split('--' + res.boundary).slice(1, -1).map(function (part) {
-            var headBody = part.trim().split(/\r\n\r\n/g)
-            return {
-              headers: headBody[0].split(/\r\n/).reduce(function (memo, header) {
-                var keyVal = header.split(/:\s+/)
-                memo[keyVal[0]] = keyVal[1]
-                return memo
-              }, {}),
-              body: headBody[1]
-            }
+          setTimeout(function () {
+            var parts = body.split('--' + res.boundary).slice(1, -1).map(function (part) {
+              var headBody = part.trim().split(/\r\n\r\n/g)
+              return {
+                headers: headBody[0].split(/\r\n/).reduce(function (memo, header) {
+                  var keyVal = header.split(/:\s+/)
+                  memo[keyVal[0]] = keyVal[1]
+                  return memo
+                }, {}),
+                body: headBody[1]
+              }
+            })
+            assert.equal(parts.length, 3)
+            assert.equal(parts[0].headers['Content-Range'], 'bytes 0-1/9')
+            assert.equal(parts[0].body, '12')
+            assert.equal(parts[1].headers['Content-Range'], 'bytes 3-3/9')
+            assert.equal(parts[1].body, '4')
+            assert.equal(parts[2].headers['Content-Range'], 'bytes 5-8/9')
+            assert.equal(parts[2].body, '6789')
+            done()
           })
-          assert.equal(parts.length, 3)
-          assert.equal(parts[0].headers['Content-Range'], 'bytes 0-1/9')
-          assert.equal(parts[0].body, '12')
-          assert.equal(parts[1].headers['Content-Range'], 'bytes 3-3/9')
-          assert.equal(parts[1].body, '4')
-          assert.equal(parts[2].headers['Content-Range'], 'bytes 5-8/9')
-          assert.equal(parts[2].body, '6789')
-          done()
         })
       })
     })
