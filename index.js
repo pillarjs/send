@@ -36,6 +36,7 @@ var util = require('util')
  * @private
  */
 
+var basename = path.basename
 var extname = path.extname
 var join = path.join
 var normalize = path.normalize
@@ -620,17 +621,32 @@ SendStream.prototype.send = function send (path, stat) {
       })
     }
 
-    // valid (syntactically invalid/multiple ranges are treated as a regular response)
-    if (ranges !== -2 && ranges.length === 1) {
+    // valid (syntactically invalid treated as a regular response)
+    if (ranges !== -2) {
       debug('range %j', ranges)
 
       // Content-Range
       res.statusCode = 206
-      res.setHeader('Content-Range', contentRange('bytes', len, ranges[0]))
 
-      // adjust for requested range
-      offset += ranges[0].start
-      len = ranges[0].end - ranges[0].start + 1
+      if (ranges.length === 1) {
+        res.setHeader('Content-Range', contentRange('bytes', len, ranges[0]))
+        // adjust for requested range
+        offset += ranges[0].start
+        len = ranges[0].end - ranges[0].start + 1
+      } else if (ranges.length > 1) {
+        opts.boundary = 'BYTERANGE_' + Date.now()
+        opts.contentType = res.getHeader('Content-Type')
+        opts.fileSize = stat.size
+        opts.ranges = ranges
+        res.setHeader('Content-Disposition', 'attachment; filename="' + basename(path) + '"')
+        res.setHeader('Content-Type', 'multipart/byteranges; boundary=' + opts.boundary)
+        res.statusCode = 206
+        // HEAD support
+        if (req.method === 'HEAD') {
+          return res.end()
+        }
+        return this.streamMultipart(path, opts)
+      }
     }
   }
 
@@ -767,6 +783,73 @@ SendStream.prototype.stream = function stream (path, options) {
   // end
   stream.on('end', function onend () {
     self.emit('end')
+  })
+}
+
+/**
+ * Multipart Stream `path` to the response.
+ *
+ * @param {String} path
+ * @param {Object} options
+ * @api private
+ */
+
+SendStream.prototype.streamMultipart = function streamMultipart (path, options) {
+  var finished = false
+  var self = this
+  var res = this.res
+  var fileSize = options.fileSize
+  var BOUNDARY = options.boundary
+  var CRLF = '\r\n'
+  var stream
+
+  fs.open(path, 'r', function beginMultipartStream (err, fd) {
+    if (err) {
+      return self.onStatError(err)
+    }
+    // iterate through all the ranges
+    var stopSeries = asyncSeries(options.ranges, function sendpart (range, idx, next) {
+      if (finished) return next()
+      var partHeaders = (
+        (idx ? CRLF : '') +
+        '--' + BOUNDARY + CRLF +
+        'Content-Type: ' + options.contentType + CRLF +
+        'Content-Range: ' + contentRange('bytes', fileSize, range) + CRLF +
+        CRLF
+      )
+      range.fd = fd
+      range.autoClose = false
+      stream = fs.createReadStream(path, range)
+      self.emit('stream', stream)
+      res.write(partHeaders, function pipestream () {
+        stream.on('error', next)
+        stream.on('end', function onpartend () { next() })
+        stream.pipe(res, { end: false })
+      })
+    }, function sentparts (err) {
+      if (finished) return
+      safelyCloseFileDescriptor(fd)
+      if (err) {
+        // clean up stream
+        finished = true
+        destroy(stream)
+
+        // error
+        self.onStatError(err)
+      } else {
+        res.end(CRLF + '--' + BOUNDARY + '--', function onend () {
+          self.emit('end')
+        })
+      }
+    })
+
+    // response finished, done with the fd
+    onFinished(res, function onfinished () {
+      finished = true
+      destroy(stream)
+      stopSeries()
+      safelyCloseFileDescriptor(fd)
+    })
   })
 }
 
@@ -944,5 +1027,50 @@ function setHeaders (res, headers) {
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i]
     res.setHeader(key, headers[key])
+  }
+}
+
+/**
+ * Applies the function `iteratee` to each item in `array` asynchronously in serial.
+ * The iteratee is called with an item from the array, its index, and a callback (next)
+ * for when it has finished. If the iteratee passes an error to its callback,
+ * the main callback (done) is immediately called with the error.
+ *
+ * @param {array} array
+ * @param {function} iteratee
+ * @param {function} [done]
+ * @private
+ */
+
+function asyncSeries (array, iteratee, done) {
+  var current = 0
+  var total = array.length
+  function next (err) {
+    if (err || total <= current) return endSeries(err)
+    var idx = current++
+    return setImmediate(function () { iteratee(array[idx], idx, next) })
+  }
+  function endSeries (err) {
+    if (typeof done === 'function') {
+      done(err)
+      done = null
+      current = total
+    }
+  }
+  next()
+  return endSeries
+}
+
+/**
+ * Safely closes a node file descriptor
+ *
+ * @param {fd} number
+ * @private
+ */
+function safelyCloseFileDescriptor (fd) {
+  try {
+    return fs.close(fd)
+  } catch (e) {
+    return false
   }
 }

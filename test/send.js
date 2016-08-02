@@ -518,20 +518,51 @@ describe('send(file).pipe(res)', function () {
     })
 
     describe('when multiple ranges', function () {
-      it('should respond with 200 and the entire contents', function (done) {
-        request(app)
-        .get('/nums')
-        .set('Range', 'bytes=1-1,3-')
-        .expect(shouldNotHaveHeader('Content-Range'))
-        .expect(200, '123456789', done)
-      })
-
-      it('should respond with 206 is all ranges can be combined', function (done) {
+      it('should respond with normal 206 if all ranges can be combined', function (done) {
         request(app)
         .get('/nums')
         .set('Range', 'bytes=1-2,3-5')
         .expect('Content-Range', 'bytes 1-5/9')
         .expect(206, '23456', done)
+      })
+
+      it('should respond with multipart 206 if all ranges cannot be combined', function (done) {
+        var body = ''
+        request(app)
+        .get('/nums')
+        .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+        .buffer(true)
+        .parse(function (res, next) {
+          res.on('data', function (chunk) {
+            body += chunk
+          })
+          res.on('end', function () {
+            next(null, body)
+          })
+        })
+        .expect(206)
+        .end(function (err, res) {
+          if (err) return done(err)
+          var parts = body.split('--' + res.boundary).slice(1, -1).map(function (part) {
+            var headBody = part.trim().split(/\r\n\r\n/g)
+            return {
+              headers: headBody[0].split(/\r\n/).reduce(function (memo, header) {
+                var keyVal = header.split(/:\s+/)
+                memo[keyVal[0]] = keyVal[1]
+                return memo
+              }, {}),
+              body: headBody[1]
+            }
+          })
+          assert.equal(parts.length, 3)
+          assert.equal(parts[0].headers['Content-Range'], 'bytes 0-1/9')
+          assert.equal(parts[0].body, '12')
+          assert.equal(parts[1].headers['Content-Range'], 'bytes 3-3/9')
+          assert.equal(parts[1].body, '4')
+          assert.equal(parts[2].headers['Content-Range'], 'bytes 5-8/9')
+          assert.equal(parts[2].body, '6789')
+          done()
+        })
       })
     })
 
