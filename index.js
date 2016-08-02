@@ -808,7 +808,7 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
       return self.onStatError(err)
     }
     // iterate through all the ranges
-    var stopSeries = asyncSeries(options.ranges, function sendpart (range, idx, next) {
+    asyncSeries(options.ranges, function (range, idx, next) {
       if (finished) return next()
       var partHeaders = (
         (idx ? CRLF : '') +
@@ -843,12 +843,10 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
       }
     })
 
-    // response finished, done with the fd
-    onFinished(res, function onfinished () {
+    // response finished
+    onFinished(res, function () {
       finished = true
       destroy(stream)
-      stopSeries()
-      safelyCloseFileDescriptor(fd)
     })
   })
 }
@@ -1045,20 +1043,11 @@ function setHeaders (res, headers) {
 function asyncSeries (array, iteratee, done) {
   var current = 0
   var total = array.length
-  function next (err) {
-    if (err || total <= current) return endSeries(err)
-    var idx = current++
-    return setImmediate(function () { iteratee(array[idx], idx, next) })
-  }
-  function endSeries (err) {
-    if (typeof done === 'function') {
-      done(err)
-      done = null
-      current = total
-    }
-  }
-  next()
-  return endSeries
+  var delay = typeof setImmediate === 'function' ? setImmediate : setTimeout
+  return (function next (err) {
+    if (err || total <= current) typeof done === 'function' ? done(err) : null
+    delay(function () { iteratee(array[current], current++, next) })
+  })()
 }
 
 /**
