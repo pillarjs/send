@@ -541,7 +541,9 @@ describe('send(file).pipe(res)', function () {
         .end(function (err, res) {
           if (err) return done(err)
           setTimeout(function () {
-            var parts = body.split('--' + res.boundary).slice(1, -1).map(function (part) {
+            var parts = body.split('--' + res.boundary).filter(function (part) {
+              return part && part !== '--'
+            }).map(function (part) {
               var headBody = part.trim().split(/\r\n\r\n/g)
               return {
                 headers: headBody[0].split(/\r\n/).reduce(function (memo, header) {
@@ -559,6 +561,53 @@ describe('send(file).pipe(res)', function () {
             assert.equal(parts[1].body, '4')
             assert.equal(parts[2].headers['Content-Range'], 'bytes 5-8/9')
             assert.equal(parts[2].body, '6789')
+            done()
+          })
+        })
+      })
+
+      it('should stop streaming parts if any stream failed', function (done) {
+        var body = ''
+        var app = http.createServer(function (req, res) {
+          send(req, req.url, {root: 'test/fixtures'})
+          .on('stream', function (stream) {
+            // simulate file error
+            process.nextTick(function () {
+              stream.emit('error', new Error('boom!'))
+            })
+          })
+          .pipe(res)
+        })
+
+        request(app)
+        .get('/nums')
+        .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+        .buffer(true)
+        .parse(function (res, next) {
+          res.on('data', function (chunk) {
+            body += chunk
+          })
+        })
+        .expect(206)
+        .end(function (err, res) {
+          if (err) return done(err)
+          setTimeout(function () {
+            var parts = body.split('--' + res.boundary).filter(function (part) {
+              return part && part !== '--'
+            }).map(function (part) {
+              var headBody = part.trim().split(/\r\n\r\n/g)
+              return {
+                headers: headBody[0].split(/\r\n/).reduce(function (memo, header) {
+                  var keyVal = header.split(/:\s+/)
+                  memo[keyVal[0]] = keyVal[1]
+                  return memo
+                }, {}),
+                body: headBody[1]
+              }
+            })
+            assert.equal(parts.length, 1)
+            assert.equal(parts[0].headers['Content-Range'], 'bytes 0-1/9')
+            assert.equal(parts[0].body, 'Internal Server Error')
             done()
           })
         })

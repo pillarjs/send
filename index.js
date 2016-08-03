@@ -281,6 +281,9 @@ SendStream.prototype.error = function error (status, error) {
   var res = this.res
   var msg = statuses[status]
 
+  // do not set headers if they have already been sent
+  if (res._headerSent) return res.end(msg)
+
   // clear existing headers
   clearHeaders(res)
 
@@ -810,6 +813,7 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
     // iterate through all the ranges
     asyncSeries(options.ranges, function (range, idx, next) {
       if (finished) return next()
+      var isLast = idx >= range.length - 1
       var partHeaders = (
         (idx ? CRLF : '') +
         '--' + BOUNDARY + CRLF +
@@ -818,17 +822,16 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
         CRLF
       )
       range.fd = fd
-      range.autoClose = false
+      range.autoClose = isLast
       stream = fs.createReadStream(path, range)
-      self.emit('stream', stream)
+      stream.on('error', next)
+      stream.on('end', function onpartend () { next() })
+      if (!idx) self.emit('stream', stream)
       res.write(partHeaders, function pipestream () {
-        stream.on('error', next)
-        stream.on('end', function onpartend () { next() })
+        if (finished) return next()
         stream.pipe(res, { end: false })
       })
     }, function sentparts (err) {
-      if (finished) return
-      safelyCloseFileDescriptor(fd)
       if (err) {
         // clean up stream
         finished = true
@@ -837,6 +840,7 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
         // error
         self.onStatError(err)
       } else {
+        if (finished) return
         res.end(CRLF + '--' + BOUNDARY + '--', function onend () {
           self.emit('end')
         })
@@ -845,6 +849,7 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
 
     // response finished
     onFinished(res, function () {
+      console.log('res closed')
       finished = true
       destroy(stream)
     })
@@ -1046,20 +1051,22 @@ function asyncSeries (array, iteratee, done) {
   var delay = typeof setImmediate === 'function' ? setImmediate : setTimeout
   return (function next (err) {
     if (err || total <= current) typeof done === 'function' ? done(err) : null
-    delay(function () { iteratee(array[current], current++, next) })
+    else delay(function () { iteratee(array[current], current++, once(next)) })
   })()
 }
 
 /**
- * Safely closes a node file descriptor
+ * Only allow a function to run once
  *
- * @param {fd} number
+ * @param {fn} function
  * @private
  */
-function safelyCloseFileDescriptor (fd) {
-  try {
-    return fs.close(fd)
-  } catch (e) {
-    return false
+
+function once (fn) {
+  var invoked = false
+  return function () {
+    if (invoked) return invoked
+    invoked = true
+    return fn.apply(null, arguments)
   }
 }
