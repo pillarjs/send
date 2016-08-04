@@ -175,13 +175,15 @@ describe('send(file).pipe(res)', function () {
     .expect(404, done)
   })
 
-  it('should 500 on file stream error', function (done) {
+  it('should handle response ending before streaming finished', function (done) {
     var app = http.createServer(function (req, res) {
       send(req, req.url, {root: 'test/fixtures'})
       .on('stream', function (stream) {
         // simulate file error
-        process.nextTick(function () {
-          stream.emit('error', new Error('boom!'))
+        process.nextTick(function (){
+          res.end(function () {
+            stream.emit('error', new Error('boom!'))
+          })
         })
       })
       .pipe(res)
@@ -189,8 +191,35 @@ describe('send(file).pipe(res)', function () {
 
     request(app)
     .get('/name.txt')
-    .expect(500, done)
+    .expect(200, done)
   })
+
+  var ver = process.version
+  .match(/^v(\d+)\.(\d+)\.(\d+)/)
+  .slice(1)
+  .map(function (i) {
+    return parseInt(i, 10)
+  })
+
+  // This test appears to be broken only on Node 0.8
+  if (ver[0] > 0 || ver[1] > 8) {
+    it('should 500 on file stream error', function (done) {
+      var app = http.createServer(function (req, res) {
+        send(req, req.url, {root: 'test/fixtures'})
+        .on('stream', function (stream) {
+          // simulate file error
+          process.nextTick(function () {
+            stream.emit('error', new Error('boom!'))
+          })
+        })
+        .pipe(res)
+      })
+
+      request(app)
+      .get('/name.txt')
+      .expect(500, done)
+    })
+  }
 
   describe('"headers" event', function () {
     it('should fire when sending file', function (done) {
@@ -518,97 +547,156 @@ describe('send(file).pipe(res)', function () {
     })
 
     describe('when multiple ranges', function () {
-      it('should respond with normal 206 if all ranges can be combined', function (done) {
-        request(app)
-        .get('/nums')
-        .set('Range', 'bytes=1-2,3-5')
-        .expect('Content-Range', 'bytes 1-5/9')
-        .expect(206, '23456', done)
+
+      describe('which can be combined', function () {
+        it('should respond with normal 206', function (done) {
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=1-2,3-5')
+          .expect('Content-Range', 'bytes 1-5/9')
+          .expect(206, '23456', done)
+        })
       })
 
-      it('should respond with multipart 206 if all ranges cannot be combined', function (done) {
-        var body = ''
-        request(app)
-        .get('/nums')
-        .set('Range', 'bytes=0-1,3-3,5-6,7-8')
-        .buffer(true)
-        .parse(function (res, next) {
-          res.on('data', function (chunk) {
-            body += chunk
-          })
-        })
-        .expect(206)
-        .end(function (err, res) {
-          if (err) return done(err)
-          setTimeout(function () {
-            var parts = body.split('--' + res.boundary).filter(function (part) {
-              return part && part !== '--'
-            }).map(function (part) {
-              var headBody = part.trim().split(/\r\n\r\n/g)
-              return {
-                headers: headBody[0].split(/\r\n/).reduce(function (memo, header) {
-                  var keyVal = header.split(/:\s+/)
-                  memo[keyVal[0]] = keyVal[1]
-                  return memo
-                }, {}),
-                body: headBody[1]
-              }
+      describe('which cannot be combined', function () {
+        it('should respond with multipart 206', function (done) {
+          var body = ''
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .buffer(true)
+          .parse(function (res, next) {
+            res.on('data', function (chunk) {
+              body += chunk
             })
-            assert.equal(parts.length, 3)
-            assert.equal(parts[0].headers['Content-Range'], 'bytes 0-1/9')
-            assert.equal(parts[0].body, '12')
-            assert.equal(parts[1].headers['Content-Range'], 'bytes 3-3/9')
-            assert.equal(parts[1].body, '4')
-            assert.equal(parts[2].headers['Content-Range'], 'bytes 5-8/9')
-            assert.equal(parts[2].body, '6789')
-            done()
+          })
+          .expect(206)
+          .end(function (err, res) {
+            if (err) return done(err)
+            setTimeout(function () {
+              var parts = parseMultipartBody(body, res.boundary)
+              assert.equal(parts.length, 3)
+              assert.equal(parts[0].headers['Content-Range'], 'bytes 0-1/9')
+              assert.equal(parts[0].body, '12')
+              assert.equal(parts[1].headers['Content-Range'], 'bytes 3-3/9')
+              assert.equal(parts[1].body, '4')
+              assert.equal(parts[2].headers['Content-Range'], 'bytes 5-8/9')
+              assert.equal(parts[2].body, '6789')
+              done()
+            })
           })
         })
-      })
 
-      it('should stop streaming parts if any stream failed', function (done) {
-        var body = ''
-        var app = http.createServer(function (req, res) {
-          send(req, req.url, {root: 'test/fixtures'})
-          .on('stream', function (stream) {
+        it('should support HEAD', function (done) {
+          request(app)
+          .head('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .expect('Content-Disposition', 'attachment; filename="nums"')
+          .expect('Content-Type', /multipart\/byteranges;\sboundary=BYTERANGE_[0-9]+/)
+          .expect(206, undefined, done)
+        })
+
+        it('should 500 on file open error', function (done) {
+          var open = fs.open
+          fs.open = function (path, mode, cb) {
             // simulate file error
-            process.nextTick(function () {
+            setTimeout(function () {
+              var error = new Error('EMFILE: too many open files, open \'' + path + '\'')
+              error.code = 'EMFILE'
+              cb(error)
+            })
+          }
+          var app = http.createServer(function (req, res) {
+            send(req, req.url, {root: 'test/fixtures'}).pipe(res)
+          })
+
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .expect(500, function (err, res) {
+            fs.open = open
+            done(err, res)
+          })
+        })
+
+        it('should 500 on file stream error', function (done) {
+          var app = http.createServer(function (req, res) {
+            send(req, req.url, {root: 'test/fixtures'})
+            .on('stream', function (stream) {
+              // simulate file error
               stream.emit('error', new Error('boom!'))
             })
+            .pipe(res)
           })
-          .pipe(res)
+
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .expect(500, done)
         })
 
-        request(app)
-        .get('/nums')
-        .set('Range', 'bytes=0-1,3-3,5-6,7-8')
-        .buffer(true)
-        .parse(function (res, next) {
-          res.on('data', function (chunk) {
-            body += chunk
-          })
-        })
-        .expect(206)
-        .end(function (err, res) {
-          if (err) return done(err)
-          setTimeout(function () {
-            var parts = body.split('--' + res.boundary).filter(function (part) {
-              return part && part !== '--'
-            }).map(function (part) {
-              var headBody = part.trim().split(/\r\n\r\n/g)
-              return {
-                headers: headBody[0].split(/\r\n/).reduce(function (memo, header) {
-                  var keyVal = header.split(/:\s+/)
-                  memo[keyVal[0]] = keyVal[1]
-                  return memo
-                }, {}),
-                body: headBody[1]
-              }
+        it('should handle response ending before streaming finished', function (done) {
+          var body = ''
+          var app = http.createServer(function (req, res) {
+            send(req, req.url, {root: 'test/fixtures'})
+            .on('stream', function (stream) {
+              // simulate file error
+              stream.on('end', function () {
+                res.end()
+              })
             })
-            assert.equal(parts.length, 1)
-            assert.equal(parts[0].headers['Content-Range'], 'bytes 0-1/9')
-            assert.equal(parts[0].body, 'Internal Server Error')
-            done()
+            .pipe(res)
+          })
+
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .buffer(true)
+          .parse(function (res, next) {
+            res.on('data', function (chunk) {
+              body += chunk
+            })
+          })
+          .expect(206, done)
+        })
+
+        it('should stop streaming parts if any stream failed beyond the first', function (done) {
+          var body = ''
+          var app = http.createServer(function (req, res) {
+            send(req, req.url, {root: 'test/fixtures'})
+            .on('stream', function (stream) {
+              // simulate file error
+              var invoked = false
+              stream.on('readable', function () {
+                if (invoked) return false
+                process.nextTick(function () {
+                  stream.emit('error', new Error('boom!'))
+                })
+                invoked = true
+              })
+            })
+            .pipe(res)
+          })
+
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .buffer(true)
+          .parse(function (res, next) {
+            res.on('data', function (chunk) {
+              body += chunk
+            })
+          })
+          .expect(206)
+          .end(function (err, res) {
+            if (err) return done(err)
+            setTimeout(function () {
+              var parts = parseMultipartBody(body, res.boundary)
+              assert.equal(parts.length, 1)
+              assert.equal(parts[0].headers['Content-Range'], 'bytes 0-1/9')
+              assert.equal(parts[0].body, '12')
+              done()
+            })
           })
         })
       })
@@ -698,7 +786,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should support start/end with unsatisfiable Range request', function (done) {
-      request(createServer({root: fixtures, start: 0, end: 2}))
+      request(createServer({root: fixtures, start: 0, end: 2, hidden: false}))
       .get('/nums')
       .set('Range', 'bytes=5-9')
       .expect('Content-Range', 'bytes */3')
@@ -1373,4 +1461,20 @@ function shouldNotHaveHeader (header) {
   return function (res) {
     assert.ok(!(header.toLowerCase() in res.headers), 'should not have header ' + header)
   }
+}
+
+function parseMultipartBody (body, boundary) {
+  return body.split('--' + boundary).filter(function (part) {
+    return part && part !== '--'
+  }).map(function (part) {
+    var headBody = part.trim().split(/\r\n\r\n/g)
+    return {
+      headers: headBody[0].split(/\r\n/).reduce(function (memo, header) {
+        var keyVal = header.split(/:\s+/)
+        memo[keyVal[0]] = keyVal[1]
+        return memo
+      }, {}),
+      body: headBody[1]
+    }
+  })
 }

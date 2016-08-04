@@ -282,7 +282,7 @@ SendStream.prototype.error = function error (status, error) {
   var msg = statuses[status]
 
   // do not set headers if they have already been sent
-  if (res._headerSent) return res.end(msg)
+  if (res._headerSent) return res.end()
 
   // clear existing headers
   clearHeaders(res)
@@ -646,9 +646,11 @@ SendStream.prototype.send = function send (path, stat) {
         res.statusCode = 206
         // HEAD support
         if (req.method === 'HEAD') {
-          return res.end()
+          res.end()
+          return
         }
-        return this.streamMultipart(path, opts)
+        this.streamMultipart(path, opts)
+        return
       }
     }
   }
@@ -762,9 +764,11 @@ SendStream.prototype.stream = function stream (path, options) {
   // pipe
   var stream = fs.createReadStream(path, options)
   this.emit('stream', stream)
-  stream.pipe(res)
+  stream.once('readable', function () {
+    stream.pipe(res)
+  })
 
-  // response finished, done with the fd
+  // response finished
   onFinished(res, function onfinished () {
     finished = true
     destroy(stream)
@@ -827,11 +831,12 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
       stream.on('error', next)
       stream.on('end', function onpartend () { next() })
       if (!idx) self.emit('stream', stream)
-      res.write(partHeaders, function pipestream () {
-        if (finished) return next()
+      stream.once('readable', function onpartreadable () {
+        res.write(partHeaders)
         stream.pipe(res, { end: false })
       })
     }, function sentparts (err) {
+      if (finished) return
       if (err) {
         // clean up stream
         finished = true
@@ -840,7 +845,6 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
         // error
         self.onStatError(err)
       } else {
-        if (finished) return
         res.end(CRLF + '--' + BOUNDARY + '--', function onend () {
           self.emit('end')
         })
@@ -849,7 +853,6 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
 
     // response finished
     onFinished(res, function () {
-      console.log('res closed')
       finished = true
       destroy(stream)
     })
@@ -1050,7 +1053,7 @@ function asyncSeries (array, iteratee, done) {
   var total = array.length
   var delay = typeof setImmediate === 'function' ? setImmediate : setTimeout
   return (function next (err) {
-    if (err || total <= current) typeof done === 'function' ? done(err) : null
+    if (err || total <= current) done(err)
     else delay(function () { iteratee(array[current], current++, once(next)) })
   })()
 }
