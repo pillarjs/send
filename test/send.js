@@ -583,7 +583,7 @@ describe('send(file).pipe(res)', function () {
               assert.equal(parts[2].headers['Content-Range'], 'bytes 5-8/9')
               assert.equal(parts[2].body, '6789')
               done()
-            })
+            }, 20)
           })
         })
 
@@ -619,12 +619,14 @@ describe('send(file).pipe(res)', function () {
           })
         })
 
-        it('should 500 on file stream error', function (done) {
+        it('should handle file stream error after response partially written', function (done) {
+          var body = ''
           var app = http.createServer(function (req, res) {
             send(req, req.url, {root: 'test/fixtures'})
             .on('stream', function (stream) {
-              // simulate file error
-              stream.emit('error', new Error('boom!'))
+              process.nextTick(function () {
+                stream.emit('error', new Error('boom!'))
+              })
             })
             .pipe(res)
           })
@@ -632,7 +634,13 @@ describe('send(file).pipe(res)', function () {
           request(app)
           .get('/nums')
           .set('Range', 'bytes=0-1,3-3,5-6,7-8')
-          .expect(500, done)
+          .buffer(true)
+          .parse(function (res, next) {
+            res.on('data', function (chunk) {
+              body += chunk
+            })
+          })
+          .expect(206, done)
         })
 
         it('should handle response ending before streaming finished', function (done) {

@@ -764,7 +764,7 @@ SendStream.prototype.stream = function stream (path, options) {
   // pipe
   var stream = fs.createReadStream(path, options)
   this.emit('stream', stream)
-  stream.once('readable', function () {
+  stream.once('open', function () {
     stream.pipe(res)
   })
 
@@ -831,10 +831,8 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
       stream.on('error', next)
       stream.on('end', function onpartend () { next() })
       if (!idx) self.emit('stream', stream)
-      stream.once('readable', function onpartreadable () {
-        res.write(partHeaders)
-        stream.pipe(res, { end: false })
-      })
+      res.write(partHeaders)
+      stream.pipe(res, { end: false })
     }, function sentparts (err) {
       if (finished) return
       if (err) {
