@@ -582,7 +582,7 @@ describe('send(file).pipe(res)', function () {
               assert.equal(parts[2].headers['Content-Range'], 'bytes 5-8/9')
               assert.equal(parts[2].body, '6789')
               done()
-            }, 20)
+            }, 100)
           })
         })
 
