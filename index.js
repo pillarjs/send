@@ -823,7 +823,7 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
     // iterate through all the ranges
     asyncSeries(options.ranges, function (range, idx, next) {
       if (finished) return next()
-      var isLast = idx >= range.length - 1
+      var isLast = idx >= options.ranges.length - 1
       var partHeaders = (
         (idx ? CRLF : '') +
         '--' + BOUNDARY + CRLF +
@@ -1065,7 +1065,7 @@ function asyncSeries (array, iteratee, done) {
 /**
  * Only allow a function to run once
  *
- * @param {fn} function
+ * @param {function} fn
  * @private
  */
 

@@ -637,7 +637,7 @@ describe('send(file).pipe(res)', function () {
           var app = http.createServer(function (req, res) {
             send(req, req.url, {root: 'test/fixtures'})
             .on('stream', function (stream) {
-              // simulate file error
+              // simulate response end
               stream.on('end', function () {
                 res.end()
               })
