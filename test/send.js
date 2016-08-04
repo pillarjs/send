@@ -194,32 +194,22 @@ describe('send(file).pipe(res)', function () {
     .expect(200, done)
   })
 
-  var ver = process.version
-  .match(/^v(\d+)\.(\d+)\.(\d+)/)
-  .slice(1)
-  .map(function (i) {
-    return parseInt(i, 10)
-  })
-
-  // This test appears to be broken only on Node 0.8
-  if (ver[0] > 0 || ver[1] > 8) {
-    it('should 500 on file stream error', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url, {root: 'test/fixtures'})
-        .on('stream', function (stream) {
-          // simulate file error
-          process.nextTick(function () {
-            stream.emit('error', new Error('boom!'))
-          })
+  it('should 500 on file stream error', function (done) {
+    var app = http.createServer(function (req, res) {
+      send(req, req.url, {root: 'test/fixtures'})
+      .on('stream', function (stream) {
+        // simulate file error
+        process.nextTick(function () {
+          stream.emit('error', new Error('boom!'))
         })
-        .pipe(res)
       })
-
-      request(app)
-      .get('/name.txt')
-      .expect(500, done)
+      .pipe(res)
     })
-  }
+
+    request(app)
+    .get('/name.txt')
+    .expect(500, done)
+  })
 
   describe('"headers" event', function () {
     it('should fire when sending file', function (done) {
@@ -582,7 +572,7 @@ describe('send(file).pipe(res)', function () {
               assert.equal(parts[2].headers['Content-Range'], 'bytes 5-8/9')
               assert.equal(parts[2].body, '6789')
               done()
-            }, 100)
+            }, 20)
           })
         })
 
@@ -673,13 +663,8 @@ describe('send(file).pipe(res)', function () {
             send(req, req.url, {root: 'test/fixtures'})
             .on('stream', function (stream) {
               // simulate file error
-              var invoked = false
-              stream.on('readable', function () {
-                if (invoked) return false
-                process.nextTick(function () {
-                  stream.emit('error', new Error('boom!'))
-                })
-                invoked = true
+              stream.on('end', function () {
+                stream.emit('error', new Error('boom!'))
               })
             })
             .pipe(res)

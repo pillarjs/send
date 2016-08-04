@@ -73,6 +73,12 @@ module.exports = send
 module.exports.mime = mime
 
 /**
+ * Is the node version is < 0.10
+ */
+
+var isLegacyNodeVersion = Boolean(EventEmitter.listenerCount)
+
+/**
  * Shim EventEmitter.listenerCount for node.js < 0.10
  */
 
@@ -825,11 +831,12 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
         'Content-Range: ' + contentRange('bytes', fileSize, range) + CRLF +
         CRLF
       )
-      range.fd = fd
+      /* istanbul ignore next */
+      range.fd = isLegacyNodeVersion && idx ? null : fd
       range.autoClose = isLast
       stream = fs.createReadStream(path, range)
       stream.on('error', next)
-      stream.on('end', function onpartend () { next() })
+      stream.on('end', function onpartend () { process.nextTick(next) })
       if (!idx) self.emit('stream', stream)
       res.write(partHeaders)
       stream.pipe(res, { end: false })
@@ -1049,10 +1056,9 @@ function setHeaders (res, headers) {
 function asyncSeries (array, iteratee, done) {
   var current = 0
   var total = array.length
-  var delay = typeof setImmediate === 'function' ? setImmediate : setTimeout
   return (function next (err) {
     if (err || total <= current) done(err)
-    else delay(function () { iteratee(array[current], current++, once(next)) })
+    else process.nextTick(function () { iteratee(array[current], current++, once(next)) })
   })()
 }
 
