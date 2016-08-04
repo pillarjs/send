@@ -180,8 +180,8 @@ describe('send(file).pipe(res)', function () {
       send(req, req.url, {root: 'test/fixtures'})
       .on('stream', function (stream) {
         // simulate file error
-        process.nextTick(function (){
-          res.end(function () {
+        process.nextTick(function () {
+          res.end('', function () {
             stream.emit('error', new Error('boom!'))
           })
         })
@@ -547,7 +547,6 @@ describe('send(file).pipe(res)', function () {
     })
 
     describe('when multiple ranges', function () {
-
       describe('which can be combined', function () {
         it('should respond with normal 206', function (done) {
           request(app)
