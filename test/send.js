@@ -136,7 +136,7 @@ describe('send(file).pipe(res)', function () {
     request(app)
     .get('/pets')
     .expect('Location', '/pets/')
-    .expect(301, 'Redirecting to /pets/', done)
+    .expect(301, 'Redirecting to <a href="/pets/">/pets/</a>\n', done)
   })
 
   it("should not redirect on symbolic links", function(done){
