@@ -145,7 +145,9 @@ function SendStream (req, path, options) {
   this._extensions = normalizeList(opts.extensions, 'extensions option')
 
   this._index = opts.index !== undefined
-    ? normalizeList(opts.index, 'index option')
+    ? (opts.index instanceof Function
+      ? opts.index
+      : normalizeList(opts.index, 'index option'))
     : ['index.html']
 
   this._lastModified = opts.lastModified !== undefined
