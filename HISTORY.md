@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Add `res` and `path` arguments to `directory` event
   * Remove usage of `res._headers` private field
     - Improves compatibility with Node.js 8 nightly
   * Send complete HTML document in redirect & error responses

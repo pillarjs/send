@@ -114,7 +114,7 @@ meaning `start: 2` will include the 3rd byte in the stream.
 The `SendStream` is an event emitter and will emit the following events:
 
   - `error` an error occurred `(err)`
-  - `directory` a directory was requested
+  - `directory` a directory was requested `(res, path)`
   - `file` a file was requested `(path, stat)`
   - `headers` the headers are about to be set on a file `(res, path, stat)`
   - `stream` file streaming has started `(stream)`

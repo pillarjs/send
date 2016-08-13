@@ -308,21 +308,37 @@ describe('send(file).pipe(res)', function () {
   })
 
   describe('when "directory" listeners are present', function () {
-    it('should emit "directory" event sending directory', function (done) {
+    it('should be called when sending directory', function (done) {
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('directory', onDirectory)
         .pipe(res)
       })
 
-      function onDirectory () {
-        this.res.statusCode = 400
-        this.res.end('No directory for you')
+      function onDirectory (res) {
+        res.statusCode = 400
+        res.end('No directory for you')
       }
 
       request(server)
       .get('/pets')
       .expect(400, 'No directory for you', done)
+    })
+
+    it('should be called with path', function (done) {
+      var server = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('directory', onDirectory)
+        .pipe(res)
+      })
+
+      function onDirectory (res, dirPath) {
+        res.end(path.normalize(dirPath))
+      }
+
+      request(server)
+      .get('/pets')
+      .expect(200, path.normalize(path.join(fixtures, 'pets')), done)
     })
   })
 

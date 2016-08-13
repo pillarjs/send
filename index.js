@@ -446,8 +446,10 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
  */
 
 SendStream.prototype.redirect = function redirect (path) {
+  var res = this.res
+
   if (listenerCount(this, 'directory') !== 0) {
-    this.emit('directory')
+    this.emit('directory', res, path)
     return
   }
 
@@ -456,10 +458,9 @@ SendStream.prototype.redirect = function redirect (path) {
     return
   }
 
-  var loc = encodeUrl(collapseLeadingSlashes(path + '/'))
+  var loc = encodeUrl(collapseLeadingSlashes(this.path + '/'))
   var doc = createHtmlDocument('Redirecting', 'Redirecting to <a href="' + escapeHtml(loc) + '">' +
     escapeHtml(loc) + '</a>')
-  var res = this.res
 
   // redirect
   res.statusCode = 301
@@ -685,7 +686,7 @@ SendStream.prototype.sendFile = function sendFile (path) {
       return next(err)
     }
     if (err) return self.onStatError(err)
-    if (stat.isDirectory()) return self.redirect(self.path)
+    if (stat.isDirectory()) return self.redirect(path)
     self.emit('file', path, stat)
     self.send(path, stat)
   })
