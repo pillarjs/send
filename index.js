@@ -541,8 +541,8 @@ SendStream.prototype.pipe = function pipe (res) {
 
   // index file support
   if (this._index instanceof Function) {
-    this._index(path);
-    return res;
+    this._index(path)
+    return res
   }
   if (this._index.length && this.path[this.path.length - 1] === '/') {
     this.sendIndex(path)
@@ -713,12 +713,12 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
   // We don't want to render an index, process it as a `file`. Probably it will
   // return a 404 error.
   if (!this._index.length) {
-    this.sendFile(path);
-    return this.res;
+    this.sendFile(path)
+    return this.res
   }
 
-  var i = -1;
-  var self = this;
+  var i = -1
+  var self = this
 
   function next (err) {
     if (++i >= self._index.length) {
