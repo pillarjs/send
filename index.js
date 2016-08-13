@@ -549,6 +549,7 @@ SendStream.prototype.pipe = function pipe (res) {
     return res
   }
 
+  // Render a file, or an index as a file
   this.sendFile(path)
   return res
 }
@@ -708,13 +709,6 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
   if (listenerCount(this, 'index')) {
     this.emit('index', path)
     return
-  }
-
-  // We don't want to render an index, process it as a `file`. Probably it will
-  // return a 404 error.
-  if (!this._index.length) {
-    this.sendFile(path)
-    return this.res
   }
 
   var i = -1
