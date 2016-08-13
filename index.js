@@ -30,7 +30,7 @@ var statuses = require('statuses')
 var Stream = require('stream')
 var util = require('util')
 
-var dirname  = path.dirname
+var dirname = path.dirname
 var relative = path.relative
 var url = require('url')
 
@@ -82,10 +82,9 @@ module.exports.mime = mime
 var listenerCount = EventEmitter.listenerCount ||
   function (emitter, type) { return emitter.listeners(type).length }
 
-
-function responseStatus(res, code, msg) {
+function responseStatus (res, code, msg) {
   var errMsg = msg
-  if(errMsg == null) {
+  if (errMsg == null) {
     errMsg = statuses[code]
 
     res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
@@ -97,7 +96,7 @@ function responseStatus(res, code, msg) {
   res.end(errMsg)
 }
 
-function redirect(res, loc) {
+function redirect (res, loc) {
   // redirect
   res.setHeader('Content-Type', 'text/html; charset=UTF-8')
   res.setHeader('Location', loc)
@@ -107,7 +106,6 @@ function redirect(res, loc) {
 
   responseStatus(res, 301, msg)
 }
-
 
 /**
  * Return a `SendStream` for `req` and `path`.
@@ -461,7 +459,7 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
  * @private
  */
 
-SendStream.prototype.redirect = function redirectDirectory(path) {
+SendStream.prototype.redirect = function redirectDirectory (path) {
   if (listenerCount(this, 'directory') !== 0) {
     this.emit('directory')
     return
@@ -482,11 +480,10 @@ SendStream.prototype.redirect = function redirectDirectory(path) {
  * @private
  */
 
-SendStream.prototype.redirectSymbolicLink = function redirectSymbolicLink(path) {
+SendStream.prototype.redirectSymbolicLink = function redirectSymbolicLink (path) {
   var self = this
 
-  fs.readlink(path, function(err, linkString)
-  {
+  fs.readlink(path, function (err, linkString) {
     if (err) return self.onStatError(err)
 
     // Get absolute path on the real filesystem of the destination
@@ -494,7 +491,7 @@ SendStream.prototype.redirectSymbolicLink = function redirectSymbolicLink(path) 
     var to = resolve(path, linkString)
 
     // Check destination is not out of files root
-    if(to.indexOf(self._root) !== 0) return this.error(403)
+    if (to.indexOf(self._root) !== 0) return this.error(403)
 
     // Get relative paths for all symlinks, also for absolute ones
     linkString = relative(path, to)
@@ -714,11 +711,11 @@ SendStream.prototype.sendFile = function sendFile (path) {
   var i = 0
   var self = this
 
-  debug('stat "%s"', path);
-  fs.lstat(path, function onstat(err, stat) {
-    if (err && err.code === 'ENOENT'
-      && !extname(path)
-      && path[path.length - 1] !== sep) {
+  debug('stat "%s"', path)
+  fs.lstat(path, function onstat (err, stat) {
+    if (err && err.code === 'ENOENT' &&
+        !extname(path) &&
+        path[path.length - 1] !== sep) {
       // not found, check extensions
       return next(err)
     }
@@ -727,8 +724,9 @@ SendStream.prototype.sendFile = function sendFile (path) {
 
     if (stat.isDirectory()) return self.redirect(self.path)
 
-    if (stat.isSymbolicLink() && self._redirectSymlinks)
+    if (stat.isSymbolicLink() && self._redirectSymlinks) {
       return self.redirectSymbolicLink(path)
+    }
 
     self.emit('file', path, stat)
     self.send(path, stat)
@@ -736,8 +734,8 @@ SendStream.prototype.sendFile = function sendFile (path) {
 
   function next (err) {
     if (self._extensions.length <= i) {
-      if (err) return self.onStatError(err);
-      return self.error(404);
+      if (err) return self.onStatError(err)
+      return self.error(404)
     }
 
     var p = path + '.' + self._extensions[i++]
@@ -760,27 +758,27 @@ SendStream.prototype.sendFile = function sendFile (path) {
  * @param {String} path
  * @api private
  */
-SendStream.prototype.sendIndex = function sendIndex(path){
-  var i = 0;
-  var self = this;
+SendStream.prototype.sendIndex = function sendIndex (path) {
+  var i = 0
+  var self = this
 
-  function next(err){
+  function next (err) {
     if (self._index.length <= i) {
-      if (err) return self.onStatError(err);
-      return self.error(404);
+      if (err) return self.onStatError(err)
+      return self.error(404)
     }
 
-    var p = join(path, self._index[i++]);
+    var p = join(path, self._index[i++])
 
-    debug('stat "%s"', p);
-    fs.stat(p, function(err, stat){
-      if (err) return next(err);
+    debug('stat "%s"', p)
+    fs.stat(p, function (err, stat) {
+      if (err) return next(err)
 
-      if (stat.isDirectory()) return next();
+      if (stat.isDirectory()) return next()
 
-      self.emit('file', p, stat);
-      self.send(p, stat);
-    });
+      self.emit('file', p, stat)
+      self.send(p, stat)
+    })
   }
 
   next()

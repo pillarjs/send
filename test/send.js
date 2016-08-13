@@ -132,34 +132,31 @@ describe('send(file).pipe(res)', function () {
     .expect(200, '404 ENOENT', done)
   })
 
-  it('should 301 if the directory exists', function(done){
+  it('should 301 if the directory exists', function (done) {
     request(app)
     .get('/pets')
     .expect('Location', '/pets/')
     .expect(301, 'Redirecting to <a href="/pets/">/pets/</a>\n', done)
   })
 
-  it("should not redirect on symbolic links", function(done){
+  it('should not redirect on symbolic links', function (done) {
     var destination = 'name.txt'
     var path2 = path.join(fixtures, 'symlink')
 
-    fs.symlink(destination, path2, function(error)
-    {
-      if(error && error.code !== 'EEXIST') return done(error)
+    fs.symlink(destination, path2, function (error) {
+      if (error && error.code !== 'EEXIST') return done(error)
 
       request(app)
       .get('/symlink')
-      .expect(200, 'tobi', function(error)
-      {
-        fs.unlink(path2, function(error2)
-        {
+      .expect(200, 'tobi', function (error) {
+        fs.unlink(path2, function (error2) {
           done(error || error2)
         })
       })
     })
   })
 
-  it("should 301 if it's a symbolic link and we want to redirect", function(done){
+  it("should 301 if it's a symbolic link and we want to redirect", function (done) {
     var app = http.createServer(function (req, res) {
       send(req, req.url, {root: fixtures, redirectSymlinks: true})
       .on('error', function (err) { res.end(err.statusCode + ' ' + err.code) })
@@ -169,25 +166,22 @@ describe('send(file).pipe(res)', function () {
     var destination = 'name.txt'
     var path2 = path.join(fixtures, 'symlink')
 
-    fs.symlink(destination, path2, function(error)
-    {
-      if(error && error.code !== 'EEXIST') return done(error)
+    fs.symlink(destination, path2, function (error) {
+      if (error && error.code !== 'EEXIST') return done(error)
 
       request(app)
       .get('/symlink')
       .expect('Location', destination)
-      .expect(301, 'Redirecting to <a href="'+destination+'">'+destination+'</a>\n', function(error)
-      {
-        fs.unlink(path2, function(error2)
-        {
+      .expect(301, 'Redirecting to <a href="' + destination + '">' + destination + '</a>\n', function (error) {
+        fs.unlink(path2, function (error2) {
           done(error || error2)
         })
       })
     })
   })
 
-  it('should not override content-type', function(done){
-    var app = http.createServer(function(req, res){
+  it('should not override content-type', function (done) {
+    var app = http.createServer(function (req, res) {
       res.setHeader('Content-Type', 'application/x-custom')
       send(req, req.url, {root: fixtures}).pipe(res)
     })
