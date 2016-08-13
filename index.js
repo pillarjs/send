@@ -16,7 +16,6 @@ var createError = require('http-errors')
 var debug = require('debug')('send')
 var deprecate = require('depd')('send')
 var destroy = require('destroy')
-var encodeUrl = require('encodeurl')
 var escapeHtml = require('escape-html')
 var etag = require('etag')
 var EventEmitter = require('events').EventEmitter
@@ -905,24 +904,6 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
 function clearHeaders (res) {
   res._headers = {}
   res._headerNames = {}
-}
-
-/**
- * Collapse all leading slashes into a single slash
- *
- * @param {string} str
- * @private
- */
-function collapseLeadingSlashes (str) {
-  for (var i = 0; i < str.length; i++) {
-    if (str[i] !== '/') {
-      break
-    }
-  }
-
-  return i > 1
-    ? '/' + str.substr(i)
-    : str
 }
 
 /**
