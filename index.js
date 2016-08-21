@@ -94,7 +94,7 @@ var willAlwaysCloseFileDescriptor = (function testAutoClose () {
   }).on('error', /* istanbul ignore next */ function (e) {
     willAlwaysCloseFileDescriptor = e.code === 'EBADF'
   }).on('data', function () {})
-  return false
+  return Boolean(EventEmitter.listenerCount)
 })()
 
 /**
