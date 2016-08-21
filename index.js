@@ -51,6 +51,13 @@ var sep = path.sep
 var BYTES_RANGE_REGEXP = /^ *bytes=/
 
 /**
+ * Internet standard newline RFC 5234 B.1
+ * @private
+ */
+
+var CRLF = '\r\n'
+
+/**
  * Maximum value allowed for the max age.
  * @private
  */
@@ -73,10 +80,22 @@ module.exports = send
 module.exports.mime = mime
 
 /**
- * Is the node version is < 0.10
+ * Does this version of node.js always close the fd after piping
  */
 
-var isLegacyNodeVersion = Boolean(EventEmitter.listenerCount)
+var willAlwaysCloseFileDescriptor = (function testAutoClose () {
+  var fd = fs.openSync('./package.json', 'r')
+  fs.createReadStream(null, {
+    autoClose: false,
+    fd: fd,
+    end: 0
+  }).on('end', function () {
+    fs.close(fd)
+  }).on('error', /* istanbul ignore next */ function (e) {
+    willAlwaysCloseFileDescriptor = e.code === 'EBADF'
+  }).on('data', function () {})
+  return false
+})()
 
 /**
  * Shim EventEmitter.listenerCount for node.js < 0.10
@@ -643,20 +662,11 @@ SendStream.prototype.send = function send (path, stat) {
         offset += ranges[0].start
         len = ranges[0].end - ranges[0].start + 1
       } else if (ranges.length > 1) {
-        opts.boundary = 'BYTERANGE_' + Date.now()
-        opts.contentType = res.getHeader('Content-Type')
-        opts.fileSize = stat.size
-        opts.ranges = ranges
-        res.setHeader('Content-Disposition', 'attachment; filename="' + basename(path) + '"')
-        res.setHeader('Content-Type', 'multipart/byteranges; boundary=' + opts.boundary)
-        res.statusCode = 206
+        opts = this.setMultipartHeader(path, stat, ranges)
         // HEAD support
-        if (req.method === 'HEAD') {
-          res.end()
-          return
-        }
-        this.streamMultipart(path, opts)
-        return
+        return req.method === 'HEAD'
+          ? res.end()
+          : this.streamMultipart(path, opts)
       }
     }
   }
@@ -680,6 +690,44 @@ SendStream.prototype.send = function send (path, stat) {
   }
 
   this.stream(path, opts)
+}
+
+/**
+ * Set multipart headers and return options for `streamMultipart`
+ *
+ * @param {String} path
+ * @param {Object} stat
+ * @param {Array} ranges
+ * @api private
+ */
+SendStream.prototype.setMultipartHeader = function setMultipartHeader (path, stat, ranges) {
+  var opts = {}
+  var res = this.res
+  var contentType = res.getHeader('Content-Type')
+  var boundary = 'BYTERANGE_' + Date.now().toString(36).toUpperCase()
+  var partHeaders = opts.partHeaders = new Array(ranges.length)
+  opts.footer = CRLF + '--' + boundary + '--'
+  opts.ranges = ranges
+
+  // calculate content length
+  var len = opts.footer.length
+  for (var i = ranges.length - 1; i >= 0; i--) {
+    partHeaders[i] = (
+      (i ? CRLF : '') +
+      '--' + boundary + CRLF +
+      'Content-Type: ' + contentType + CRLF +
+      'Content-Range: ' + contentRange('bytes', stat.size, ranges[i]) + CRLF +
+      CRLF
+    )
+    len += partHeaders[i].length
+    len += ranges[i].end - ranges[i].start + 1
+  }
+
+  // set multipart headers
+  res.setHeader('Content-Disposition', 'attachment; filename="' + basename(path) + '"')
+  res.setHeader('Content-Length', len)
+  res.setHeader('Content-Type', 'multipart/byteranges; boundary=' + boundary)
+  return opts
 }
 
 /**
@@ -811,9 +859,7 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
   var finished = false
   var self = this
   var res = this.res
-  var fileSize = options.fileSize
-  var BOUNDARY = options.boundary
-  var CRLF = '\r\n'
+  var partHeaders = options.partHeaders
   var stream
 
   fs.open(path, 'r', function beginMultipartStream (err, fd) {
@@ -821,24 +867,17 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
       return self.onStatError(err)
     }
     // iterate through all the ranges
-    asyncSeries(options.ranges, function (range, idx, next) {
+    asyncSeries(options.ranges, function streamPart (range, idx, next) {
       if (finished) return next()
       var isLast = idx >= options.ranges.length - 1
-      var partHeaders = (
-        (idx ? CRLF : '') +
-        '--' + BOUNDARY + CRLF +
-        'Content-Type: ' + options.contentType + CRLF +
-        'Content-Range: ' + contentRange('bytes', fileSize, range) + CRLF +
-        CRLF
-      )
       /* istanbul ignore next */
-      range.fd = isLegacyNodeVersion && idx ? null : fd
+      range.fd = willAlwaysCloseFileDescriptor && idx ? null : fd
       range.autoClose = isLast
       stream = fs.createReadStream(path, range)
       stream.on('error', next)
-      stream.on('end', function onpartend () { process.nextTick(next) })
+      stream.on('end', function () { process.nextTick(next) })
       if (!idx) self.emit('stream', stream)
-      res.write(partHeaders)
+      res.write(partHeaders[idx])
       stream.pipe(res, { end: false })
     }, function sentparts (err) {
       if (finished) return
@@ -850,7 +889,7 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
         // error
         self.onStatError(err)
       } else {
-        res.end(CRLF + '--' + BOUNDARY + '--', function onend () {
+        res.end(options.footer, function onend () {
           self.emit('end')
         })
       }
@@ -1049,7 +1088,7 @@ function setHeaders (res, headers) {
  *
  * @param {array} array
  * @param {function} iteratee
- * @param {function} [done]
+ * @param {function} done
  * @private
  */
 

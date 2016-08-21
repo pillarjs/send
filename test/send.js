@@ -1,4 +1,4 @@
-
+/* global it describe before afterEach */
 process.env.NO_DEPRECATION = 'send'
 
 var after = require('after')
@@ -7,6 +7,7 @@ var fs = require('fs')
 var http = require('http')
 var path = require('path')
 var request = require('supertest')
+var formidable = require('formidable')
 var send = require('..')
 
 // test server
@@ -23,6 +24,26 @@ var app = http.createServer(function (req, res) {
   .on('error', error)
   .pipe(res)
 })
+
+// This appears to be the best way to test multipart/byteranges
+// responses while using SuperTest. The SuperAgent `.parse()`
+// method doesn't work correctly when using SuperTest.
+formidable.IncomingForm.prototype.parse = function parseByteRanges (res, done) {
+  var parts = []
+  var totalLength = 0
+  res.on('error', done).on('data', function (chunk) {
+    parts.push(chunk)
+    totalLength += chunk.length
+  }).on('end', function () {
+    try {
+      var boundary = res.headers['content-type'].match(/boundary=(BYTERANGE_[A-Z0-9]+)$/)[1]
+      var body = Buffer.concat(parts, totalLength)
+      done(null, parseMultipartBody(body.toString(), boundary))
+    } catch (e) {
+      done(e)
+    }
+  })
+}
 
 describe('send(file).pipe(res)', function () {
   it('should stream the file contents', function (done) {
@@ -549,31 +570,35 @@ describe('send(file).pipe(res)', function () {
 
       describe('which cannot be combined', function () {
         it('should respond with multipart 206', function (done) {
-          var body = ''
           request(app)
           .get('/nums')
           .set('Range', 'bytes=0-1,3-3,5-6,7-8')
-          .buffer(true)
-          .parse(function (res, next) {
-            res.on('data', function (chunk) {
-              body += chunk
-            })
-          })
-          .expect(206)
-          .end(function (err, res) {
-            if (err) return done(err)
-            setTimeout(function () {
-              var parts = parseMultipartBody(body, res.boundary)
-              assert.equal(parts.length, 3)
-              assert.equal(parts[0].headers['Content-Range'], 'bytes 0-1/9')
-              assert.equal(parts[0].body, '12')
-              assert.equal(parts[1].headers['Content-Range'], 'bytes 3-3/9')
-              assert.equal(parts[1].body, '4')
-              assert.equal(parts[2].headers['Content-Range'], 'bytes 5-8/9')
-              assert.equal(parts[2].body, '6789')
-              done()
-            }, 20)
-          })
+          .expect('Content-Disposition', 'attachment; filename="nums"')
+          .expect('Content-Type', /multipart\/byteranges;\sboundary=BYTERANGE_[A-Z0-9]+/)
+          .expect('Content-Length', '311')
+          .expect(206, [
+            {
+              body: '12',
+              headers: {
+                'content-range': 'bytes 0-1/9',
+                'content-type': 'application/octet-stream'
+              }
+            },
+            {
+              body: '4',
+              headers: {
+                'content-range': 'bytes 3-3/9',
+                'content-type': 'application/octet-stream'
+              }
+            },
+            {
+              body: '6789',
+              headers: {
+                'content-range': 'bytes 5-8/9',
+                'content-type': 'application/octet-stream'
+              }
+            }
+          ], done)
         })
 
         it('should support HEAD', function (done) {
@@ -581,7 +606,8 @@ describe('send(file).pipe(res)', function () {
           .head('/nums')
           .set('Range', 'bytes=0-1,3-3,5-6,7-8')
           .expect('Content-Disposition', 'attachment; filename="nums"')
-          .expect('Content-Type', /multipart\/byteranges;\sboundary=BYTERANGE_[0-9]+/)
+          .expect('Content-Type', /multipart\/byteranges;\sboundary=BYTERANGE_[A-Z0-9]+/)
+          .expect('Content-Length', '311')
           .expect(206, undefined, done)
         })
 
@@ -609,7 +635,6 @@ describe('send(file).pipe(res)', function () {
         })
 
         it('should handle file stream error after response partially written', function (done) {
-          var body = ''
           var app = http.createServer(function (req, res) {
             send(req, req.url, {root: 'test/fixtures'})
             .on('stream', function (stream) {
@@ -623,17 +648,10 @@ describe('send(file).pipe(res)', function () {
           request(app)
           .get('/nums')
           .set('Range', 'bytes=0-1,3-3,5-6,7-8')
-          .buffer(true)
-          .parse(function (res, next) {
-            res.on('data', function (chunk) {
-              body += chunk
-            })
-          })
           .expect(206, done)
         })
 
         it('should handle response ending before streaming finished', function (done) {
-          var body = ''
           var app = http.createServer(function (req, res) {
             send(req, req.url, {root: 'test/fixtures'})
             .on('stream', function (stream) {
@@ -648,17 +666,10 @@ describe('send(file).pipe(res)', function () {
           request(app)
           .get('/nums')
           .set('Range', 'bytes=0-1,3-3,5-6,7-8')
-          .buffer(true)
-          .parse(function (res, next) {
-            res.on('data', function (chunk) {
-              body += chunk
-            })
-          })
           .expect(206, done)
         })
 
         it('should stop streaming parts if any stream failed beyond the first', function (done) {
-          var body = ''
           var app = http.createServer(function (req, res) {
             send(req, req.url, {root: 'test/fixtures'})
             .on('stream', function (stream) {
@@ -673,24 +684,15 @@ describe('send(file).pipe(res)', function () {
           request(app)
           .get('/nums')
           .set('Range', 'bytes=0-1,3-3,5-6,7-8')
-          .buffer(true)
-          .parse(function (res, next) {
-            res.on('data', function (chunk) {
-              body += chunk
-            })
-          })
           .expect(206)
-          .end(function (err, res) {
-            if (err) return done(err)
-            setTimeout(function () {
-              var parts = parseMultipartBody(body, res.boundary)
-              assert.equal(parts.length, 1)
-              assert.equal(parts[0].headers['Content-Range'], 'bytes 0-1/9')
-              var expected = typeof parts[0].body === 'undefined' || parts[0].body === '12'
-              assert.ok(expected, 'the first multipart body was either "12" or did not arrive')
-              done()
-            })
+          .expect(function (res) {
+            var parts = res.body
+            assert.equal(parts.length, 1)
+            assert.equal(parts[0].headers['content-range'], 'bytes 0-1/9')
+            var expected = typeof parts[0].body === 'undefined' || parts[0].body === '12'
+            assert.ok(expected, 'the first multipart body was either "12" or did not arrive')
           })
+          .end(done)
         })
       })
     })
@@ -1464,7 +1466,7 @@ function parseMultipartBody (body, boundary) {
     return {
       headers: headBody[0].split(/\r\n/).reduce(function (memo, header) {
         var keyVal = header.split(/:\s+/)
-        memo[keyVal[0]] = keyVal[1]
+        memo[keyVal[0].toLowerCase()] = keyVal[1]
         return memo
       }, {}),
       body: headBody[1]
