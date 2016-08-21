@@ -7,7 +7,6 @@ var fs = require('fs')
 var http = require('http')
 var path = require('path')
 var request = require('supertest')
-var formidable = require('formidable')
 var send = require('..')
 
 // test server
@@ -28,6 +27,12 @@ var app = http.createServer(function (req, res) {
 // This appears to be the best way to test multipart/byteranges
 // responses while using SuperTest. The SuperAgent `.parse()`
 // method doesn't work correctly when using SuperTest.
+var formidable
+try {
+  formidable = require('formidable')
+} catch (e) {
+  formidable = require('supertest/node_modules/superagent/node_modules/formidable')
+}
 formidable.IncomingForm.prototype.parse = function parseByteRanges (res, done) {
   var parts = []
   var totalLength = 0
