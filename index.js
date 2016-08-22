@@ -85,16 +85,19 @@ module.exports.mime = mime
 
 var willAlwaysCloseFileDescriptor = (function testAutoClose () {
   var fd = fs.openSync('./package.json', 'r')
-  fs.createReadStream(null, {
+  fs.createReadStream('./package.json', {
     autoClose: false,
     fd: fd,
     end: 0
   }).on('end', function () {
+    console.log('willAlwaysCloseFileDescriptor: stream ended')
     fs.close(fd)
   }).on('error', /* istanbul ignore next */ function (e) {
+    console.log('willAlwaysCloseFileDescriptor: stream error = ' + e.code)
     willAlwaysCloseFileDescriptor = e.code === 'EBADF'
   }).on('data', function () {})
-  return typeof EventEmitter.listenerCount !== 'function'
+  console.log('willAlwaysCloseFileDescriptor: typeof EventEmitter.listenerCount = ' + typeof EventEmitter.listenerCount)
+  return Number(process.versions.node[0]) === 0
 })()
 
 /**
@@ -870,6 +873,7 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
     asyncSeries(options.ranges, function streamPart (range, idx, next) {
       if (finished) return next()
       var isLast = idx >= options.ranges.length - 1
+      console.log('willAlwaysCloseFileDescriptor = ' + willAlwaysCloseFileDescriptor)
       /* istanbul ignore next */
       range.fd = willAlwaysCloseFileDescriptor && idx ? null : fd
       range.autoClose = isLast
