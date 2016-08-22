@@ -85,18 +85,20 @@ module.exports.mime = mime
 
 var willAlwaysCloseFileDescriptor = (function testAutoClose () {
   var fd = fs.openSync('./package.json', 'r')
-  fs.createReadStream('./package.json', {
+  fs.createReadStream(null, {
     autoClose: false,
     fd: fd,
     end: 0
   }).on('end', function () {
-    console.log('willAlwaysCloseFileDescriptor: stream ended')
     fs.close(fd)
   }).on('error', /* istanbul ignore next */ function (e) {
-    console.log('willAlwaysCloseFileDescriptor: stream error = ' + e.code)
-    willAlwaysCloseFileDescriptor = e.code === 'EBADF'
+    switch (e.code) {
+      case 'OK': // AppVeyor is just flat out broken on node 0.8 apparently
+      case 'EBADF': willAlwaysCloseFileDescriptor = true
+    }
   }).on('data', function () {})
   console.log('willAlwaysCloseFileDescriptor: typeof EventEmitter.listenerCount = ' + typeof EventEmitter.listenerCount)
+  console.log('willAlwaysCloseFileDescriptor: process.versions.node = ' + process.versions.node)
   return Number(process.versions.node[0]) === 0
 })()
 
