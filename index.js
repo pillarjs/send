@@ -93,12 +93,10 @@ var willAlwaysCloseFileDescriptor = (function testAutoClose () {
     fs.close(fd)
   }).on('error', /* istanbul ignore next */ function (e) {
     switch (e.code) {
-      case 'OK': // AppVeyor is just flat out broken on node 0.8 apparently
+      case 'OK': // AppVeyor outputs an OK error in place of an EBADF error because reasons
       case 'EBADF': willAlwaysCloseFileDescriptor = true
     }
   }).on('data', function () {})
-  console.log('willAlwaysCloseFileDescriptor: typeof EventEmitter.listenerCount = ' + typeof EventEmitter.listenerCount)
-  console.log('willAlwaysCloseFileDescriptor: process.versions.node = ' + process.versions.node)
   return Number(process.versions.node[0]) === 0
 })()
 
@@ -875,7 +873,6 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
     asyncSeries(options.ranges, function streamPart (range, idx, next) {
       if (finished) return next()
       var isLast = idx >= options.ranges.length - 1
-      console.log('willAlwaysCloseFileDescriptor = ' + willAlwaysCloseFileDescriptor)
       /* istanbul ignore next */
       range.fd = willAlwaysCloseFileDescriptor && idx ? null : fd
       range.autoClose = isLast
