@@ -84,20 +84,27 @@ module.exports.mime = mime
  */
 
 var willAlwaysCloseFileDescriptor = (function testAutoClose () {
+  var nodeVer = process.versions.node.split('.').map(Number)
   var fd = fs.openSync('./package.json', 'r')
   fs.createReadStream(null, {
     autoClose: false,
     fd: fd,
     end: 0
   }).on('end', function () {
-    fs.close(fd)
-  }).on('error', /* istanbul ignore next */ function (e) {
-    switch (e.code) {
-      case 'OK': // AppVeyor outputs an OK error in place of an EBADF error because reasons
+    fs.close(fd, onError)
+  }).on('error', onError).on('data', function () {})
+  /* istanbul ignore next */
+  function onError (e) {
+    switch (e && e.code) {
+      // Node on Windows is incorrectly setting the error code to `OK` instead of the
+      // correct `EBADF` error code because of a bug in libuv so we have to handle it here
+      // https://github.com/nodejs/node/issues/3718
+      // https://github.com/libuv/libuv/pull/613
+      case 'OK':
       case 'EBADF': willAlwaysCloseFileDescriptor = true
     }
-  }).on('data', function () {})
-  return Number(process.versions.node[0]) === 0
+  }
+  return nodeVer[0] === 0 && nodeVer[1] <= 10
 })()
 
 /**
