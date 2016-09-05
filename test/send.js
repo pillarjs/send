@@ -1127,6 +1127,18 @@ describe('send(file, options)', function () {
       .expect(200, fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'), done)
     })
 
+    it('should accept a function', function (done) {
+      var expected = '<p>tobi</p>'
+
+      function index (path) {
+        this.res.end(expected)
+      }
+
+      request(createServer({root: fixtures, index: index}))
+      .get('/pets/')
+      .expect(200, expected, done)
+    })
+
     it('should 404 if no index file found (file)', function (done) {
       request(createServer({root: fixtures, index: 'default.htm'}))
       .get('/pets/')

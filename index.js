@@ -146,9 +146,18 @@ function SendStream (req, path, options) {
     ? normalizeList(opts.extensions, 'extensions option')
     : []
 
-  this._index = opts.index !== undefined
-    ? normalizeList(opts.index, 'index option')
-    : ['index.html']
+  switch (typeof opts.index) {
+    case 'function':
+      this._index = opts.index
+      break
+
+    case 'undefined':
+      this._index = ['index.html']
+      break
+
+    default:
+      this._index = normalizeList(opts.index, 'index option')
+  }
 
   this._lastModified = opts.lastModified !== undefined
     ? Boolean(opts.lastModified)
@@ -707,6 +716,8 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
   var self = this
 
   function next (err) {
+    if (typeof self._index === 'function') return self._index(path)
+
     if (++i >= self._index.length) {
       if (err) return self.onStatError(err)
       return self.error(404)

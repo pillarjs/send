@@ -81,9 +81,10 @@ This is skipped if the requested file already has an extension.
 
 ##### index
 
-By default send supports "index.html" files, to disable this
-set `false` or to supply a new index pass a string or an array
-in preferred order.
+By default send supports `index.html` files, to disable this set `false`. You
+can supply a different index file by setting it to a string or array of strings
+in the preferred order to be evaluated, or you can set it to a function that
+will process the index content response.
 
 ##### lastModified
 
@@ -229,7 +230,7 @@ var app = http.createServer(function onRequest (req, res) {
 }).listen(3000)
 ```
 
-## License 
+## License
 
 [MIT](LICENSE)
 
