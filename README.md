@@ -139,6 +139,14 @@ Compression tips:
      gzip encoders. Brotli compresses generally 15-20% better than gzip.
    * Use zopfli for gzip compression for and extra 5% benefit for all browsers.
 
+Performance of serving static files is lower due to extra stats – worst case
+20% with 1 byte files to loopback client. Compared to on-the-fly compression
+the precompression is still a large win.
+
+##### encodingNegotiatorOptions
+
+Allows configuring the [encoding negotation options](https://github.com/jshttp/negotiator#sort-options).
+
 ##### root
 
 Serve files relative to `path`.

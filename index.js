@@ -170,6 +170,10 @@ function SendStream (req, path, options) {
       ? opts.precompressionFormats
       : this._precompressionFormats
 
+  this._encodingNegotiatorOptions = opts.encodingNegotiatorOptions !== undefined
+    ? opts.encodingNegotiatorOptions
+    : { sortPreference: 'clientThenServer' }
+
   this._index = opts.index !== undefined
     ? normalizeList(opts.index, 'index option')
     : ['index.html']
@@ -386,7 +390,7 @@ SendStream.prototype.isPreconditionFailure = function isPreconditionFailure () {
 
 SendStream.prototype.getAcceptEncodingExtensions = function () {
   var self = this
-  var negotiatedEncodings = new Negotiator(this.req).encodings(self._precompressionEncodings)
+  var negotiatedEncodings = new Negotiator(this.req).encodings(self._precompressionEncodings, this._encodingNegotiatorOptions)
   var accepted = []
   for (var e = 0; e < negotiatedEncodings.length; e++) {
     var encoding = negotiatedEncodings[e]
