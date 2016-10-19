@@ -232,7 +232,7 @@ var app = http.createServer(function onRequest (req, res) {
 ### Using with Koa
 
 To use with Koa correctly the property ```skipStreamPipe``` must be set and 
-added to the options sent into sen.
+added to the options sent into ```send```.
 
 ```ctx.body``` must also be set to the stream which send creates.
 
