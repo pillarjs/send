@@ -80,34 +80,6 @@ module.exports = send
 module.exports.mime = mime
 
 /**
- * Does this version of node.js always close the fd after piping
- */
-
-var willAlwaysCloseFileDescriptor = (function testAutoClose () {
-  var nodeVer = process.versions.node.split('.').map(Number)
-  var fd = fs.openSync('./package.json', 'r')
-  fs.createReadStream(null, {
-    autoClose: false,
-    fd: fd,
-    end: 0
-  }).on('end', function () {
-    fs.close(fd, onError)
-  }).on('error', onError).on('data', function () {})
-  /* istanbul ignore next */
-  function onError (e) {
-    switch (e && e.code) {
-      // Node on Windows is incorrectly setting the error code to `OK` instead of the
-      // correct `EBADF` error code because of a bug in libuv so we have to handle it here
-      // https://github.com/nodejs/node/issues/3718
-      // https://github.com/libuv/libuv/pull/613
-      case 'OK':
-      case 'EBADF': willAlwaysCloseFileDescriptor = true
-    }
-  }
-  return nodeVer[0] === 0 && nodeVer[1] <= 10
-})()
-
-/**
  * Shim EventEmitter.listenerCount for node.js < 0.10
  */
 
@@ -365,8 +337,10 @@ SendStream.prototype.isConditionalGET = function isConditionalGET () {
  */
 
 SendStream.prototype.removeContentHeaderFields = function removeContentHeaderFields () {
+  // istanbul ignore if
+  if (!this.res._headers) return
   var res = this.res
-  var headers = Object.keys(res._headers || {})
+  var headers = Object.keys(res._headers)
 
   for (var i = 0; i < headers.length; i++) {
     var header = headers[i]
@@ -413,7 +387,7 @@ SendStream.prototype.headersAlreadySent = function headersAlreadySent () {
 SendStream.prototype.isCachable = function isCachable () {
   var statusCode = this.res.statusCode
   return (statusCode >= 200 && statusCode < 300) ||
-    statusCode === 304
+    /* istanbul ignore next */ statusCode === 304
 }
 
 /**
@@ -671,7 +645,7 @@ SendStream.prototype.send = function send (path, stat) {
         // adjust for requested range
         offset += ranges[0].start
         len = ranges[0].end - ranges[0].start + 1
-      } else if (ranges.length > 1) {
+      } else {
         opts = this.setMultipartHeader(path, stat, ranges)
         // HEAD support
         return req.method === 'HEAD'
@@ -866,37 +840,40 @@ SendStream.prototype.stream = function stream (path, options) {
  */
 
 SendStream.prototype.streamMultipart = function streamMultipart (path, options) {
-  var finished = false
   var self = this
   var res = this.res
-  var partHeaders = options.partHeaders
-  var stream
+  var ranges = options.ranges
+  var headers = options.partHeaders
+  var stream, finished
+
+  function finish () {
+    finished = true
+    destroy(stream)
+  }
 
   fs.open(path, 'r', function beginMultipartStream (err, fd) {
-    if (err) {
-      return self.onStatError(err)
-    }
+    if (err) return self.onStatError(err)
     // iterate through all the ranges
-    asyncSeries(options.ranges, function streamPart (range, idx, next) {
+    asyncSeries(ranges, function streamPart (range, idx, next) {
       if (finished) return next()
-      var isLast = idx >= options.ranges.length - 1
-      /* istanbul ignore next */
-      range.fd = willAlwaysCloseFileDescriptor && idx ? null : fd
+      var isLast = idx >= ranges.length - 1
+      range.fd = fd
       range.autoClose = isLast
       stream = fs.createReadStream(path, range)
       stream.on('error', next)
-      stream.on('end', function () { process.nextTick(next) })
+      stream.on('end', function () {
+        if (!isLast) stream.fd = null // prevent node.js < 0.10 from closing the fd
+        process.nextTick(next)
+      })
       if (!idx) self.emit('stream', stream)
-      res.write(partHeaders[idx])
+      res.write(headers[idx])
       stream.pipe(res, { end: false })
     }, function sentparts (err) {
       if (finished) return
       if (err) {
-        // clean up stream
-        finished = true
-        destroy(stream)
-
-        // error
+        finish()
+        // istanbul ignore if
+        if (!stream.destroyed) fs.close(fd) // node.js < 0.10 doesn't close the fd on error
         self.onStatError(err)
       } else {
         res.end(options.footer, function onend () {
@@ -906,10 +883,7 @@ SendStream.prototype.streamMultipart = function streamMultipart (path, options) 
     })
 
     // response finished
-    onFinished(res, function () {
-      finished = true
-      destroy(stream)
-    })
+    onFinished(res, finish)
   })
 }
 
@@ -1119,10 +1093,8 @@ function asyncSeries (array, iteratee, done) {
  */
 
 function once (fn) {
-  var invoked = false
+  var run
   return function () {
-    if (invoked) return invoked
-    invoked = true
-    return fn.apply(null, arguments)
+    return run || (run = true, fn.apply(null, arguments))
   }
 }
