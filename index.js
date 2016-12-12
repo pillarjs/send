@@ -269,7 +269,7 @@ SendStream.prototype.maxage = deprecate.function(function maxage (maxAge) {
  * @private
  */
 
-SendStream.prototype.error = function error (status, error) {
+SendStream.prototype.error = function (status, error) {
   // emit if listeners instead of responding
   if (listenerCount(this, 'error') !== 0) {
     return this.emit('error', createError(error, status, {
