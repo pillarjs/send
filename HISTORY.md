@@ -5,6 +5,7 @@ unreleased
     - deps: inherits@2.0.3
     - deps: setprototypeof@1.0.2
     - deps: statuses@'>= 1.3.1 < 2'
+  * deps: statuses@~1.3.1
 
 0.14.1 / 2016-06-09
 ===================
