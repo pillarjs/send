@@ -207,7 +207,6 @@ describe('send(file).pipe(res)', function () {
       .expect('Content-Type', /plain/)
       .expect(200, done)
     })
-
   })
 
   it('should 500 on file stream error', function (done) {

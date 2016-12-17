@@ -721,9 +721,11 @@ SendStream.prototype.sendFile = function sendFile (path) {
   function sendStats (path, fd, onError, onDirectory) {
     debug('stat fd "%d" for path "%s"', fd, path)
     fs.fstat(fd, function onstat (err, stat) {
-      if (err || stat.isDirectory()) return fs.close(fd, function () { /* istanbul ignore next */
-        return err ? onError(err) : onDirectory()
-      })
+      if (err || stat.isDirectory()) {
+        return fs.close(fd, function () { /* istanbul ignore next */
+          return err ? onError(err) : onDirectory()
+        })
+      }
       self.fd = fd
       self.emit('file', path, stat)
       self.emit('open', fd)
@@ -755,9 +757,11 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
       if (err) return next(err)
       debug('stat fd "%d" for path "%s"', fd, p)
       fs.fstat(fd, function (err, stat) {
-        if (err || stat.isDirectory()) return fs.close(fd, function () {
-          next(err)
-        })
+        if (err || stat.isDirectory()) {
+          return fs.close(fd, function () {
+            next(err)
+          })
+        }
         self.fd = fd
         self.emit('file', p, stat)
         self.emit('open', fd)
