@@ -24,6 +24,40 @@ var app = http.createServer(function (req, res) {
   .pipe(res)
 })
 
+var fsOpen = fs.open
+var fsClose = fs.close
+var fds = {
+  opened: 0,
+  closed: 0
+}
+
+before(function () {
+  fs.open = function () {
+    var args = Array.prototype.slice.call(arguments)
+    var last = args.length - 1
+    var done = args[last]
+    args[last] = function (err, fd) {
+      if (typeof fd === 'number') fds.opened++
+      done(err, fd)
+    }
+    return fsOpen.apply(fs, args)
+  }
+  fs.close = function (fd, cb) {
+    fds.closed++
+    return fsClose.call(fs, fd, cb)
+  }
+})
+
+after(function () {
+  fs.open = fsOpen
+  fs.close = fsClose
+})
+
+afterEach(function () {
+  var reason = 'all opened file descriptors (' + fds.opened + ') should have been closed (' + fds.closed + ')'
+  assert.equal(fds.closed, fds.opened, reason)
+})
+
 describe('send(file).pipe(res)', function () {
   it('should stream the file contents', function (done) {
     request(app)
@@ -155,24 +189,25 @@ describe('send(file).pipe(res)', function () {
     })
   })
 
-  it('should 404 if file disappears after stat, before open', function (done) {
+  it('should 200 even if file disappears after stat', function (done) {
+    var resource = '/tmp.txt'
+    var tmpPath = path.join(__dirname, 'fixtures', resource)
     var app = http.createServer(function (req, res) {
       send(req, req.url, {root: 'test/fixtures'})
-      .on('file', function () {
-        // simulate file ENOENT after on open, after stat
-        var fn = this.send
-        this.send = function (path, stat) {
-          path += '__xxx_no_exist'
-          fn.call(this, path, stat)
-        }
+      .on('file', function (path) {
+        fs.unlinkSync(tmpPath)
       })
       .pipe(res)
     })
 
-    request(app)
-    .get('/name.txt')
-    .expect('Content-Type', /plain/)
-    .expect(404, done)
+    fs.writeFile(tmpPath, 'howdy', { flag: 'wx' }, function (err) {
+      if (err) return done(err)
+      request(app)
+      .get(resource)
+      .expect('Content-Type', /plain/)
+      .expect(200, done)
+    })
+
   })
 
   it('should 500 on file stream error', function (done) {
@@ -870,6 +905,39 @@ describe('send(file, options)', function () {
       request(createServer({extensions: 'html', root: fixtures}))
       .get('/thing.html')
       .expect(404, done)
+    })
+  })
+
+  describe('fd', function () {
+    it('should support providing an existing file descriptor', function (done) {
+      var resource = '/nums'
+      fs.open(path.join(fixtures, resource), 'r', function (err, fd) {
+        if (err) return done(err)
+        request(createServer({fd: fd}))
+        .get(resource)
+        .expect(200, done)
+      })
+    })
+
+    it('should still error if the fd cannot be streamed', function (done) {
+      request(createServer({fd: 999, autoClose: false}))
+      .get('/anything')
+      .expect(500, done)
+    })
+  })
+
+  describe('autoClose', function () {
+    it('should prevent the file descriptor from being closed automatically', function (done) {
+      var resource = '/nums'
+      fs.open(path.join(fixtures, resource), 'r', function (err, fd) {
+        if (err) return done(err)
+        request(createServer({fd: fd, autoClose: false}))
+        .get(resource)
+        .expect(200, function (err) {
+          if (err) return done(err)
+          fs.close(fd, done)
+        })
+      })
     })
   })
 

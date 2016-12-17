@@ -166,9 +166,15 @@ function SendStream (req, path, options) {
     ? resolve(opts.root)
     : null
 
+  this.fd = typeof opts.fd === 'number'
+    ? opts.fd
+    : null
+
   if (!this._root && opts.from) {
     this.from(opts.from)
   }
+
+  this.onFileSystemError = this.onFileSystemError.bind(this)
 }
 
 /**
@@ -374,7 +380,7 @@ SendStream.prototype.headersAlreadySent = function headersAlreadySent () {
 SendStream.prototype.isCachable = function isCachable () {
   var statusCode = this.res.statusCode
   return (statusCode >= 200 && statusCode < 300) ||
-    statusCode === 304
+    /* istanbul ignore next */ statusCode === 304
 }
 
 /**
@@ -384,7 +390,7 @@ SendStream.prototype.isCachable = function isCachable () {
  * @private
  */
 
-SendStream.prototype.onStatError = function onStatError (error) {
+SendStream.prototype.onFileSystemError = function onFileSystemError (error) {
   switch (error.code) {
     case 'ENAMETOOLONG':
     case 'ENOENT':
@@ -469,9 +475,32 @@ SendStream.prototype.redirect = function redirect (path) {
 SendStream.prototype.pipe = function pipe (res) {
   // root path
   var root = this._root
+  var self = this
 
   // references
   this.res = res
+
+  // response finished, done with the fd
+  onFinished(res, function onfinished () {
+    var fd = self.fd
+    var autoClose = self.options.autoClose
+    if (self._stream) destroy(self._stream)
+    if (typeof fd === 'number' && autoClose !== false) {
+      fs.close(fd, function () {
+        self.fd = null
+        self.emit('close')
+      })
+    }
+  })
+
+  if (typeof this.fd === 'number') {
+    fs.fstat(this.fd, function (err, stat) {
+      if (err) return self.onFileSystemError(err)
+      self.emit('file', self.path, stat)
+      self.send(self.path, stat)
+    })
+    return res
+  }
 
   // decode the path
   var path = decode(this.path)
@@ -573,7 +602,7 @@ SendStream.prototype.send = function send (path, stat) {
     return
   }
 
-  debug('pipe "%s"', path)
+  debug('pipe fd "%d" for path "%s"', this.fd, path)
 
   // set header fields
   this.setHeader(path, stat)
@@ -664,34 +693,41 @@ SendStream.prototype.send = function send (path, stat) {
 SendStream.prototype.sendFile = function sendFile (path) {
   var i = 0
   var self = this
+  var redirect = this.redirect.bind(this, this.path)
 
-  debug('stat "%s"', path)
-  fs.stat(path, function onstat (err, stat) {
-    if (err && err.code === 'ENOENT' && !extname(path) && path[path.length - 1] !== sep) {
-      // not found, check extensions
-      return next(err)
-    }
-    if (err) return self.onStatError(err)
-    if (stat.isDirectory()) return self.redirect(self.path)
-    self.emit('file', path, stat)
-    self.send(path, stat)
+  debug('open "%s"', path)
+  fs.open(path, 'r', function onopen (err, fd) {
+    return !err
+      ? sendStats(path, fd, self.onFileSystemError, redirect)
+      : err.code === 'ENOENT' && !extname(path) && path[path.length - 1] !== sep
+        ? next(err) // not found, check extensions
+        : self.onFileSystemError(err)
   })
 
   function next (err) {
     if (self._extensions.length <= i) {
       return err
-        ? self.onStatError(err)
+        ? self.onFileSystemError(err)
         : self.error(404)
     }
-
     var p = path + '.' + self._extensions[i++]
-
-    debug('stat "%s"', p)
-    fs.stat(p, function (err, stat) {
+    debug('open "%s"', p)
+    fs.open(p, 'r', function (err, fd) {
       if (err) return next(err)
-      if (stat.isDirectory()) return next()
-      self.emit('file', p, stat)
-      self.send(p, stat)
+      sendStats(p, fd, next, next)
+    })
+  }
+
+  function sendStats (path, fd, onError, onDirectory) {
+    debug('stat fd "%d" for path "%s"', fd, path)
+    fs.fstat(fd, function onstat (err, stat) {
+      if (err || stat.isDirectory()) return fs.close(fd, function () { /* istanbul ignore next */
+        return err ? onError(err) : onDirectory()
+      })
+      self.fd = fd
+      self.emit('file', path, stat)
+      self.emit('open', fd)
+      self.send(path, stat)
     })
   }
 }
@@ -702,28 +738,33 @@ SendStream.prototype.sendFile = function sendFile (path) {
  * @param {String} path
  * @api private
  */
+
 SendStream.prototype.sendIndex = function sendIndex (path) {
   var i = -1
   var self = this
 
-  function next (err) {
+  return (function next (err) {
     if (++i >= self._index.length) {
-      if (err) return self.onStatError(err)
+      if (err) return self.onFileSystemError(err)
       return self.error(404)
     }
 
     var p = join(path, self._index[i])
 
-    debug('stat "%s"', p)
-    fs.stat(p, function (err, stat) {
+    fs.open(p, 'r', function onopen (err, fd) {
       if (err) return next(err)
-      if (stat.isDirectory()) return next()
-      self.emit('file', p, stat)
-      self.send(p, stat)
+      debug('stat fd "%d" for path "%s"', fd, p)
+      fs.fstat(fd, function (err, stat) {
+        if (err || stat.isDirectory()) return fs.close(fd, function () {
+          next(err)
+        })
+        self.fd = fd
+        self.emit('file', p, stat)
+        self.emit('open', fd)
+        self.send(p, stat)
+      })
     })
-  }
-
-  next()
+  })()
 }
 
 /**
@@ -735,39 +776,27 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
  */
 
 SendStream.prototype.stream = function stream (path, options) {
-  // TODO: this is all lame, refactor meeee
-  var finished = false
+  options.fd = this.fd
+  options.autoClose = false
+
   var self = this
-  var res = this.res
+  var stream = this._stream = fs.createReadStream(path, options)
 
-  // pipe
-  var stream = fs.createReadStream(path, options)
-  this.emit('stream', stream)
-  stream.pipe(res)
-
-  // response finished, done with the fd
-  onFinished(res, function onfinished () {
-    finished = true
-    destroy(stream)
-  })
-
-  // error handling code-smell
-  stream.on('error', function onerror (err) {
-    // request already finished
-    if (finished) return
-
-    // clean up stream
-    finished = true
-    destroy(stream)
-
-    // error
-    self.onStatError(err)
+  // error
+  stream.on('error', function onerror (e) {
+    stream.fd = null
+    self.onFileSystemError(e)
   })
 
   // end
   stream.on('end', function onend () {
+    stream.fd = null
     self.emit('end')
   })
+
+  // pipe
+  this.emit('stream', stream)
+  stream.pipe(this.res)
 }
 
 /**
