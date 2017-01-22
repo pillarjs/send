@@ -1,7 +1,7 @@
 
 process.env.NO_DEPRECATION = 'send'
 
-var after = require('after')
+var afterCalls = require('after') // do not interfere with mocha's after() global
 var assert = require('assert')
 var fs = require('fs')
 var http = require('http')
@@ -26,13 +26,16 @@ var app = http.createServer(function (req, res) {
 
 var fsOpen = fs.open
 var fsClose = fs.close
-var fds = {
-  opened: 0,
-  closed: 0
-}
-
+var fds = { opened: 0, closed: 0 }
+// Before any of the tests run wrap `fs.open()` and `fs.close()`
+// so we can test that all the file descriptors that get opened
+// by `send()` are also closed properly after each response
 before(function () {
-  fs.open = function () {
+  // When `fs.open()` is called we wrap the last argument (the
+  // callback which receives the file descriptor) so that when
+  // it is evuantually called we can increment the number of
+  // opened file descriptors
+  fs.open = function wrappedFSopen () {
     var args = Array.prototype.slice.call(arguments)
     var last = args.length - 1
     var done = args[last]
@@ -42,17 +45,25 @@ before(function () {
     }
     return fsOpen.apply(fs, args)
   }
-  fs.close = function (fd, cb) {
-    fds.closed++
+
+  // When `fs.close()` is called we increment the number of closed
+  // file descriptors immediately since closing is asynchronous and
+  // we check after each response that any opened file descriptors
+  // will eventually be closed, not necessarily that they *are* now
+  fs.close = function wrappedFSclose (fd, cb) {
+    if (typeof fd === 'number') fds.closed++
     return fsClose.call(fs, fd, cb)
   }
 })
 
+// After all the tests have run then restore `fs.open()`
+// and `fs.close()` to their original un-wrapped versions
 after(function () {
   fs.open = fsOpen
   fs.close = fsClose
 })
 
+// After each test: ensure all opened file descriptors have been closed
 afterEach(function () {
   var reason = 'all opened file descriptors (' + fds.opened + ') should have been closed (' + fds.closed + ')'
   assert.equal(fds.closed, fds.opened, reason)
@@ -228,7 +239,7 @@ describe('send(file).pipe(res)', function () {
 
   describe('"headers" event', function () {
     it('should fire when sending file', function (done) {
-      var cb = after(2, done)
+      var cb = afterCalls(2, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', function () { cb() })
@@ -241,7 +252,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should not fire on 404', function (done) {
-      var cb = after(1, done)
+      var cb = afterCalls(1, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', function () { cb() })
@@ -254,7 +265,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should fire on index', function (done) {
-      var cb = after(2, done)
+      var cb = afterCalls(2, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', function () { cb() })
@@ -267,7 +278,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should not fire on redirect', function (done) {
-      var cb = after(1, done)
+      var cb = afterCalls(1, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', function () { cb() })
@@ -280,7 +291,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should provide path', function (done) {
-      var cb = after(2, done)
+      var cb = afterCalls(2, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', onHeaders)
@@ -299,7 +310,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should provide stat', function (done) {
-      var cb = after(2, done)
+      var cb = afterCalls(2, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', onHeaders)

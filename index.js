@@ -482,11 +482,12 @@ SendStream.prototype.pipe = function pipe (res) {
 
   // response finished, done with the fd
   onFinished(res, function onfinished () {
-    var fd = self.fd
-    var autoClose = self.options.autoClose
+    var autoClose = self.options.autoClose !== false
     if (self._stream) destroy(self._stream)
-    if (typeof fd === 'number' && autoClose !== false) {
-      fs.close(fd, function () {
+    if (typeof self.fd === 'number' && autoClose !== false) {
+      fs.close(self.fd, function (err) {
+        /* istanbul ignore next */
+        if (err && err.code !== 'EBADF') return self.onFileSystemError(err)
         self.fd = null
         self.emit('close')
       })
@@ -758,8 +759,8 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
       debug('stat fd "%d" for path "%s"', fd, p)
       fs.fstat(fd, function (err, stat) {
         if (err || stat.isDirectory()) {
-          return fs.close(fd, function () {
-            next(err)
+          return fs.close(fd, function (e) {
+            next(err || e)
           })
         }
         self.fd = fd
