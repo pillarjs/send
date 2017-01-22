@@ -384,7 +384,7 @@ SendStream.prototype.isCachable = function isCachable () {
 }
 
 /**
- * Handle stat() error.
+ * Handle file system error.
  *
  * @param {Error} error
  * @private
