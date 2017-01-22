@@ -484,7 +484,7 @@ SendStream.prototype.pipe = function pipe (res) {
   onFinished(res, function onfinished () {
     var autoClose = self.options.autoClose !== false
     if (self._stream) destroy(self._stream)
-    if (typeof self.fd === 'number' && autoClose !== false) {
+    if (typeof self.fd === 'number' && autoClose) {
       fs.close(self.fd, function (err) {
         /* istanbul ignore next */
         if (err && err.code !== 'EBADF') return self.onFileSystemError(err)
