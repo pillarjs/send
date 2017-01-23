@@ -723,8 +723,8 @@ SendStream.prototype.sendFile = function sendFile (path) {
     debug('stat fd "%d" for path "%s"', fd, path)
     fs.fstat(fd, function onstat (err, stat) {
       if (err || stat.isDirectory()) {
-        return fs.close(fd, function () { /* istanbul ignore next */
-          return err ? onError(err) : onDirectory()
+        return fs.close(fd, function (e) { /* istanbul ignore next */
+          return (err || e) ? onError(err || e) : onDirectory()
         })
       }
       self.fd = fd
