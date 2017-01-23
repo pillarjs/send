@@ -15,7 +15,6 @@
 var createError = require('http-errors')
 var debug = require('debug')('send')
 var deprecate = require('depd')('send')
-var destroy = require('destroy')
 var encodeUrl = require('encodeurl')
 var escapeHtml = require('escape-html')
 var etag = require('etag')
@@ -483,7 +482,7 @@ SendStream.prototype.pipe = function pipe (res) {
   // response finished, done with the fd
   onFinished(res, function onfinished () {
     var autoClose = self.options.autoClose !== false
-    if (self._stream) destroy(self._stream)
+    if (self._stream) self._stream.destroy()
     if (typeof self.fd === 'number' && autoClose) {
       fs.close(self.fd, function (err) {
         /* istanbul ignore next */
@@ -682,7 +681,7 @@ SendStream.prototype.send = function send (path, stat) {
     return
   }
 
-  this.stream(path, opts)
+  this.stream(opts)
 }
 
 /**
@@ -773,31 +772,23 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
 }
 
 /**
- * Stream `path` to the response.
+ * Stream to the response.
  *
- * @param {String} path
  * @param {Object} options
  * @api private
  */
 
-SendStream.prototype.stream = function stream (path, options) {
+SendStream.prototype.stream = function stream (options) {
   options.fd = this.fd
   options.autoClose = false
 
-  var self = this
-  var stream = this._stream = fs.createReadStream(path, options)
+  var stream = this._stream = new PartStream(options)
 
   // error
-  stream.on('error', function onerror (e) {
-    stream.fd = null
-    self.onFileSystemError(e)
-  })
+  stream.on('error', this.onFileSystemError)
 
   // end
-  stream.on('end', function onend () {
-    stream.fd = null
-    self.emit('end')
-  })
+  stream.on('end', this.emit.bind(this, 'end'))
 
   // pipe
   this.emit('stream', stream)
@@ -866,6 +857,17 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
     debug('etag %s', val)
     res.setHeader('ETag', val)
   }
+}
+
+util.inherits(PartStream, fs.ReadStream)
+
+function PartStream (opts) {
+  fs.ReadStream.call(this, null, opts)
+  this.bufferSize = opts.highWaterMark || this.bufferSize
+}
+
+PartStream.prototype.destroy = PartStream.prototype.close = function closePartStream () {
+  this.readable = !(this.destroyed = this.closed = !(this.fd = null))
 }
 
 /**
