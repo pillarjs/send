@@ -1,5 +1,5 @@
-unreleased
-==========
+0.14.2 / 2017-01-23
+===================
 
   * deps: http-errors@~1.5.1
     - deps: inherits@2.0.3
