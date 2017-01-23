@@ -1,4 +1,4 @@
-
+/* global it describe before afterEach */
 process.env.NO_DEPRECATION = 'send'
 
 var after = require('after')
@@ -23,6 +23,32 @@ var app = http.createServer(function (req, res) {
   .on('error', error)
   .pipe(res)
 })
+
+// This appears to be the best way to test multipart/byteranges
+// responses while using SuperTest. The SuperAgent `.parse()`
+// method doesn't work correctly when using SuperTest.
+var formidable
+try {
+  formidable = require('formidable')
+} catch (e) {
+  formidable = require('supertest/node_modules/superagent/node_modules/formidable')
+}
+formidable.IncomingForm.prototype.parse = function parseByteRanges (res, done) {
+  var parts = []
+  var totalLength = 0
+  res.on('error', done).on('data', function (chunk) {
+    parts.push(chunk)
+    totalLength += chunk.length
+  }).on('end', function () {
+    try {
+      var boundary = res.headers['content-type'].match(/boundary=(BYTERANGE_[A-Z0-9]+)$/)[1]
+      var body = Buffer.concat(parts, totalLength)
+      done(null, parseMultipartBody(body.toString(), boundary))
+    } catch (e) {
+      done(e)
+    }
+  })
+}
 
 describe('send(file).pipe(res)', function () {
   it('should stream the file contents', function (done) {
@@ -173,6 +199,25 @@ describe('send(file).pipe(res)', function () {
     .get('/name.txt')
     .expect('Content-Type', /plain/)
     .expect(404, done)
+  })
+
+  it('should handle response ending before streaming finished', function (done) {
+    var app = http.createServer(function (req, res) {
+      send(req, req.url, {root: 'test/fixtures'})
+      .on('stream', function (stream) {
+        // simulate file error
+        process.nextTick(function () {
+          res.end('', function () {
+            stream.emit('error', new Error('boom!'))
+          })
+        })
+      })
+      .pipe(res)
+    })
+
+    request(app)
+    .get('/name.txt')
+    .expect(200, done)
   })
 
   it('should 500 on file stream error', function (done) {
@@ -518,20 +563,142 @@ describe('send(file).pipe(res)', function () {
     })
 
     describe('when multiple ranges', function () {
-      it('should respond with 200 and the entire contents', function (done) {
-        request(app)
-        .get('/nums')
-        .set('Range', 'bytes=1-1,3-')
-        .expect(shouldNotHaveHeader('Content-Range'))
-        .expect(200, '123456789', done)
+      describe('which can be combined', function () {
+        it('should respond with normal 206', function (done) {
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=1-2,3-5')
+          .expect('Content-Range', 'bytes 1-5/9')
+          .expect(206, '23456', done)
+        })
       })
 
-      it('should respond with 206 is all ranges can be combined', function (done) {
-        request(app)
-        .get('/nums')
-        .set('Range', 'bytes=1-2,3-5')
-        .expect('Content-Range', 'bytes 1-5/9')
-        .expect(206, '23456', done)
+      describe('which cannot be combined', function () {
+        it('should respond with multipart 206', function (done) {
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .expect('Content-Disposition', 'attachment; filename="nums"')
+          .expect('Content-Type', /multipart\/byteranges;\sboundary=BYTERANGE_[A-Z0-9]+/)
+          .expect('Content-Length', '311')
+          .expect(206, [
+            {
+              body: '12',
+              headers: {
+                'content-range': 'bytes 0-1/9',
+                'content-type': 'application/octet-stream'
+              }
+            },
+            {
+              body: '4',
+              headers: {
+                'content-range': 'bytes 3-3/9',
+                'content-type': 'application/octet-stream'
+              }
+            },
+            {
+              body: '6789',
+              headers: {
+                'content-range': 'bytes 5-8/9',
+                'content-type': 'application/octet-stream'
+              }
+            }
+          ], done)
+        })
+
+        it('should support HEAD', function (done) {
+          request(app)
+          .head('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .expect('Content-Disposition', 'attachment; filename="nums"')
+          .expect('Content-Type', /multipart\/byteranges;\sboundary=BYTERANGE_[A-Z0-9]+/)
+          .expect('Content-Length', '311')
+          .expect(206, undefined, done)
+        })
+
+        it('should 500 on file open error', function (done) {
+          var open = fs.open
+          fs.open = function (path, mode, cb) {
+            // simulate file error
+            setTimeout(function () {
+              var error = new Error('EMFILE: too many open files, open \'' + path + '\'')
+              error.code = 'EMFILE'
+              cb(error)
+            })
+          }
+          var app = http.createServer(function (req, res) {
+            send(req, req.url, {root: 'test/fixtures'}).pipe(res)
+          })
+
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .expect(500, function (err, res) {
+            fs.open = open
+            done(err, res)
+          })
+        })
+
+        it('should handle file stream error after response partially written', function (done) {
+          var app = http.createServer(function (req, res) {
+            send(req, req.url, {root: 'test/fixtures'})
+            .on('stream', function (stream) {
+              process.nextTick(function () {
+                stream.emit('error', new Error('boom!'))
+              })
+            })
+            .pipe(res)
+          })
+
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .expect(206, done)
+        })
+
+        it('should handle response ending before streaming finished', function (done) {
+          var app = http.createServer(function (req, res) {
+            send(req, req.url, {root: 'test/fixtures'})
+            .on('stream', function (stream) {
+              // simulate response end
+              stream.on('end', function () {
+                res.end()
+              })
+            })
+            .pipe(res)
+          })
+
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .expect(206, done)
+        })
+
+        it('should stop streaming parts if any stream failed beyond the first', function (done) {
+          var app = http.createServer(function (req, res) {
+            send(req, req.url, {root: 'test/fixtures'})
+            .on('stream', function (stream) {
+              // simulate file error
+              stream.on('end', function () {
+                stream.emit('error', new Error('boom!'))
+              })
+            })
+            .pipe(res)
+          })
+
+          request(app)
+          .get('/nums')
+          .set('Range', 'bytes=0-1,3-3,5-6,7-8')
+          .expect(206)
+          .expect(function (res) {
+            var parts = res.body
+            assert.equal(parts.length, 1)
+            assert.equal(parts[0].headers['content-range'], 'bytes 0-1/9')
+            var expected = typeof parts[0].body === 'undefined' || parts[0].body === '12'
+            assert.ok(expected, 'the first multipart body was either "12" or did not arrive')
+          })
+          .end(done)
+        })
       })
     })
 
@@ -619,7 +786,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should support start/end with unsatisfiable Range request', function (done) {
-      request(createServer({root: fixtures, start: 0, end: 2}))
+      request(createServer({root: fixtures, start: 0, end: 2, hidden: false}))
       .get('/nums')
       .set('Range', 'bytes=5-9')
       .expect('Content-Range', 'bytes */3')
@@ -1294,4 +1461,20 @@ function shouldNotHaveHeader (header) {
   return function (res) {
     assert.ok(!(header.toLowerCase() in res.headers), 'should not have header ' + header)
   }
+}
+
+function parseMultipartBody (body, boundary) {
+  return body.split('--' + boundary).filter(function (part) {
+    return part && part !== '--'
+  }).map(function (part) {
+    var headBody = part.trim().split(/\r\n\r\n/g)
+    return {
+      headers: headBody[0].split(/\r\n/).reduce(function (memo, header) {
+        var keyVal = header.split(/:\s+/)
+        memo[keyVal[0].toLowerCase()] = keyVal[1]
+        return memo
+      }, {}),
+      body: headBody[1]
+    }
+  })
 }

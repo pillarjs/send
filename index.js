@@ -36,6 +36,7 @@ var util = require('util')
  * @private
  */
 
+var basename = path.basename
 var extname = path.extname
 var join = path.join
 var normalize = path.normalize
@@ -48,6 +49,13 @@ var sep = path.sep
  */
 
 var BYTES_RANGE_REGEXP = /^ *bytes=/
+
+/**
+ * Internet standard newline RFC 5234 B.1
+ * @private
+ */
+
+var CRLF = '\r\n'
 
 /**
  * Maximum value allowed for the max age.
@@ -280,6 +288,9 @@ SendStream.prototype.error = function error (status, error) {
   var res = this.res
   var msg = statuses[status]
 
+  // do not set headers if they have already been sent
+  if (res._headerSent) return res.end()
+
   // clear existing headers
   clearHeaders(res)
 
@@ -326,8 +337,10 @@ SendStream.prototype.isConditionalGET = function isConditionalGET () {
  */
 
 SendStream.prototype.removeContentHeaderFields = function removeContentHeaderFields () {
+  // istanbul ignore if
+  if (!this.res._headers) return
   var res = this.res
-  var headers = Object.keys(res._headers || {})
+  var headers = Object.keys(res._headers)
 
   for (var i = 0; i < headers.length; i++) {
     var header = headers[i]
@@ -374,7 +387,7 @@ SendStream.prototype.headersAlreadySent = function headersAlreadySent () {
 SendStream.prototype.isCachable = function isCachable () {
   var statusCode = this.res.statusCode
   return (statusCode >= 200 && statusCode < 300) ||
-    statusCode === 304
+    /* istanbul ignore next */ statusCode === 304
 }
 
 /**
@@ -620,17 +633,25 @@ SendStream.prototype.send = function send (path, stat) {
       })
     }
 
-    // valid (syntactically invalid/multiple ranges are treated as a regular response)
-    if (ranges !== -2 && ranges.length === 1) {
+    // valid (syntactically invalid treated as a regular response)
+    if (ranges !== -2) {
       debug('range %j', ranges)
 
       // Content-Range
       res.statusCode = 206
-      res.setHeader('Content-Range', contentRange('bytes', len, ranges[0]))
 
-      // adjust for requested range
-      offset += ranges[0].start
-      len = ranges[0].end - ranges[0].start + 1
+      if (ranges.length === 1) {
+        res.setHeader('Content-Range', contentRange('bytes', len, ranges[0]))
+        // adjust for requested range
+        offset += ranges[0].start
+        len = ranges[0].end - ranges[0].start + 1
+      } else {
+        opts = this.setMultipartHeader(path, stat, ranges)
+        // HEAD support
+        return req.method === 'HEAD'
+          ? res.end()
+          : this.streamMultipart(path, opts)
+      }
     }
   }
 
@@ -653,6 +674,44 @@ SendStream.prototype.send = function send (path, stat) {
   }
 
   this.stream(path, opts)
+}
+
+/**
+ * Set multipart headers and return options for `streamMultipart`
+ *
+ * @param {String} path
+ * @param {Object} stat
+ * @param {Array} ranges
+ * @api private
+ */
+SendStream.prototype.setMultipartHeader = function setMultipartHeader (path, stat, ranges) {
+  var opts = {}
+  var res = this.res
+  var contentType = res.getHeader('Content-Type')
+  var boundary = 'BYTERANGE_' + Date.now().toString(36).toUpperCase()
+  var partHeaders = opts.partHeaders = new Array(ranges.length)
+  opts.footer = CRLF + '--' + boundary + '--'
+  opts.ranges = ranges
+
+  // calculate content length
+  var len = opts.footer.length
+  for (var i = ranges.length - 1; i >= 0; i--) {
+    partHeaders[i] = (
+      (i ? CRLF : '') +
+      '--' + boundary + CRLF +
+      'Content-Type: ' + contentType + CRLF +
+      'Content-Range: ' + contentRange('bytes', stat.size, ranges[i]) + CRLF +
+      CRLF
+    )
+    len += partHeaders[i].length
+    len += ranges[i].end - ranges[i].start + 1
+  }
+
+  // set multipart headers
+  res.setHeader('Content-Disposition', 'attachment; filename="' + basename(path) + '"')
+  res.setHeader('Content-Length', len)
+  res.setHeader('Content-Type', 'multipart/byteranges; boundary=' + boundary)
+  return opts
 }
 
 /**
@@ -743,9 +802,11 @@ SendStream.prototype.stream = function stream (path, options) {
   // pipe
   var stream = fs.createReadStream(path, options)
   this.emit('stream', stream)
-  stream.pipe(res)
+  stream.once('open', function () {
+    stream.pipe(res)
+  })
 
-  // response finished, done with the fd
+  // response finished
   onFinished(res, function onfinished () {
     finished = true
     destroy(stream)
@@ -767,6 +828,62 @@ SendStream.prototype.stream = function stream (path, options) {
   // end
   stream.on('end', function onend () {
     self.emit('end')
+  })
+}
+
+/**
+ * Multipart Stream `path` to the response.
+ *
+ * @param {String} path
+ * @param {Object} options
+ * @api private
+ */
+
+SendStream.prototype.streamMultipart = function streamMultipart (path, options) {
+  var self = this
+  var res = this.res
+  var ranges = options.ranges
+  var headers = options.partHeaders
+  var stream, finished
+
+  function finish () {
+    finished = true
+    destroy(stream)
+  }
+
+  fs.open(path, 'r', function beginMultipartStream (err, fd) {
+    if (err) return self.onStatError(err)
+    // iterate through all the ranges
+    asyncSeries(ranges, function streamPart (range, idx, next) {
+      if (finished) return next()
+      var isLast = idx >= ranges.length - 1
+      range.fd = fd
+      range.autoClose = isLast
+      stream = fs.createReadStream(path, range)
+      stream.on('error', next)
+      stream.on('end', function () {
+        if (!isLast) stream.fd = null // prevent node.js < 0.10 from closing the fd
+        process.nextTick(next)
+      })
+      if (!idx) self.emit('stream', stream)
+      res.write(headers[idx])
+      stream.pipe(res, { end: false })
+    }, function sentparts (err) {
+      if (finished) return
+      if (err) {
+        finish()
+        // istanbul ignore if
+        if (!stream.destroyed) fs.close(fd) // node.js < 0.10 doesn't close the fd on error
+        self.onStatError(err)
+      } else {
+        res.end(options.footer, function onend () {
+          self.emit('end')
+        })
+      }
+    })
+
+    // response finished
+    onFinished(res, finish)
   })
 }
 
@@ -944,5 +1061,40 @@ function setHeaders (res, headers) {
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i]
     res.setHeader(key, headers[key])
+  }
+}
+
+/**
+ * Applies the function `iteratee` to each item in `array` asynchronously in serial.
+ * The iteratee is called with an item from the array, its index, and a callback (next)
+ * for when it has finished. If the iteratee passes an error to its callback,
+ * the main callback (done) is immediately called with the error.
+ *
+ * @param {array} array
+ * @param {function} iteratee
+ * @param {function} done
+ * @private
+ */
+
+function asyncSeries (array, iteratee, done) {
+  var current = 0
+  var total = array.length
+  return (function next (err) {
+    if (err || total <= current) done(err)
+    else process.nextTick(function () { iteratee(array[current], current++, once(next)) })
+  })()
+}
+
+/**
+ * Only allow a function to run once
+ *
+ * @param {function} fn
+ * @private
+ */
+
+function once (fn) {
+  var run
+  return function () {
+    return run || (run = true, fn.apply(null, arguments))
   }
 }
