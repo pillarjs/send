@@ -233,6 +233,72 @@ var app = http.createServer(function onRequest (req, res) {
 }).listen(3000)
 ```
 
+### Using with Koa
+
+To use with Koa correctly the property ```skipStreamPipe``` must be set and 
+added to the options sent into ```send```.
+
+```ctx.body``` must also be set to the stream which send creates.
+
+
+
+```js
+app.use(function* (next) {
+  var ctx = this;
+
+  var routePrefix = '/static/'; // this assumes files are located in ./static/ i.e ./static/your_file.txt
+
+  var path = ctx.request.path;
+  if (!path.startsWith(routePrefix) || (ctx.request.method !== 'GET' && ctx.request.method !== 'HEAD')) {
+    return yield next; // jump over as the request is not looking in the static directory
+  }
+
+  var filePath = '.'+path;
+
+  var sendOptions = {
+      fallthrough: false,
+      redirect: false,
+      index: false,
+      skipStreamPipe: true  // required by koa
+    };
+
+  yield new Promise(function (resolve, reject) {
+    send(ctx.req, filePath, sendOptions)
+      .on('error', function (err) {
+        console.log('on error');
+        ctx.status = err.statusCode || 500;
+        ctx.body = 'Not found: ' + filePath;
+        resolve();
+        // reject(err);
+      })
+      .on('directory', function () {
+        console.log('on directory');
+        ctx.status = 400;
+        ctx.body = 'directory';
+        resolve();
+      
+        // var err = new Error('no directory');
+        // err.status = 400;
+        // reject(err);
+      })
+      .on('headers', function (req, path, stat) {
+        console.log('on headers');
+        ctx.status = 200;
+      })
+      .on('stream', function (stream) {
+        console.log('on stream');
+        ctx.body = stream;  // required by koa
+        resolve(); 
+      })
+      .on('end', function () {
+        console.log('on end');
+        resolve();
+      })
+      .pipe(ctx.res);
+  });
+});
+```
+
 ## License 
 
 [MIT](LICENSE)
