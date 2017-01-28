@@ -702,9 +702,11 @@ describe('send(file).pipe(res)', function () {
         .pipe(res)
       })
 
+      var filePath = path.join(fixtures, 'pets', 'index.html')
+
       request(app)
       .get('/pets/')
-      .expect(200, fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'), done)
+      .expect(200, fs.readFileSync(filePath, 'utf8'), done)
     })
   })
 
@@ -1111,6 +1113,41 @@ describe('send(file, options)', function () {
 
     it('should be configurable', function (done) {
       request(createServer({root: fixtures, index: 'tobi.html'}))
+      .get('/')
+      .expect(200, '<p>tobi</p>', done)
+    })
+
+    it('should support function', function (done) {
+      function index (path) {
+        var res = this.res
+
+        res.end('<p>tobi</p>')
+      }
+
+      var app = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('index', index)
+        .pipe(res)
+      })
+
+      request(app)
+      .get('/')
+      .expect(200, '<p>tobi</p>', done)
+    })
+
+    it('should support function as option', function (done) {
+      function index (path) {
+        var res = this.res
+
+        res.end('<p>tobi</p>')
+      }
+
+      var app = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures, index: index})
+        .pipe(res)
+      })
+
+      request(app)
       .get('/')
       .expect(200, '<p>tobi</p>', done)
     })

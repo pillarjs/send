@@ -142,13 +142,20 @@ function SendStream (req, path, options) {
     this._dotfiles = undefined
   }
 
-  this._extensions = opts.extensions !== undefined
-    ? normalizeList(opts.extensions, 'extensions option')
-    : []
+  this._extensions = normalizeList(opts.extensions, 'extensions option')
 
-  this._index = opts.index !== undefined
-    ? normalizeList(opts.index, 'index option')
-    : ['index.html']
+  switch (typeof opts.index) {
+    case 'function':
+      this._index = opts.index
+      break
+
+    case 'undefined':
+      this._index = ['index.html']
+      break
+
+    default:
+      this._index = normalizeList(opts.index, 'index option')
+  }
 
   this._lastModified = opts.lastModified !== undefined
     ? Boolean(opts.lastModified)
@@ -542,11 +549,16 @@ SendStream.prototype.pipe = function pipe (res) {
   }
 
   // index file support
+  if (typeof this._index === 'function') {
+    this._index(path)
+    return res
+  }
   if (this._index.length && this.path[this.path.length - 1] === '/') {
     this.sendIndex(path)
     return res
   }
 
+  // Render a file, or an index as a file
   this.sendFile(path)
   return res
 }
@@ -703,6 +715,11 @@ SendStream.prototype.sendFile = function sendFile (path) {
  * @api private
  */
 SendStream.prototype.sendIndex = function sendIndex (path) {
+  if (listenerCount(this, 'index')) {
+    this.emit('index', path)
+    return
+  }
+
   var i = -1
   var self = this
 
