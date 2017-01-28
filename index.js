@@ -63,6 +63,18 @@ var MAX_MAXAGE = 60 * 60 * 24 * 365 * 1000 // 1 year
 var UP_PATH_REGEXP = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/
 
 /**
+ * Regular expression to match a bad file number error code
+ * Node on Windows incorrectly sets the error code to `OK`
+ * instead of `EBADF` because of a bug in libuv
+ * @type {RegExp}
+ * @const
+ * @see {@link https://github.com/nodejs/node/issues/3718}
+ * @see {@link https://github.com/libuv/libuv/pull/613}
+ */
+
+var BAD_FD_REGEXP = /^(EBADF|OK)$/
+
+/**
  * Module exports.
  * @public
  */
@@ -486,7 +498,7 @@ SendStream.prototype.pipe = function pipe (res) {
     if (typeof self.fd === 'number' && autoClose) {
       fs.close(self.fd, function (err) {
         /* istanbul ignore next */
-        if (err && err.code !== 'EBADF') return self.onFileSystemError(err)
+        if (err && !BAD_FD_REGEXP.test(err.code)) return self.onFileSystemError(err)
         self.fd = null
         self.emit('close')
       })
