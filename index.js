@@ -24,6 +24,7 @@ var fs = require('fs')
 var mime = require('mime')
 var ms = require('ms')
 var onFinished = require('on-finished')
+var isFinished = onFinished.isFinished
 var parseRange = require('range-parser')
 var path = require('path')
 var statuses = require('statuses')
@@ -180,6 +181,8 @@ function SendStream (req, path, options) {
   this.fd = typeof opts.fd === 'number'
     ? opts.fd
     : null
+
+  this.autoClose = opts.autoClose !== false
 
   if (!this._root && opts.from) {
     this.from(opts.from)
@@ -476,7 +479,35 @@ SendStream.prototype.redirect = function redirect (path) {
 }
 
 /**
- * Pipe to `res.
+ * End the stream.
+ *
+ * @private
+ */
+
+SendStream.prototype.end = function end () {
+  this.send = this.close
+  if (this._stream) this._stream.destroy()
+  if (this.autoClose) this.close()
+}
+
+/**
+ * Close the file descriptor.
+ *
+ * @private
+ */
+
+SendStream.prototype.close = function close () {
+  if (typeof this.fd !== 'number') return
+  var self = this
+  fs.close(this.fd, function (err) { /* istanbul ignore next */
+    if (err && !BAD_FD_REGEXP.test(err.code)) return self.onFileSystemError(err)
+    self.fd = null
+    self.emit('close')
+  })
+}
+
+/**
+ * Pipe to `res`.
  *
  * @param {Stream} res
  * @return {Stream} res
@@ -492,18 +523,12 @@ SendStream.prototype.pipe = function pipe (res) {
   this.res = res
 
   // response finished, done with the fd
-  onFinished(res, function onfinished () {
-    var autoClose = self.options.autoClose !== false
-    if (self._stream) self._stream.destroy()
-    if (typeof self.fd === 'number' && autoClose) {
-      fs.close(self.fd, function (err) {
-        /* istanbul ignore next */
-        if (err && !BAD_FD_REGEXP.test(err.code)) return self.onFileSystemError(err)
-        self.fd = null
-        self.emit('close')
-      })
-    }
-  })
+  if (isFinished(res)) {
+    this.end()
+    return res
+  }
+
+  onFinished(res, this.end.bind(this))
 
   if (typeof this.fd === 'number') {
     fs.fstat(this.fd, function (err, stat) {
@@ -607,6 +632,8 @@ SendStream.prototype.send = function send (path, stat) {
   var req = this.req
   var ranges = req.headers.range
   var offset = options.start || 0
+
+  if (isFinished(res)) return this.end()
 
   if (res._header) {
     // impossible to send now

@@ -24,6 +24,7 @@ var app = http.createServer(function (req, res) {
   .pipe(res)
 })
 
+var noop = Function.prototype
 var fsOpen = fs.open
 var fsClose = fs.close
 var fds = { opened: 0, closed: 0 }
@@ -934,10 +935,43 @@ describe('send(file, options)', function () {
       .get('/anything')
       .expect(500, done)
     })
+
+    it('should close the file descriptor if the response ends before pipe', function (done) {
+      fs.open(path.join(fixtures, '/name.txt'), 'r', function (err, fd) {
+        if (err) return done(err)
+        var app = http.createServer(function (req, res) {
+          res.end()
+          send(req, req.url, req.url === '/fd' ? {fd: fd} : {root: 'test/fixtures'})
+          .on('close', done)
+          .pipe(res)
+        })
+
+        request(app)
+        .get('/nums')
+        .expect(200, function () {
+          request(app)
+          .get('/fd')
+          .expect(200, noop)
+        })
+      })
+    })
+
+    it('should close the file descriptor if the response ends immediately after pipe', function (done) {
+      var app = http.createServer(function (req, res) {
+        send(req, req.url, {root: 'test/fixtures'})
+        .on('close', done)
+        .pipe(res)
+        res.end()
+      })
+
+      request(app)
+      .get('/name.txt')
+      .expect(200, noop)
+    })
   })
 
   describe('autoClose', function () {
-    it('should prevent the file descriptor from being closed automatically', function (done) {
+    it('should prevent the file descriptor from being closed automatically if set to `false`', function (done) {
       var resource = '/nums'
       fs.open(path.join(fixtures, resource), 'r', function (err, fd) {
         if (err) return done(err)
