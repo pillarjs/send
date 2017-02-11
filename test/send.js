@@ -34,7 +34,7 @@ var fds = { opened: 0, closed: 0 }
 before(function () {
   // When `fs.open()` is called we wrap the last argument (the
   // callback which receives the file descriptor) so that when
-  // it is evuantually called we can increment the number of
+  // it is eventually called we can increment the number of
   // opened file descriptors
   fs.open = function wrappedFSopen () {
     var args = Array.prototype.slice.call(arguments)
@@ -937,21 +937,31 @@ describe('send(file, options)', function () {
     })
 
     it('should close the file descriptor if the response ends before pipe', function (done) {
-      fs.open(path.join(fixtures, '/name.txt'), 'r', function (err, fd) {
-        if (err) return done(err)
-        var app = http.createServer(function (req, res) {
+      var app = http.createServer(function (req, res) {
+        if (req.url === '/fd') {
+          fs.open(path.join(fixtures, '/name.txt'), 'r', function (err, fd) {
+            res.end()
+            if (err) return done(err)
+            send(req, req.url, {fd: fd})
+            .on('close', done)
+            .pipe(res)
+          })
+        } else {
           res.end()
-          send(req, req.url, req.url === '/fd' ? {fd: fd} : {root: 'test/fixtures'})
+          send(req, req.url, {root: 'test/fixtures'})
           .on('close', done)
           .pipe(res)
-        })
+        }
+      })
 
+      request(app)
+      .get('/nums')
+      .expect(200, function (err) {
+        if (err) return done(err)
         request(app)
-        .get('/nums')
-        .expect(200, function () {
-          request(app)
-          .get('/fd')
-          .expect(200, noop)
+        .get('/fd')
+        .expect(200, function (err) {
+          if (err) done(err)
         })
       })
     })

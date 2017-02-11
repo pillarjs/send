@@ -608,7 +608,7 @@ SendStream.prototype.pipe = function pipe (res) {
   }
 
   // index file support
-  if (this._index.length && this.path[this.path.length - 1] === '/') {
+  if (this._index.length && this.hasTrailingSlash()) {
     this.sendIndex(path)
     return res
   }
@@ -632,8 +632,6 @@ SendStream.prototype.send = function send (path, stat) {
   var req = this.req
   var ranges = req.headers.range
   var offset = options.start || 0
-
-  if (isFinished(res)) return this.end()
 
   if (res._header) {
     // impossible to send now
@@ -736,11 +734,10 @@ SendStream.prototype.sendFile = function sendFile (path) {
 
   debug('open "%s"', path)
   fs.open(path, 'r', function onopen (err, fd) {
-    return !err
-      ? sendStats(path, fd, self.onFileSystemError, redirect)
-      : err.code === 'ENOENT' && !extname(path) && path[path.length - 1] !== sep
-        ? next(err) // not found, check extensions
-        : self.onFileSystemError(err)
+    if (!err) return sendStats(path, fd, self.onFileSystemError, redirect)
+    return err.code === 'ENOENT' && !extname(path) && path[path.length - 1] !== sep
+      ? next(err) // not found, check extensions
+      : self.onFileSystemError(err)
   })
 
   function next (err) {
