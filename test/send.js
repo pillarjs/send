@@ -426,6 +426,34 @@ describe('send(file).pipe(res)', function () {
       })
     })
 
+    describe('where "If-Match" is set', function () {
+      it('should respond with 200 when "*"', function (done) {
+        request(app)
+        .get('/name.txt')
+        .set('If-Match', '*')
+        .expect(200, done)
+      })
+
+      it('should respond with 412 when ETag unmatched', function (done) {
+        request(app)
+        .get('/name.txt')
+        .set('If-Match', '"foo", "bar"')
+        .expect(412, done)
+      })
+
+      it('should respond with 200 when ETag matched', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-Match', '"foo", "bar", ' + res.headers.etag)
+          .expect(200, done)
+        })
+      })
+    })
+
     describe('where "If-Modified-Since" is set', function () {
       it('should respond with 304 when unmodified', function (done) {
         request(app)
@@ -477,6 +505,41 @@ describe('send(file).pipe(res)', function () {
           .set('If-None-Match', '"123"')
           .expect(200, 'tobi', done)
         })
+      })
+    })
+
+    describe('where "If-Unmodified-Since" is set', function () {
+      it('should respond with 200 when unmodified', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-Unmodified-Since', res.headers['last-modified'])
+          .expect(200, done)
+        })
+      })
+
+      it('should respond with 412 when modified', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          var lmod = new Date(res.headers['last-modified'])
+          var date = new Date(lmod - 60000).toUTCString()
+          request(app)
+          .get('/name.txt')
+          .set('If-Unmodified-Since', date)
+          .expect(412, done)
+        })
+      })
+
+      it('should respond with 200 when invalid date', function (done) {
+        request(app)
+        .get('/name.txt')
+        .set('If-Unmodified-Since', 'foo')
+        .expect(200, done)
       })
     })
   })

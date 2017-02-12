@@ -8,9 +8,10 @@
 [![Gratipay][gratipay-image]][gratipay-url]
 
 Send is a library for streaming files from the file system as a http response
-supporting partial responses (Ranges), conditional-GET negotiation (If-None-Match,
-If-Modified-Since), high test coverage, and granular events which may be
-leveraged to take appropriate actions in your application or framework.
+supporting partial responses (Ranges), conditional-GET negotiation (If-Match,
+If-Unmodified-Since, If-None-Match, If-Modified-Since), high test coverage,
+and granular events which may be leveraged to take appropriate actions in your
+application or framework.
 
 Looking to serve up entire folders mapped to URLs? Try [serve-static](https://www.npmjs.org/package/serve-static).
 

@@ -50,6 +50,13 @@ var sep = path.sep
 var BYTES_RANGE_REGEXP = /^ *bytes=/
 
 /**
+ * Simple expression to split token list.
+ * @private
+ */
+
+var TOKEN_LIST_REGEXP = / *, */
+
+/**
  * Maximum value allowed for the max age.
  * @private
  */
@@ -317,8 +324,40 @@ SendStream.prototype.hasTrailingSlash = function hasTrailingSlash () {
  */
 
 SendStream.prototype.isConditionalGET = function isConditionalGET () {
-  return this.req.headers['if-none-match'] ||
+  return this.req.headers['if-match'] ||
+    this.req.headers['if-unmodified-since'] ||
+    this.req.headers['if-none-match'] ||
     this.req.headers['if-modified-since']
+}
+
+/**
+ * Check if the request preconditions failed.
+ *
+ * @return {boolean}
+ * @private
+ */
+
+SendStream.prototype.isPreconditionFailure = function isPreconditionFailure () {
+  var req = this.req
+  var res = this.res
+
+  // if-match
+  var match = req.headers['if-match']
+  if (match) {
+    var etag = res.getHeader('ETag')
+    return !etag || (match !== '*' && match.split(TOKEN_LIST_REGEXP).every(function (match) {
+      return match !== etag && match !== 'W/' + etag && 'W/' + match !== etag
+    }))
+  }
+
+  // if-unmodified-since
+  var unmodifiedSince = Date.parse(req.headers['if-unmodified-since'])
+  if (!isNaN(unmodifiedSince)) {
+    var lastModified = Date.parse(res.getHeader('Last-Modified'))
+    return isNaN(lastModified) || lastModified > unmodifiedSince
+  }
+
+  return false
 }
 
 /**
@@ -596,9 +635,16 @@ SendStream.prototype.send = function send (path, stat) {
   this.type(path)
 
   // conditional GET support
-  if (this.isConditionalGET() && this.isCachable() && this.isFresh()) {
-    this.notModified()
-    return
+  if (this.isConditionalGET()) {
+    if (this.isPreconditionFailure()) {
+      this.error(412)
+      return
+    }
+
+    if (this.isCachable() && this.isFresh()) {
+      this.notModified()
+      return
+    }
   }
 
   // adjust len to start/end options
