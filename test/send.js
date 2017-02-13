@@ -379,11 +379,11 @@ describe('send(file).pipe(res)', function () {
         res.setHeader('ETag', ETAG)
       })
 
-      it('should respond with 200 if the response `ETag` is not "strong"', function (done) {
+      it('should respond with 412 if the response `ETag` is not "strong"', function (done) {
         request(createServer({root: fixtures}))
         .get('/name.txt')
         .set('If-Match', ETAG)
-        .expect(200, done)
+        .expect(412, done)
       })
 
       it('should respond with 412 if the response `ETag` does not match', function (done) {
@@ -409,24 +409,33 @@ describe('send(file).pipe(res)', function () {
         .expect(200, done)
       })
 
-      it('should respond with 412 if the resource was modified since the `If-Unmodified-Since` request header', function (done) {
+      it('should respond with 412 if the response was `Last-Modified` since the `If-Unmodified-Since` request header', function (done) {
         request(createServer({root: fixtures}))
         .get('/name.txt')
         .set('If-Unmodified-Since', new Date(0).toUTCString())
         .expect(412, done)
       })
 
+      it('should respond with 412 if the response `Last-Modified` is not set or is invalid', function (done) {
+        request(createServer({root: fixtures, lastModified: false}))
+        .get('/name.txt')
+        .set('If-Unmodified-Since', new Date().toUTCString())
+        .expect(412, function (err) {
+          if (err) return done(err)
+          request(createServer({root: fixtures}, function (req, res) {
+            res.setHeader('Last-Modified', 'invalid date')
+          }))
+          .get('/name.txt')
+          .set('If-Unmodified-Since', new Date().toUTCString())
+          .expect(412, done)
+        })
+      })
+
       it('should respond with 200 if the resource has not been modified since the `If-Unmodified-Since` request header', function (done) {
         request(createServer({root: fixtures}))
         .get('/name.txt')
         .set('If-Unmodified-Since', new Date().toUTCString())
-        .expect(200, function (err) {
-          if (err) return done(err)
-          request(createServer({root: fixtures, lastModified: false}))
-          .get('/name.txt')
-          .set('If-Unmodified-Since', new Date().toUTCString())
-          .expect(200, done)
-        })
+        .expect(200, done)
       })
     })
 

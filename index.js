@@ -308,36 +308,34 @@ SendStream.prototype.hasTrailingSlash = function hasTrailingSlash () {
 }
 
 /**
- * Returns `true` if any request preconditions are failing
+ * Returns `true` if all request preconditions are satisfied
  *
  * @return {Boolean}
  * @api private
  */
 
-SendStream.prototype.isFailingPrecondition = function isFailingPrecondition (stat) {
+SendStream.prototype.isSatisfyingPreconditions = function isSatisfyingPreconditions (stat) {
   // if-match
   var match = this.req.headers['if-match']
-  var etag = this.res._headers['etag']
-  var strongEtag = /^(?!W\/)/
 
   if (match) {
-    if (strongEtag.test(etag)) {
-      return !match.split(/ *, */).some(function (match) {
-        return match === '*' || match === etag
-      })
-    }
+    var etag = this.res.getHeader('etag')
+    var validEtag = etag && /^(?!W\/)/.test(etag)
+
+    return validEtag && match.split(/ *, */).some(function (match) {
+      return match === '*' || match === etag
+    })
   }
 
   // if-unmodified-since
   var unmodifiedSince = Date.parse(this.req.headers['if-unmodified-since'])
-  var lastModified = Date.parse(this.res._headers['last-modified'])
-  if (isNaN(lastModified)) lastModified = stat.mtime.getTime()
 
-  if (!isNaN(unmodifiedSince) && !isNaN(lastModified)) {
-    return unmodifiedSince <= lastModified
+  if (!isNaN(unmodifiedSince)) {
+    var lastModified = Date.parse(this.res.getHeader('last-modified'))
+    return !isNaN(lastModified) && lastModified <= unmodifiedSince
   }
 
-  return false
+  return true
 }
 
 /**
@@ -632,7 +630,7 @@ SendStream.prototype.send = function send (path, stat) {
 
   // conditional GET support
   if (this.isConditionalGET() && this.isCachable()) {
-    if (this.isFailingPrecondition(stat)) {
+    if (!this.isSatisfyingPreconditions()) {
       this.preconditionFailed()
       return
     }
