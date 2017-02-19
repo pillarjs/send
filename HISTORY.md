@@ -3,6 +3,12 @@ unreleased
 
   * Send complete HTML document in redirect & error responses
   * Set default CSP header in redirect & error responses
+  * deps: debug@2.6.1
+    - Allow colors in workers
+    - Deprecated `DEBUG_FD` environment variable set to `3` or higher
+    - Fix error when running under React Native
+    - Use same color for same namespace
+    - deps: ms@0.7.2
 
 0.14.2 / 2017-01-23
 ===================
