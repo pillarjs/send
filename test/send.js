@@ -342,6 +342,14 @@ describe('send(file).pipe(res)', function () {
       .expect(301, />Redirecting to <a href="\/pets\/">\/pets\/<\/a></, done)
     })
 
+    it('should respond with default Content-Security-Policy', function (done) {
+      request(createServer({root: fixtures}))
+      .get('/pets')
+      .expect('Location', '/pets/')
+      .expect('Content-Security-Policy', "default-src 'self'")
+      .expect(301, done)
+    })
+
     it('should not redirect to protocol-relative locations', function (done) {
       request(createServer({root: fixtures}))
       .get('//pets')
@@ -368,6 +376,13 @@ describe('send(file).pipe(res)', function () {
       request(createServer({root: fixtures}))
       .get('/foobar')
       .expect(404, />Not Found</, done)
+    })
+
+    it('should respond with default Content-Security-Policy', function (done) {
+      request(createServer({root: fixtures}))
+      .get('/foobar')
+      .expect('Content-Security-Policy', "default-src 'self'")
+      .expect(404, done)
     })
   })
 

@@ -293,6 +293,7 @@ SendStream.prototype.error = function error (status, error) {
   res.statusCode = status
   res.setHeader('Content-Type', 'text/html; charset=UTF-8')
   res.setHeader('Content-Length', Buffer.byteLength(doc))
+  res.setHeader('Content-Security-Policy', "default-src 'self'")
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.end(doc)
 }
@@ -455,6 +456,7 @@ SendStream.prototype.redirect = function redirect (path) {
   res.statusCode = 301
   res.setHeader('Content-Type', 'text/html; charset=UTF-8')
   res.setHeader('Content-Length', Buffer.byteLength(doc))
+  res.setHeader('Content-Security-Policy', "default-src 'self'")
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('Location', loc)
   res.end(doc)
