@@ -171,7 +171,6 @@ describe('send(file).pipe(res)', function () {
 
     request(app)
     .get('/name.txt')
-    .expect('Content-Type', /plain/)
     .expect(404, done)
   })
 
@@ -340,7 +339,7 @@ describe('send(file).pipe(res)', function () {
       .get('/pets')
       .expect('Location', '/pets/')
       .expect('Content-Type', /html/)
-      .expect(301, 'Redirecting to <a href="/pets/">/pets/</a>\n', done)
+      .expect(301, />Redirecting to <a href="\/pets\/">\/pets\/<\/a></, done)
     })
 
     it('should not redirect to protocol-relative locations', function (done) {
@@ -360,7 +359,7 @@ describe('send(file).pipe(res)', function () {
       .get('/snow')
       .expect('Location', '/snow%20%E2%98%83/')
       .expect('Content-Type', /html/)
-      .expect(301, 'Redirecting to <a href="/snow%20%E2%98%83/">/snow%20%E2%98%83/</a>\n', done)
+      .expect(301, />Redirecting to <a href="\/snow%20%E2%98%83\/">\/snow%20%E2%98%83\/<\/a></, done)
     })
   })
 
@@ -368,7 +367,7 @@ describe('send(file).pipe(res)', function () {
     it('should respond to errors directly', function (done) {
       request(createServer({root: fixtures}))
       .get('/foobar')
-      .expect(404, 'Not Found', done)
+      .expect(404, />Not Found</, done)
     })
   })
 

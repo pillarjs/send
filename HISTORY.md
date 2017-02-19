@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Send complete HTML document in redirect & error responses
+
 0.14.2 / 2017-01-23
 ===================
 

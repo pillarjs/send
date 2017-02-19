@@ -278,7 +278,8 @@ SendStream.prototype.error = function error (status, error) {
   }
 
   var res = this.res
-  var msg = statuses[status]
+  var msg = statuses[status] || String(status)
+  var doc = createHtmlDocument('Error', escapeHtml(msg))
 
   // clear existing headers
   clearHeaders(res)
@@ -290,10 +291,10 @@ SendStream.prototype.error = function error (status, error) {
 
   // send basic response
   res.statusCode = status
-  res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
-  res.setHeader('Content-Length', Buffer.byteLength(msg))
+  res.setHeader('Content-Type', 'text/html; charset=UTF-8')
+  res.setHeader('Content-Length', Buffer.byteLength(doc))
   res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.end(msg)
+  res.end(doc)
 }
 
 /**
@@ -446,16 +447,17 @@ SendStream.prototype.redirect = function redirect (path) {
   }
 
   var loc = encodeUrl(collapseLeadingSlashes(path + '/'))
-  var msg = 'Redirecting to <a href="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</a>\n'
+  var doc = createHtmlDocument('Redirecting', 'Redirecting to <a href="' + escapeHtml(loc) + '">' +
+    escapeHtml(loc) + '</a>')
   var res = this.res
 
   // redirect
   res.statusCode = 301
   res.setHeader('Content-Type', 'text/html; charset=UTF-8')
-  res.setHeader('Content-Length', Buffer.byteLength(msg))
+  res.setHeader('Content-Length', Buffer.byteLength(doc))
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('Location', loc)
-  res.end(msg)
+  res.end(doc)
 }
 
 /**
@@ -890,6 +892,26 @@ function containsDotFile (parts) {
 
 function contentRange (type, size, range) {
   return type + ' ' + (range ? range.start + '-' + range.end : '*') + '/' + size
+}
+
+/**
+ * Create a minimal HTML document.
+ *
+ * @param {string} title
+ * @param {string} body
+ * @private
+ */
+
+function createHtmlDocument (title, body) {
+  return '<!DOCTYPE html>\n' +
+    '<html lang="en">\n' +
+    '<head>\n' +
+    '<meta charset="utf-8">\n' +
+    '<title>' + title + '</title>\n' +
+    '</head>\n' +
+    '<body>\n' +
+    '<pre>' + body + '</pre>\n' +
+    '</body>\n'
 }
 
 /**
