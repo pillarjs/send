@@ -19,7 +19,7 @@
     "destroy": "~1.0.4",
     "encodeurl": "~1.0.1",
     "escape-html": "~1.0.3",
-    "etag": "~1.7.0",
+    "etag": "~1.8.0",
     "fresh": "0.3.0",
     "http-errors": "~1.6.0",
     "mime": "1.3.4",
