@@ -61,7 +61,7 @@ var MAX_MAXAGE = 60 * 60 * 24 * 365 * 1000 // 1 year
  * @private
  */
 
-var UP_PATH_REGEXP = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/
+var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/
 
 /**
  * Module exports.
