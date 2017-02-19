@@ -16,7 +16,6 @@ var createError = require('http-errors')
 var debug = require('debug')('send')
 var deprecate = require('depd')('send')
 var destroy = require('destroy')
-var encodeUrl = require('encodeurl')
 var escapeHtml = require('escape-html')
 var etag = require('etag')
 var EventEmitter = require('events').EventEmitter
@@ -30,6 +29,10 @@ var path = require('path')
 var statuses = require('statuses')
 var Stream = require('stream')
 var util = require('util')
+
+var dirname = path.dirname
+var relative = path.relative
+var url = require('url')
 
 /**
  * Path function references.
@@ -78,6 +81,31 @@ module.exports.mime = mime
 /* istanbul ignore next */
 var listenerCount = EventEmitter.listenerCount ||
   function (emitter, type) { return emitter.listeners(type).length }
+
+function responseStatus (res, code, msg) {
+  var errMsg = msg
+  if (errMsg == null) {
+    errMsg = statuses[code]
+
+    res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
+  }
+
+  res.statusCode = code
+  res.setHeader('Content-Length', Buffer.byteLength(msg))
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.end(errMsg)
+}
+
+function redirect (res, loc) {
+  // redirect
+  res.setHeader('Content-Type', 'text/html; charset=UTF-8')
+  res.setHeader('Location', loc)
+
+  var escLoc = escapeHtml(loc)
+  var msg = 'Redirecting to <a href="' + escLoc + '">' + escLoc + '</a>\n'
+
+  responseStatus(res, 301, msg)
+}
 
 /**
  * Return a `SendStream` for `req` and `path`.
@@ -165,6 +193,8 @@ function SendStream (req, path, options) {
   this._root = opts.root
     ? resolve(opts.root)
     : null
+
+  this._redirectSymlinks = opts.redirectSymlinks
 
   if (!this._root && opts.from) {
     this.from(opts.from)
@@ -278,7 +308,6 @@ SendStream.prototype.error = function error (status, error) {
   }
 
   var res = this.res
-  var msg = statuses[status]
 
   // clear existing headers
   clearHeaders(res)
@@ -289,11 +318,7 @@ SendStream.prototype.error = function error (status, error) {
   }
 
   // send basic response
-  res.statusCode = status
-  res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
-  res.setHeader('Content-Length', Buffer.byteLength(msg))
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.end(msg)
+  responseStatus(res, status)
 }
 
 /**
@@ -434,7 +459,7 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
  * @private
  */
 
-SendStream.prototype.redirect = function redirect (path) {
+SendStream.prototype.redirect = function redirectDirectory (path) {
   if (listenerCount(this, 'directory') !== 0) {
     this.emit('directory')
     return
@@ -445,17 +470,38 @@ SendStream.prototype.redirect = function redirect (path) {
     return
   }
 
-  var loc = encodeUrl(collapseLeadingSlashes(path + '/'))
-  var msg = 'Redirecting to <a href="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</a>\n'
-  var res = this.res
+  redirect(this.res, path + '/')
+}
 
-  // redirect
-  res.statusCode = 301
-  res.setHeader('Content-Type', 'text/html; charset=UTF-8')
-  res.setHeader('Content-Length', Buffer.byteLength(msg))
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.setHeader('Location', loc)
-  res.end(msg)
+/**
+ * Redirect a symbolic link.
+ *
+ * @param {string} path
+ * @private
+ */
+
+SendStream.prototype.redirectSymbolicLink = function redirectSymbolicLink (path) {
+  var self = this
+
+  fs.readlink(path, function (err, linkString) {
+    if (err) return self.onStatError(err)
+
+    // Get absolute path on the real filesystem of the destination
+    path = dirname(path)
+    var to = resolve(path, linkString)
+
+    // Check destination is not out of files root
+    if (to.indexOf(self._root) !== 0) return this.error(403)
+
+    // Get relative paths for all symlinks, also for absolute ones
+    linkString = relative(path, to)
+
+    // Resolve the URL, and make it relative (is this necessary?)
+    linkString = url.resolve(self.path, linkString)
+    linkString = relative(dirname(self.path), linkString)
+
+    redirect(self.res, linkString)
+  })
 }
 
 /**
@@ -666,22 +712,30 @@ SendStream.prototype.sendFile = function sendFile (path) {
   var self = this
 
   debug('stat "%s"', path)
-  fs.stat(path, function onstat (err, stat) {
-    if (err && err.code === 'ENOENT' && !extname(path) && path[path.length - 1] !== sep) {
+  fs.lstat(path, function onstat (err, stat) {
+    if (err && err.code === 'ENOENT' &&
+        !extname(path) &&
+        path[path.length - 1] !== sep) {
       // not found, check extensions
       return next(err)
     }
+
     if (err) return self.onStatError(err)
+
     if (stat.isDirectory()) return self.redirect(self.path)
+
+    if (stat.isSymbolicLink() && self._redirectSymlinks) {
+      return self.redirectSymbolicLink(path)
+    }
+
     self.emit('file', path, stat)
     self.send(path, stat)
   })
 
   function next (err) {
     if (self._extensions.length <= i) {
-      return err
-        ? self.onStatError(err)
-        : self.error(404)
+      if (err) return self.onStatError(err)
+      return self.error(404)
     }
 
     var p = path + '.' + self._extensions[i++]
@@ -689,7 +743,9 @@ SendStream.prototype.sendFile = function sendFile (path) {
     debug('stat "%s"', p)
     fs.stat(p, function (err, stat) {
       if (err) return next(err)
+
       if (stat.isDirectory()) return next()
+
       self.emit('file', p, stat)
       self.send(p, stat)
     })
@@ -703,21 +759,23 @@ SendStream.prototype.sendFile = function sendFile (path) {
  * @api private
  */
 SendStream.prototype.sendIndex = function sendIndex (path) {
-  var i = -1
+  var i = 0
   var self = this
 
   function next (err) {
-    if (++i >= self._index.length) {
+    if (self._index.length <= i) {
       if (err) return self.onStatError(err)
       return self.error(404)
     }
 
-    var p = join(path, self._index[i])
+    var p = join(path, self._index[i++])
 
     debug('stat "%s"', p)
     fs.stat(p, function (err, stat) {
       if (err) return next(err)
+
       if (stat.isDirectory()) return next()
+
       self.emit('file', p, stat)
       self.send(p, stat)
     })
@@ -844,24 +902,6 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
 function clearHeaders (res) {
   res._headers = {}
   res._headerNames = {}
-}
-
-/**
- * Collapse all leading slashes into a single slash
- *
- * @param {string} str
- * @private
- */
-function collapseLeadingSlashes (str) {
-  for (var i = 0; i < str.length; i++) {
-    if (str[i] !== '/') {
-      break
-    }
-  }
-
-  return i > 1
-    ? '/' + str.substr(i)
-    : str
 }
 
 /**
