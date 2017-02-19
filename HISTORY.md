@@ -9,6 +9,8 @@ unreleased
     - Fix error when running under React Native
     - Use same color for same namespace
     - deps: ms@0.7.2
+  * deps: http-errors@~1.6.0
+    - Make `message` property enumerable for `HttpError`s
 
 0.14.2 / 2017-01-23
 ===================
