@@ -1,6 +1,8 @@
 unreleased
 ==========
 
+  * Remove usage of `res._headers` private field
+    - Improves compatibility with Node.js 8 nightly
   * Send complete HTML document in redirect & error responses
   * Set default CSP header in redirect & error responses
   * deps: debug@2.6.1

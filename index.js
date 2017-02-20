@@ -407,7 +407,10 @@ SendStream.prototype.onStatError = function onStatError (error) {
  */
 
 SendStream.prototype.isFresh = function isFresh () {
-  return fresh(this.req.headers, this.res._headers)
+  return fresh(this.req.headers, {
+    'etag': this.res.getHeader('ETag'),
+    'last-modified': this.res.getHeader('Last-Modified')
+  })
 }
 
 /**
@@ -424,9 +427,15 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
     return true
   }
 
-  return ~ifRange.indexOf('"')
-    ? ~ifRange.indexOf(this.res._headers['etag'])
-    : Date.parse(this.res._headers['last-modified']) <= Date.parse(ifRange)
+  // if-range as etag
+  if (ifRange.indexOf('"') !== -1) {
+    var etag = this.res.getHeader('ETag')
+    return Boolean(etag && ifRange.indexOf(etag) !== -1)
+  }
+
+  // if-range as modified date
+  var lastModified = this.res.getHeader('Last-Modified')
+  return Boolean(lastModified && Date.parse(lastModified) <= Date.parse(ifRange))
 }
 
 /**
