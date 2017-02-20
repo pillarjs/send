@@ -314,7 +314,7 @@ SendStream.prototype.hasTrailingSlash = function hasTrailingSlash () {
  * @api private
  */
 
-SendStream.prototype.isSatisfyingPreconditions = function isSatisfyingPreconditions (stat) {
+SendStream.prototype.isSatisfyingPreconditions = function isSatisfyingPreconditions () {
   // if-match
   var match = this.req.headers['if-match']
 
