@@ -407,7 +407,22 @@ SendStream.prototype.onStatError = function onStatError (error) {
  */
 
 SendStream.prototype.isFresh = function isFresh () {
-  return fresh(this.req.headers, this.res._headers)
+  var resHeaders = this.res._headers || {}
+
+  // Support changes in node with how response headers are stored
+  var headerNames = this.res._headerNames || {}
+  var keys = Object.keys(resHeaders)
+  if (keys.length > 0 && headerNames[keys[0]] === undefined) {
+    var oldResHeaders = {}
+    for (var i = 0; i < keys.length; ++i) {
+      var key = keys[i]
+      // resHeaders[key] === [originalCasedKey, value]
+      oldResHeaders[key] = resHeaders[key][1]
+    }
+    resHeaders = oldResHeaders
+  }
+
+  return fresh(this.req.headers, resHeaders)
 }
 
 /**
@@ -425,8 +440,8 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
   }
 
   return ~ifRange.indexOf('"')
-    ? ~ifRange.indexOf(this.res._headers['etag'])
-    : Date.parse(this.res._headers['last-modified']) <= Date.parse(ifRange)
+    ? ~ifRange.indexOf(this.res.getHeader('etag'))
+    : Date.parse(this.res.getHeader('last-modified')) <= Date.parse(ifRange)
 }
 
 /**
