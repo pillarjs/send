@@ -609,6 +609,14 @@ describe('send(file).pipe(res)', function () {
           .expect(200, '123456789', done)
         })
       })
+
+      it('should respond with 200 when invalid value', function (done) {
+        request(app)
+        .get('/nums')
+        .set('If-Range', 'foo')
+        .set('Range', 'bytes=0-0')
+        .expect(200, '123456789', done)
+      })
     })
   })
 
