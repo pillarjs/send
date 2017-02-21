@@ -446,8 +446,8 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
  */
 
 SendStream.prototype.redirect = function redirect (path) {
-  if (listenerCount(this, 'directory') !== 0) {
-    this.emit('directory')
+  if (listenerCount(this, 'directory')) {
+    this.emit('directory', path)
     return
   }
 
