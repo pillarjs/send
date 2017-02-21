@@ -21,7 +21,7 @@
     "escape-html": "~1.0.3",
     "etag": "~1.8.0",
     "fresh": "0.3.0",
-    "http-errors": "~1.6.0",
+    "http-errors": "~1.6.1",
     "mime": "1.3.4",
     "ms": "0.7.2",
     "on-finished": "~2.3.0",
