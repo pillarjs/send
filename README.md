@@ -233,7 +233,7 @@ var app = http.createServer(function onRequest (req, res) {
 }).listen(3000)
 ```
 
-## License 
+## License
 
 [MIT](LICENSE)
 
