@@ -403,50 +403,139 @@ describe('send(file).pipe(res)', function () {
   })
 
   describe('with conditional-GET', function () {
-    it('should respond with 304 on a match', function (done) {
-      request(app)
-      .get('/name.txt')
-      .expect(200, function (err, res) {
-        if (err) return done(err)
-        request(app)
-        .get('/name.txt')
-        .set('If-None-Match', res.headers.etag)
-        .expect(304, done)
-      })
-    })
-
-    it('should respond with 200 otherwise', function (done) {
-      request(app)
-      .get('/name.txt')
-      .expect(200, function (err, res) {
-        if (err) return done(err)
-        request(app)
-        .get('/name.txt')
-        .set('If-None-Match', '"123"')
-        .expect(200, 'tobi', done)
-      })
-    })
-
-    it('should remove Content headers', function (done) {
+    describe('where the `If-Match` header is present', function () {
+      var ETAG = 'SGVsbG8gV29ybGQ'
       var app = createServer({root: fixtures}, function (req, res) {
-        res.setHeader('Content-Language', 'en-US')
-        res.setHeader('Content-Location', 'http://localhost/name.txt')
-        res.setHeader('Contents', 'foo')
+        res.setHeader('ETag', ETAG)
       })
 
-      request(app)
-      .get('/name.txt')
-      .expect(200, function (err, res) {
-        if (err) return done(err)
+      it('should respond with 412 if the response `ETag` is not "strong"', function (done) {
+        request(createServer({root: fixtures}))
+        .get('/name.txt')
+        .set('If-Match', ETAG)
+        .expect(412, done)
+      })
+
+      it('should respond with 412 if the response `ETag` does not match', function (done) {
         request(app)
         .get('/name.txt')
-        .set('If-None-Match', res.headers.etag)
-        .expect(shouldNotHaveHeader('Content-Language'))
-        .expect(shouldNotHaveHeader('Content-Length'))
-        .expect(shouldNotHaveHeader('Content-Type'))
-        .expect('Content-Location', 'http://localhost/name.txt')
-        .expect('Contents', 'foo')
-        .expect(304, done)
+        .set('If-Match', 'nomatch')
+        .expect(412, done)
+      })
+
+      it('should respond with 200 if the response `ETag` does match', function (done) {
+        request(app)
+        .get('/name.txt')
+        .set('If-Match', ETAG)
+        .expect(200, done)
+      })
+    })
+
+    describe('where the `If-Unmodified-Since` header is present', function () {
+      it('should ignore the precondition if the `If-Unmodified-Since` request header is not a valid HTTP-date', function (done) {
+        request(createServer({root: fixtures}))
+        .get('/name.txt')
+        .set('If-Unmodified-Since', 'invalid date')
+        .expect(200, done)
+      })
+
+      it('should respond with 412 if the response was `Last-Modified` since the `If-Unmodified-Since` request header', function (done) {
+        request(createServer({root: fixtures}))
+        .get('/name.txt')
+        .set('If-Unmodified-Since', new Date(0).toUTCString())
+        .expect(412, done)
+      })
+
+      it('should respond with 412 if the response `Last-Modified` is not set or is invalid', function (done) {
+        request(createServer({root: fixtures, lastModified: false}))
+        .get('/name.txt')
+        .set('If-Unmodified-Since', new Date().toUTCString())
+        .expect(412, function (err) {
+          if (err) return done(err)
+          request(createServer({root: fixtures}, function (req, res) {
+            res.setHeader('Last-Modified', 'invalid date')
+          }))
+          .get('/name.txt')
+          .set('If-Unmodified-Since', new Date().toUTCString())
+          .expect(412, done)
+        })
+      })
+
+      it('should respond with 200 if the resource has not been modified since the `If-Unmodified-Since` request header', function (done) {
+        request(createServer({root: fixtures}))
+        .get('/name.txt')
+        .set('If-Unmodified-Since', new Date().toUTCString())
+        .expect(200, done)
+      })
+    })
+
+    describe('where both the `If-Match` and `If-Unmodified-Since` headers are present', function () {
+      it('should only check the `If-Match` condition', function (done) {
+        var ETAG = 'SGVsbG8gV29ybGQ'
+        var app = createServer({root: fixtures}, function (req, res) {
+          res.setHeader('ETag', ETAG)
+        })
+        request(app)
+        .get('/name.txt')
+        .set('If-Match', ETAG)
+        .set('If-Unmodified-Since', new Date(0).toUTCString())
+        .expect(200, function (err) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-Match', 'nomatch')
+          .set('If-Unmodified-Since', new Date().toUTCString())
+          .expect(412, done)
+        })
+      })
+    })
+
+    describe('where the response is "fresh"', function () {
+      it('should respond with 304 on a match', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-None-Match', res.headers.etag)
+          .expect(304, done)
+        })
+      })
+
+      it('should respond with 200 otherwise', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-None-Match', '"123"')
+          .expect(200, 'tobi', done)
+        })
+      })
+
+      it('should remove Content headers', function (done) {
+        var app = createServer({root: fixtures}, function (req, res) {
+          res.setHeader('Content-Language', 'en-US')
+          res.setHeader('Content-Location', 'http://localhost/name.txt')
+          res.setHeader('Contents', 'foo')
+        })
+
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-None-Match', res.headers.etag)
+          .expect(shouldNotHaveHeader('Content-Language'))
+          .expect(shouldNotHaveHeader('Content-Length'))
+          .expect(shouldNotHaveHeader('Content-Type'))
+          .expect('Content-Location', 'http://localhost/name.txt')
+          .expect('Contents', 'foo')
+          .expect(304, done)
+        })
       })
     })
   })

@@ -310,6 +310,37 @@ SendStream.prototype.hasTrailingSlash = function hasTrailingSlash () {
 }
 
 /**
+ * Returns `true` if all request preconditions are satisfied
+ *
+ * @return {Boolean}
+ * @api private
+ */
+
+SendStream.prototype.isSatisfyingPreconditions = function isSatisfyingPreconditions () {
+  // if-match
+  var match = this.req.headers['if-match']
+
+  if (match) {
+    var etag = this.res.getHeader('etag')
+    var validEtag = etag && /^(?!W\/)/.test(etag)
+
+    return validEtag && match.split(/ *, */).some(function (match) {
+      return match === '*' || match === etag
+    })
+  }
+
+  // if-unmodified-since
+  var unmodifiedSince = Date.parse(this.req.headers['if-unmodified-since'])
+
+  if (!isNaN(unmodifiedSince)) {
+    var lastModified = Date.parse(this.res.getHeader('last-modified'))
+    return !isNaN(lastModified) && lastModified <= unmodifiedSince
+  }
+
+  return true
+}
+
+/**
  * Check if this is a conditional GET request.
  *
  * @return {Boolean}
@@ -317,8 +348,10 @@ SendStream.prototype.hasTrailingSlash = function hasTrailingSlash () {
  */
 
 SendStream.prototype.isConditionalGET = function isConditionalGET () {
-  return this.req.headers['if-none-match'] ||
-    this.req.headers['if-modified-since']
+  return this.req.headers['if-match'] ||
+    this.req.headers['if-none-match'] ||
+    this.req.headers['if-modified-since'] ||
+    this.req.headers['if-unmodified-since']
 }
 
 /**
@@ -337,6 +370,20 @@ SendStream.prototype.removeContentHeaderFields = function removeContentHeaderFie
       res.removeHeader(header)
     }
   }
+}
+
+/**
+ * Respond with 412 precondition failed.
+ *
+ * @api private
+ */
+
+SendStream.prototype.preconditionFailed = function preconditionFailed () {
+  var res = this.res
+  debug('precondition failed')
+  this.removeContentHeaderFields()
+  res.statusCode = 412
+  res.end()
 }
 
 /**
@@ -596,9 +643,16 @@ SendStream.prototype.send = function send (path, stat) {
   this.type(path)
 
   // conditional GET support
-  if (this.isConditionalGET() && this.isCachable() && this.isFresh()) {
-    this.notModified()
-    return
+  if (this.isConditionalGET() && this.isCachable()) {
+    if (!this.isSatisfyingPreconditions()) {
+      this.preconditionFailed()
+      return
+    }
+
+    if (this.isFresh()) {
+      this.notModified()
+      return
+    }
   }
 
   // adjust len to start/end options
