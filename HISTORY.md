@@ -13,6 +13,18 @@ unreleased
     - Use same color for same namespace
     - deps: ms@0.7.2
   * deps: etag@~1.8.0
+  * deps: fresh@0.5.0
+    - Fix false detection of `no-cache` request directive
+    - Fix incorrect result when `If-None-Match` has both `*` and ETags
+    - Fix weak `ETag` matching to match spec
+    - perf: delay reading header values until needed
+    - perf: enable strict mode
+    - perf: hoist regular expressions
+    - perf: remove duplicate conditional
+    - perf: remove unnecessary boolean coercions
+    - perf: skip checking modified time if ETag check failed
+    - perf: skip parsing `If-None-Match` when no `ETag` header
+    - perf: use `Date.parse` instead of `new Date`
   * deps: http-errors@~1.6.1
     - Make `message` property enumerable for `HttpError`s
     - deps: setprototypeof@1.0.3
