@@ -400,6 +400,17 @@ describe('send(file).pipe(res)', function () {
       .expect('Content-Security-Policy', "default-src 'self'")
       .expect(404, done)
     })
+
+    it('should remove all previously-set headers', function (done) {
+      var server = createServer({root: fixtures}, function (req, res) {
+        res.setHeader('X-Foo', 'bar')
+      })
+
+      request(server)
+      .get('/foobar')
+      .expect(shouldNotHaveHeader('X-Foo'))
+      .expect(404, done)
+    })
   })
 
   describe('with conditional-GET', function () {
