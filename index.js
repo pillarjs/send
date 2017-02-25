@@ -595,7 +595,7 @@ SendStream.prototype.pipe = function pipe (res) {
   }
 
   // index file support
-  if (this._index.length && this.path[this.path.length - 1] === '/') {
+  if (this._index.length && this.hasTrailingSlash()) {
     this.sendIndex(path)
     return res
   }
