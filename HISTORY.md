@@ -1,5 +1,5 @@
-unreleased
-==========
+0.15.0 / 2017-02-25
+===================
 
   * Support `If-Match` and `If-Unmodified-Since` headers
   * Add `res` and `path` arguments to `directory` event
