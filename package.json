@@ -32,6 +32,7 @@
     "after": "0.8.2",
     "eslint": "3.16.0",
     "eslint-config-standard": "6.2.1",
+    "eslint-plugin-markdown": "1.0.0-beta.3",
     "eslint-plugin-promise": "3.4.2",
     "eslint-plugin-standard": "2.0.1",
     "istanbul": "0.4.5",
@@ -48,7 +49,7 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint --plugin markdown --ext js,md .",
     "test": "mocha --check-leaks --reporter spec --bail",
     "test-ci": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --check-leaks --reporter spec",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --check-leaks --reporter dot"

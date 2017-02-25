@@ -27,6 +27,8 @@ $ npm install send
 
 ## API
 
+<!-- eslint-disable no-unused-vars -->
+
 ```js
 var send = require('send')
 ```
@@ -172,9 +174,11 @@ var http = require('http')
 var parseUrl = require('parseurl')
 var send = require('send')
 
-var app = http.createServer(function onRequest (req, res) {
+var server = http.createServer(function onRequest (req, res) {
   send(req, parseUrl(req).pathname).pipe(res)
-}).listen(3000)
+})
+
+server.listen(3000)
 ```
 
 ### Custom file types
@@ -192,9 +196,11 @@ send.mime.define({
   'application/x-my-type': ['x-mt', 'x-mtt']
 })
 
-var app = http.createServer(function onRequest (req, res) {
+var server = http.createServer(function onRequest (req, res) {
   send(req, parseUrl(req).pathname).pipe(res)
-}).listen(3000)
+})
+
+server.listen(3000)
 ```
 
 ### Serving from a root directory with custom error-handling
@@ -204,7 +210,7 @@ var http = require('http')
 var parseUrl = require('parseurl')
 var send = require('send')
 
-var app = http.createServer(function onRequest (req, res) {
+var server = http.createServer(function onRequest (req, res) {
   // your custom error-handling logic:
   function error (err) {
     res.statusCode = err.status || 500
@@ -230,8 +236,10 @@ var app = http.createServer(function onRequest (req, res) {
   .on('error', error)
   .on('directory', redirect)
   .on('headers', headers)
-  .pipe(res);
-}).listen(3000)
+  .pipe(res)
+})
+
+server.listen(3000)
 ```
 
 ## License
