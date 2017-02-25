@@ -308,8 +308,8 @@ SendStream.prototype.error = function error (status, error) {
 /**
  * Check if the pathname ends with "/".
  *
- * @return {Boolean}
- * @api private
+ * @return {boolean}
+ * @private
  */
 
 SendStream.prototype.hasTrailingSlash = function hasTrailingSlash () {
@@ -368,7 +368,7 @@ SendStream.prototype.isPreconditionFailure = function isPreconditionFailure () {
 
 SendStream.prototype.removeContentHeaderFields = function removeContentHeaderFields () {
   var res = this.res
-  var headers = Object.keys(res._headers || {})
+  var headers = getHeaderNames(res)
 
   for (var i = 0; i < headers.length; i++) {
     var header = headers[i]
@@ -902,8 +902,11 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
  */
 
 function clearHeaders (res) {
-  res._headers = {}
-  res._headerNames = {}
+  var headers = getHeaderNames(res)
+
+  for (var i = 0; i < headers.length; i++) {
+    res.removeHeader(headers[i])
+  }
 }
 
 /**
@@ -988,6 +991,20 @@ function decode (path) {
   } catch (err) {
     return -1
   }
+}
+
+/**
+ * Get the header names on a respnse.
+ *
+ * @param {object} res
+ * @returns {array[string]}
+ * @private
+ */
+
+function getHeaderNames (res) {
+  return typeof res.getHeaderNames !== 'function'
+    ? Object.keys(res._headers || {})
+    : res.getHeaderNames()
 }
 
 /**
