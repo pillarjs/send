@@ -620,7 +620,7 @@ SendStream.prototype.send = function send (path, stat) {
   var ranges = req.headers.range
   var offset = options.start || 0
 
-  if (res._header) {
+  if (headersSent(res)) {
     // impossible to send now
     this.headersAlreadySent()
     return
@@ -1005,6 +1005,20 @@ function getHeaderNames (res) {
   return typeof res.getHeaderNames !== 'function'
     ? Object.keys(res._headers || {})
     : res.getHeaderNames()
+}
+
+/**
+ * Determine if the response headers have been sent.
+ *
+ * @param {object} res
+ * @returns {boolean}
+ * @private
+ */
+
+function headersSent (res) {
+  return typeof res.headersSent !== 'boolean'
+    ? Boolean(res._header)
+    : res.headersSent
 }
 
 /**
