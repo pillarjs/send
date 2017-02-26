@@ -355,21 +355,37 @@ describe('send(file).pipe(res)', function () {
   })
 
   describe('when "directory" listeners are present', function () {
-    it('should emit "directory" event sending directory', function (done) {
+    it('should be called when sending directory', function (done) {
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('directory', onDirectory)
         .pipe(res)
       })
 
-      function onDirectory () {
-        this.res.statusCode = 400
-        this.res.end('No directory for you')
+      function onDirectory (res) {
+        res.statusCode = 400
+        res.end('No directory for you')
       }
 
       request(server)
       .get('/pets')
       .expect(400, 'No directory for you', done)
+    })
+
+    it('should be called with path', function (done) {
+      var server = http.createServer(function (req, res) {
+        send(req, req.url, {root: fixtures})
+        .on('directory', onDirectory)
+        .pipe(res)
+      })
+
+      function onDirectory (res, dirPath) {
+        res.end(path.normalize(dirPath))
+      }
+
+      request(server)
+      .get('/pets')
+      .expect(200, path.normalize(path.join(fixtures, 'pets')), done)
     })
   })
 
@@ -386,7 +402,15 @@ describe('send(file).pipe(res)', function () {
       .get('/pets')
       .expect('Location', '/pets/')
       .expect('Content-Type', /html/)
-      .expect(301, 'Redirecting to <a href="/pets/">/pets/</a>\n', done)
+      .expect(301, />Redirecting to <a href="\/pets\/">\/pets\/<\/a></, done)
+    })
+
+    it('should respond with default Content-Security-Policy', function (done) {
+      request(createServer({root: fixtures}))
+      .get('/pets')
+      .expect('Location', '/pets/')
+      .expect('Content-Security-Policy', "default-src 'self'")
+      .expect(301, done)
     })
 
     it('should not redirect to protocol-relative locations', function (done) {
@@ -406,7 +430,7 @@ describe('send(file).pipe(res)', function () {
       .get('/snow')
       .expect('Location', '/snow%20%E2%98%83/')
       .expect('Content-Type', /html/)
-      .expect(301, 'Redirecting to <a href="/snow%20%E2%98%83/">/snow%20%E2%98%83/</a>\n', done)
+      .expect(301, />Redirecting to <a href="\/snow%20%E2%98%83\/">\/snow%20%E2%98%83\/<\/a></, done)
     })
   })
 
@@ -414,47 +438,41 @@ describe('send(file).pipe(res)', function () {
     it('should respond to errors directly', function (done) {
       request(createServer({root: fixtures}))
       .get('/foobar')
-      .expect(404, 'Not Found', done)
+      .expect(404, />Not Found</, done)
+    })
+
+    it('should respond with default Content-Security-Policy', function (done) {
+      request(createServer({root: fixtures}))
+      .get('/foobar')
+      .expect('Content-Security-Policy', "default-src 'self'")
+      .expect(404, done)
+    })
+
+    it('should remove all previously-set headers', function (done) {
+      var server = createServer({root: fixtures}, function (req, res) {
+        res.setHeader('X-Foo', 'bar')
+      })
+
+      request(server)
+      .get('/foobar')
+      .expect(shouldNotHaveHeader('X-Foo'))
+      .expect(404, done)
     })
   })
 
   describe('with conditional-GET', function () {
-    it('should respond with 304 on a match', function (done) {
-      request(app)
-      .get('/name.txt')
-      .expect(200, function (err, res) {
-        if (err) return done(err)
-        request(app)
-        .get('/name.txt')
-        .set('If-None-Match', res.headers.etag)
-        .expect(304, done)
-      })
-    })
-
-    it('should respond with 200 otherwise', function (done) {
-      request(app)
-      .get('/name.txt')
-      .expect(200, function (err, res) {
-        if (err) return done(err)
-        request(app)
-        .get('/name.txt')
-        .set('If-None-Match', '"123"')
-        .expect(200, 'tobi', done)
-      })
-    })
-
-    it('should remove Content headers', function (done) {
-      var app = createServer({root: fixtures}, function (req, res) {
+    it('should remove Content headers with 304', function (done) {
+      var server = createServer({root: fixtures}, function (req, res) {
         res.setHeader('Content-Language', 'en-US')
         res.setHeader('Content-Location', 'http://localhost/name.txt')
         res.setHeader('Contents', 'foo')
       })
 
-      request(app)
+      request(server)
       .get('/name.txt')
       .expect(200, function (err, res) {
         if (err) return done(err)
-        request(app)
+        request(server)
         .get('/name.txt')
         .set('If-None-Match', res.headers.etag)
         .expect(shouldNotHaveHeader('Content-Language'))
@@ -463,6 +481,123 @@ describe('send(file).pipe(res)', function () {
         .expect('Content-Location', 'http://localhost/name.txt')
         .expect('Contents', 'foo')
         .expect(304, done)
+      })
+    })
+
+    describe('where "If-Match" is set', function () {
+      it('should respond with 200 when "*"', function (done) {
+        request(app)
+        .get('/name.txt')
+        .set('If-Match', '*')
+        .expect(200, done)
+      })
+
+      it('should respond with 412 when ETag unmatched', function (done) {
+        request(app)
+        .get('/name.txt')
+        .set('If-Match', '"foo", "bar"')
+        .expect(412, done)
+      })
+
+      it('should respond with 200 when ETag matched', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-Match', '"foo", "bar", ' + res.headers.etag)
+          .expect(200, done)
+        })
+      })
+    })
+
+    describe('where "If-Modified-Since" is set', function () {
+      it('should respond with 304 when unmodified', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-Modified-Since', res.headers['last-modified'])
+          .expect(304, done)
+        })
+      })
+
+      it('should respond with 200 when modified', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          var lmod = new Date(res.headers['last-modified'])
+          var date = new Date(lmod - 60000)
+          request(app)
+          .get('/name.txt')
+          .set('If-Modified-Since', date.toUTCString())
+          .expect(200, 'tobi', done)
+        })
+      })
+    })
+
+    describe('where "If-None-Match" is set', function () {
+      it('should respond with 304 when ETag matched', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-None-Match', res.headers.etag)
+          .expect(304, done)
+        })
+      })
+
+      it('should respond with 200 when ETag unmatched', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-None-Match', '"123"')
+          .expect(200, 'tobi', done)
+        })
+      })
+    })
+
+    describe('where "If-Unmodified-Since" is set', function () {
+      it('should respond with 200 when unmodified', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(app)
+          .get('/name.txt')
+          .set('If-Unmodified-Since', res.headers['last-modified'])
+          .expect(200, done)
+        })
+      })
+
+      it('should respond with 412 when modified', function (done) {
+        request(app)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          var lmod = new Date(res.headers['last-modified'])
+          var date = new Date(lmod - 60000).toUTCString()
+          request(app)
+          .get('/name.txt')
+          .set('If-Unmodified-Since', date)
+          .expect(412, done)
+        })
+      })
+
+      it('should respond with 200 when invalid date', function (done) {
+        request(app)
+        .get('/name.txt')
+        .set('If-Unmodified-Since', 'foo')
+        .expect(200, done)
       })
     })
   })
@@ -640,6 +775,14 @@ describe('send(file).pipe(res)', function () {
           .set('Range', 'bytes=0-0')
           .expect(200, '123456789', done)
         })
+      })
+
+      it('should respond with 200 when invalid value', function (done) {
+        request(app)
+        .get('/nums')
+        .set('If-Range', 'foo')
+        .set('Range', 'bytes=0-0')
+        .expect(200, '123456789', done)
       })
     })
   })

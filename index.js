@@ -50,6 +50,13 @@ var sep = path.sep
 var BYTES_RANGE_REGEXP = /^ *bytes=/
 
 /**
+ * Simple expression to split token list.
+ * @private
+ */
+
+var TOKEN_LIST_REGEXP = / *, */
+
+/**
  * Maximum value allowed for the max age.
  * @private
  */
@@ -61,7 +68,7 @@ var MAX_MAXAGE = 60 * 60 * 24 * 365 * 1000 // 1 year
  * @private
  */
 
-var UP_PATH_REGEXP = /(?:^|[\\\/])\.\.(?:[\\\/]|$)/
+var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/
 
 /**
  * Regular expression to match a bad file number error code
@@ -292,13 +299,14 @@ SendStream.prototype.maxage = deprecate.function(function maxage (maxAge) {
 SendStream.prototype.error = function error (status, error) {
   // emit if listeners instead of responding
   if (listenerCount(this, 'error') !== 0) {
-    return this.emit('error', createError(error, status, {
+    return this.emit('error', createError(status, error, {
       expose: false
     }))
   }
 
   var res = this.res
-  var msg = statuses[status]
+  var msg = statuses[status] || String(status)
+  var doc = createHtmlDocument('Error', escapeHtml(msg))
 
   // clear existing headers
   clearHeaders(res)
@@ -310,17 +318,18 @@ SendStream.prototype.error = function error (status, error) {
 
   // send basic response
   res.statusCode = status
-  res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
-  res.setHeader('Content-Length', Buffer.byteLength(msg))
+  res.setHeader('Content-Type', 'text/html; charset=UTF-8')
+  res.setHeader('Content-Length', Buffer.byteLength(doc))
+  res.setHeader('Content-Security-Policy', "default-src 'self'")
   res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.end(msg)
+  res.end(doc)
 }
 
 /**
  * Check if the pathname ends with "/".
  *
- * @return {Boolean}
- * @api private
+ * @return {boolean}
+ * @private
  */
 
 SendStream.prototype.hasTrailingSlash = function hasTrailingSlash () {
@@ -335,8 +344,40 @@ SendStream.prototype.hasTrailingSlash = function hasTrailingSlash () {
  */
 
 SendStream.prototype.isConditionalGET = function isConditionalGET () {
-  return this.req.headers['if-none-match'] ||
+  return this.req.headers['if-match'] ||
+    this.req.headers['if-unmodified-since'] ||
+    this.req.headers['if-none-match'] ||
     this.req.headers['if-modified-since']
+}
+
+/**
+ * Check if the request preconditions failed.
+ *
+ * @return {boolean}
+ * @private
+ */
+
+SendStream.prototype.isPreconditionFailure = function isPreconditionFailure () {
+  var req = this.req
+  var res = this.res
+
+  // if-match
+  var match = req.headers['if-match']
+  if (match) {
+    var etag = res.getHeader('ETag')
+    return !etag || (match !== '*' && match.split(TOKEN_LIST_REGEXP).every(function (match) {
+      return match !== etag && match !== 'W/' + etag && 'W/' + match !== etag
+    }))
+  }
+
+  // if-unmodified-since
+  var unmodifiedSince = Date.parse(req.headers['if-unmodified-since'])
+  if (!isNaN(unmodifiedSince)) {
+    var lastModified = Date.parse(res.getHeader('Last-Modified'))
+    return isNaN(lastModified) || lastModified > unmodifiedSince
+  }
+
+  return false
 }
 
 /**
@@ -347,7 +388,7 @@ SendStream.prototype.isConditionalGET = function isConditionalGET () {
 
 SendStream.prototype.removeContentHeaderFields = function removeContentHeaderFields () {
   var res = this.res
-  var headers = Object.keys(res._headers || {})
+  var headers = getHeaderNames(res)
 
   for (var i = 0; i < headers.length; i++) {
     var header = headers[i]
@@ -425,7 +466,10 @@ SendStream.prototype.onFileSystemError = function onFileSystemError (error) {
  */
 
 SendStream.prototype.isFresh = function isFresh () {
-  return fresh(this.req.headers, this.res._headers)
+  return fresh(this.req.headers, {
+    'etag': this.res.getHeader('ETag'),
+    'last-modified': this.res.getHeader('Last-Modified')
+  })
 }
 
 /**
@@ -442,9 +486,15 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
     return true
   }
 
-  return ~ifRange.indexOf('"')
-    ? ~ifRange.indexOf(this.res._headers['etag'])
-    : Date.parse(this.res._headers['last-modified']) <= Date.parse(ifRange)
+  // if-range as etag
+  if (ifRange.indexOf('"') !== -1) {
+    var etag = this.res.getHeader('ETag')
+    return Boolean(etag && ifRange.indexOf(etag) !== -1)
+  }
+
+  // if-range as modified date
+  var lastModified = this.res.getHeader('Last-Modified')
+  return Boolean(lastModified && Date.parse(lastModified) <= Date.parse(ifRange))
 }
 
 /**
@@ -455,8 +505,10 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
  */
 
 SendStream.prototype.redirect = function redirect (path) {
+  var res = this.res
+
   if (listenerCount(this, 'directory') !== 0) {
-    this.emit('directory')
+    this.emit('directory', res, path)
     return
   }
 
@@ -465,17 +517,18 @@ SendStream.prototype.redirect = function redirect (path) {
     return
   }
 
-  var loc = encodeUrl(collapseLeadingSlashes(path + '/'))
-  var msg = 'Redirecting to <a href="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</a>\n'
-  var res = this.res
+  var loc = encodeUrl(collapseLeadingSlashes(this.path + '/'))
+  var doc = createHtmlDocument('Redirecting', 'Redirecting to <a href="' + escapeHtml(loc) + '">' +
+    escapeHtml(loc) + '</a>')
 
   // redirect
   res.statusCode = 301
   res.setHeader('Content-Type', 'text/html; charset=UTF-8')
-  res.setHeader('Content-Length', Buffer.byteLength(msg))
+  res.setHeader('Content-Length', Buffer.byteLength(doc))
+  res.setHeader('Content-Security-Policy', "default-src 'self'")
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('Location', loc)
-  res.end(msg)
+  res.end(doc)
 }
 
 /**
@@ -633,7 +686,7 @@ SendStream.prototype.send = function send (path, stat) {
   var ranges = req.headers.range
   var offset = options.start || 0
 
-  if (res._header) {
+  if (headersSent(res)) {
     // impossible to send now
     this.headersAlreadySent()
     return
@@ -648,9 +701,16 @@ SendStream.prototype.send = function send (path, stat) {
   this.type(path)
 
   // conditional GET support
-  if (this.isConditionalGET() && this.isCachable() && this.isFresh()) {
-    this.notModified()
-    return
+  if (this.isConditionalGET()) {
+    if (this.isPreconditionFailure()) {
+      this.error(412)
+      return
+    }
+
+    if (this.isCachable() && this.isFresh()) {
+      this.notModified()
+      return
+    }
   }
 
   // adjust len to start/end options
@@ -730,7 +790,7 @@ SendStream.prototype.send = function send (path, stat) {
 SendStream.prototype.sendFile = function sendFile (path) {
   var i = 0
   var self = this
-  var redirect = this.redirect.bind(this, this.path)
+  var redirect = this.redirect.bind(this, path)
 
   debug('open "%s"', path)
   fs.open(path, 'r', function onopen (err, fd) {
@@ -914,8 +974,11 @@ PartStream.prototype.destroy = PartStream.prototype.close = function closePartSt
  */
 
 function clearHeaders (res) {
-  res._headers = {}
-  res._headerNames = {}
+  var headers = getHeaderNames(res)
+
+  for (var i = 0; i < headers.length; i++) {
+    res.removeHeader(headers[i])
+  }
 }
 
 /**
@@ -965,6 +1028,26 @@ function contentRange (type, size, range) {
 }
 
 /**
+ * Create a minimal HTML document.
+ *
+ * @param {string} title
+ * @param {string} body
+ * @private
+ */
+
+function createHtmlDocument (title, body) {
+  return '<!DOCTYPE html>\n' +
+    '<html lang="en">\n' +
+    '<head>\n' +
+    '<meta charset="utf-8">\n' +
+    '<title>' + title + '</title>\n' +
+    '</head>\n' +
+    '<body>\n' +
+    '<pre>' + body + '</pre>\n' +
+    '</body>\n'
+}
+
+/**
  * decodeURIComponent.
  *
  * Allows V8 to only deoptimize this fn instead of all
@@ -980,6 +1063,34 @@ function decode (path) {
   } catch (err) {
     return -1
   }
+}
+
+/**
+ * Get the header names on a respnse.
+ *
+ * @param {object} res
+ * @returns {array[string]}
+ * @private
+ */
+
+function getHeaderNames (res) {
+  return typeof res.getHeaderNames !== 'function'
+    ? Object.keys(res._headers || {})
+    : res.getHeaderNames()
+}
+
+/**
+ * Determine if the response headers have been sent.
+ *
+ * @param {object} res
+ * @returns {boolean}
+ * @private
+ */
+
+function headersSent (res) {
+  return typeof res.headersSent !== 'boolean'
+    ? Boolean(res._header)
+    : res.headersSent
 }
 
 /**

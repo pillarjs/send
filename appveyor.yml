@@ -6,15 +6,16 @@ environment:
     - nodejs_version: "1.8"
     - nodejs_version: "2.5"
     - nodejs_version: "3.3"
-    - nodejs_version: "4.5"
+    - nodejs_version: "4.8"
     - nodejs_version: "5.12"
-    - nodejs_version: "6.6"
+    - nodejs_version: "6.10"
+    - nodejs_version: "7.6"
 cache:
   - node_modules
 install:
   - ps: Install-Product node $env:nodejs_version
   - if "%nodejs_version%" equ "0.8" npm rm --save-dev istanbul
-  - npm rm --save-dev eslint eslint-config-standard eslint-plugin-promise eslint-plugin-standard
+  - npm rm --save-dev eslint eslint-config-standard eslint-plugin-markdown eslint-plugin-promise eslint-plugin-standard
   - if exist node_modules npm prune
   - if exist node_modules npm rebuild
   - npm install
