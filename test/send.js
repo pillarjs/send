@@ -24,6 +24,22 @@ var app = http.createServer(function (req, res) {
   .pipe(res)
 })
 
+var appPipeNotEnd = http.createServer(function (req, res) {
+  function error (err) {
+    res.statusCode = err.status
+    res.end(http.STATUS_CODES[err.status])
+  }
+
+  function end() {
+    res.end('tobi')
+  }
+
+  send(req, req.url, {root: fixtures,autoEnd:false,acceptRanges:false})
+      .on('error', error)
+      .on('end',end)
+      .pipe(res)
+})
+
 describe('send(file).pipe(res)', function () {
   it('should stream the file contents', function (done) {
     request(app)
@@ -1417,6 +1433,14 @@ describe('send.mime', function () {
       .expect(shouldNotHaveHeader('Content-Type'))
       .expect(200, done)
     })
+  })
+})
+
+describe('send(file).pipe(res,false)',function(){
+  it('should stream the file contents with append', function (done) {
+    request(appPipeNotEnd)
+        .get('/name.txt')
+        .expect(200, 'tobitobi', done)
   })
 })
 
