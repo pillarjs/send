@@ -704,7 +704,9 @@ SendStream.prototype.send = function send (path, stat) {
   opts.end = Math.max(offset, offset + len - 1)
 
   // content-length
-  res.setHeader('Content-Length', len)
+  if (options.autoEnd !== undefined ? options.autoEnd : true) {
+    res.setHeader('Content-Length', len)
+  }
 
   // HEAD support
   if (req.method === 'HEAD') {
@@ -803,7 +805,8 @@ SendStream.prototype.stream = function stream (path, options) {
   // pipe
   var stream = fs.createReadStream(path, options)
   this.emit('stream', stream)
-  stream.pipe(res)
+  var autoEnd = options.autoEnd !== undefined ? options.autoEnd : true
+  stream.pipe(res, {end: autoEnd})
 
   // response finished, done with the fd
   onFinished(res, function onfinished () {
