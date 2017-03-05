@@ -351,9 +351,9 @@ SendStream.prototype.isPreconditionFailure = function isPreconditionFailure () {
   }
 
   // if-unmodified-since
-  var unmodifiedSince = Date.parse(req.headers['if-unmodified-since'])
+  var unmodifiedSince = parseHttpDate(req.headers['if-unmodified-since'])
   if (!isNaN(unmodifiedSince)) {
-    var lastModified = Date.parse(res.getHeader('Last-Modified'))
+    var lastModified = parseHttpDate(res.getHeader('Last-Modified'))
     return isNaN(lastModified) || lastModified > unmodifiedSince
   }
 
@@ -474,7 +474,7 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
 
   // if-range as modified date
   var lastModified = this.res.getHeader('Last-Modified')
-  return Boolean(lastModified && Date.parse(lastModified) <= Date.parse(ifRange))
+  return Boolean(lastModified && parseHttpDate(lastModified) <= parseHttpDate(ifRange))
 }
 
 /**
@@ -1039,6 +1039,21 @@ function normalizeList (val, name) {
   }
 
   return list
+}
+
+/**
+ * Parse an HTTP Date into a number.
+ *
+ * @param {string} date
+ * @private
+ */
+
+function parseHttpDate (date) {
+  var timestamp = date && Date.parse(date)
+
+  return typeof timestamp === 'number'
+    ? timestamp
+    : NaN
 }
 
 /**
