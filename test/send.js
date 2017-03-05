@@ -1420,6 +1420,14 @@ describe('send.mime', function () {
   })
 })
 
+describe('safari compatibility', function () {
+  describe('.error function', function () {
+    it('does not used named function which causes strict mode error', function () {
+      assert.equal(new send().error.name, '')
+    })
+  })
+})
+
 function createServer (opts, fn) {
   return http.createServer(function onRequest (req, res) {
     try {
