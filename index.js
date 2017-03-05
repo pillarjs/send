@@ -474,7 +474,7 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
 
   // if-range as modified date
   var lastModified = this.res.getHeader('Last-Modified')
-  return Boolean(lastModified && parseHttpDate(lastModified) <= parseHttpDate(ifRange))
+  return parseHttpDate(lastModified) <= parseHttpDate(ifRange)
 }
 
 /**
