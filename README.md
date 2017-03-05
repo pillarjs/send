@@ -112,6 +112,13 @@ Serve files relative to `path`.
 Byte offset at which the stream starts, defaults to 0. The start is inclusive,
 meaning `start: 2` will include the 3rd byte in the stream.
 
+##### autoEnd
+
+Enable or disable ending the stream of the http response  after pipe, defaults to true.
+Disabling this will ignore the header `Content-Length` which will force 
+the `Transfer-Encoding` to be `chunked`. User can listen the event `end` 
+for further operation. Here is the doc about [pipe]('https://nodejs.org/dist/latest-v6.x/docs/api/stream.html#stream_readable_pipe_destination_options').
+
 #### Events
 
 The `SendStream` is an event emitter and will emit the following events:
