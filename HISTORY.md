@@ -1,5 +1,5 @@
-unreleased
-==========
+0.15.1 / 2017-03-04
+===================
 
   * Fix issue when `Date.parse` does not return `NaN` on invalid date
   * Fix strict violation in broken environments
