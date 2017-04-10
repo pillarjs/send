@@ -30,6 +30,8 @@ var path = require('path')
 var statuses = require('statuses')
 var Stream = require('stream')
 var util = require('util')
+var vary = require('vary')
+var Negotiator = require('negotiator')
 
 /**
  * Path function references.
@@ -152,6 +154,25 @@ function SendStream (req, path, options) {
   this._extensions = opts.extensions !== undefined
     ? normalizeList(opts.extensions, 'extensions option')
     : []
+
+  if (Array.isArray(opts.precompressed)) {
+    if (opts.precompressed.length > 0) {
+      this._precompressionFormats = opts.precompressed
+      this._precompressionEncodings = this._precompressionFormats.map(function (format) { return format.encoding })
+      this._precompressionEncodings.push('identity')
+    }
+  } else if (opts.precompressed) {
+    this._precompressionFormats = [{ encoding: 'gzip', extension: '.gz' }]
+    this._precompressionEncodings = ['gzip', 'identity']
+  }
+
+  this._precompressionFormats = opts.precompressionFormats !== undefined
+      ? opts.precompressionFormats
+      : this._precompressionFormats
+
+  this._encodingNegotiatorOptions = opts.encodingNegotiatorOptions !== undefined
+    ? opts.encodingNegotiatorOptions
+    : { sortPreference: 'clientThenServer' }
 
   this._index = opts.index !== undefined
     ? normalizeList(opts.index, 'index option')
@@ -358,6 +379,33 @@ SendStream.prototype.isPreconditionFailure = function isPreconditionFailure () {
   }
 
   return false
+}
+
+/**
+ * Return the array of file precompressed file extensions to serve in preference order.
+ *
+ * @return {Array}
+ * @api private
+ */
+
+SendStream.prototype.getAcceptEncodingExtensions = function () {
+  var self = this
+  var negotiatedEncodings = new Negotiator(this.req).encodings(self._precompressionEncodings, this._encodingNegotiatorOptions)
+  var accepted = []
+  for (var e = 0; e < negotiatedEncodings.length; e++) {
+    var encoding = negotiatedEncodings[e]
+    if (encoding === 'identity') {
+      break
+    }
+    for (var f = 0; f < self._precompressionFormats.length; f++) {
+      var format = self._precompressionFormats[f]
+      if (format.encoding === encoding) {
+        accepted.push(format.extension)
+        break
+      }
+    }
+  }
+  return accepted
 }
 
 /**
@@ -611,8 +659,10 @@ SendStream.prototype.pipe = function pipe (res) {
  * @api public
  */
 
-SendStream.prototype.send = function send (path, stat) {
-  var len = stat.size
+SendStream.prototype.send = function send (path, stat, contentPath, contentStat) {
+  contentStat = contentStat || stat
+  contentPath = contentPath || path
+  var len = contentStat.size
   var options = this.options
   var opts = {}
   var res = this.res
@@ -626,7 +676,7 @@ SendStream.prototype.send = function send (path, stat) {
     return
   }
 
-  debug('pipe "%s"', path)
+  debug('pipe "%s"', contentPath)
 
   // set header fields
   this.setHeader(path, stat)
@@ -712,7 +762,7 @@ SendStream.prototype.send = function send (path, stat) {
     return
   }
 
-  this.stream(path, opts)
+  this.stream(contentPath, opts)
 }
 
 /**
@@ -733,8 +783,7 @@ SendStream.prototype.sendFile = function sendFile (path) {
     }
     if (err) return self.onStatError(err)
     if (stat.isDirectory()) return self.redirect(path)
-    self.emit('file', path, stat)
-    self.send(path, stat)
+    checkPrecompressionAndSendFile(path, stat)
   })
 
   function next (err) {
@@ -750,9 +799,48 @@ SendStream.prototype.sendFile = function sendFile (path) {
     fs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
-      self.emit('file', p, stat)
-      self.send(p, stat)
+      checkPrecompressionAndSendFile(p, stat)
     })
+  }
+
+  function checkPrecompressionAndSendFile (p, stat) {
+    self.emit('file', p, stat)
+    if (!self._precompressionFormats) return self.send(p, stat)
+
+    var state = {
+      contents: [],
+      extensionsToCheck: self._precompressionFormats.length
+    }
+
+    self._precompressionFormats.forEach(function (format) {
+      debug('stat "%s%s"', p, format.extension)
+      fs.stat(p + format.extension, function onstat (err, contentStat) {
+        if (!err) state.contents.push({ext: format.extension, encoding: format.encoding, contentStat: contentStat})
+        if (--state.extensionsToCheck === 0) sendPreferredContent(p, stat, state.contents)
+      })
+    })
+  }
+
+  function sendPreferredContent (p, stat, contents) {
+    if (contents.length) {
+      vary(self.res, 'Accept-Encoding')
+    }
+
+    var preferredContent
+    var extensions = self.getAcceptEncodingExtensions()
+    for (var e = 0; e < extensions.length && !preferredContent; e++) {
+      for (var c = 0; c < contents.length; c++) {
+        if (extensions[e] === contents[c].ext) {
+          preferredContent = contents[c]
+          break
+        }
+      }
+    }
+
+    if (!preferredContent) return self.send(p, stat)
+
+    self.res.setHeader('Content-Encoding', preferredContent.encoding)
+    self.send(p, stat, p + preferredContent.ext, preferredContent.contentStat)
   }
 }
 
