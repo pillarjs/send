@@ -1,5 +1,5 @@
-unreleased
-==========
+0.15.2 / 2017-04-26
+===================
 
   * deps: debug@2.6.4
     - Fix `DEBUG_MAX_ARRAY_LENGTH`
