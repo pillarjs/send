@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Add `immutable` option
   * Fix missing `</html>` in default error & redirects
   * Use instance methods on steam to check for listeners
   * deps: mime@1.4.0

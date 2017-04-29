@@ -1205,6 +1205,20 @@ describe('send(file, options)', function () {
     })
   })
 
+  describe('immutable', function () {
+    it('should default to false', function (done) {
+      request(createServer({root: fixtures}))
+      .get('/name.txt')
+      .expect('Cache-Control', 'public, max-age=0', done)
+    })
+
+    it('should set immutable directive in Cache-Control', function (done) {
+      request(createServer({immutable: true, maxAge: '1h', root: fixtures}))
+      .get('/name.txt')
+      .expect('Cache-Control', 'public, max-age=3600, immutable', done)
+    })
+  })
+
   describe('maxAge', function () {
     it('should default to 0', function (done) {
       request(createServer({root: fixtures}))
@@ -1225,7 +1239,7 @@ describe('send(file, options)', function () {
     })
 
     it('should max at 1 year', function (done) {
-      request(createServer({maxAge: Infinity, root: fixtures}))
+      request(createServer({maxAge: '2y', root: fixtures}))
       .get('/name.txt')
       .expect('Cache-Control', 'public, max-age=31536000', done)
     })

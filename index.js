@@ -137,6 +137,10 @@ function SendStream (req, path, options) {
     ? normalizeList(opts.extensions, 'extensions option')
     : []
 
+  this._immutable = opts.immutable !== undefined
+    ? Boolean(opts.immutable)
+    : false
+
   this._index = opts.index !== undefined
     ? normalizeList(opts.index, 'index option')
     : ['index.html']
@@ -861,6 +865,11 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
 
   if (this._cacheControl && !res.getHeader('Cache-Control')) {
     var cacheControl = 'public, max-age=' + Math.floor(this._maxage / 1000)
+
+    if (this._immutable) {
+      cacheControl += ', immutable'
+    }
+
     debug('cache-control %s', cacheControl)
     res.setHeader('Cache-Control', cacheControl)
   }
