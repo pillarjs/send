@@ -1226,9 +1226,15 @@ describe('send(file, options)', function () {
     })
 
     it('should max at 1 year', function (done) {
-      request(createServer({maxAge: Infinity, root: fixtures}))
+      request(createServer({maxAge: '2y', root: fixtures}))
       .get('/name.txt')
       .expect('Cache-Control', 'public, max-age=31536000', done)
+    })
+
+    it('should set "immutable" if set to Infinity', function (done) {
+      request(createServer({maxAge: Infinity, root: fixtures}))
+      .get('/name.txt')
+      .expect('Cache-Control', 'public, max-age=31536000, immutable', done)
     })
   })
 
