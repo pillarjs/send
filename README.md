@@ -101,7 +101,11 @@ system's last modified value.
 
 Provide a max-age in milliseconds for http caching, defaults to 0.
 This can also be a string accepted by the
-[ms](https://www.npmjs.org/package/ms#readme) module.
+[ms](https://www.npmjs.org/package/ms#readme) module. The maximum max-age
+is 1 year or 31536000000ms. If set to `Infinity` the [`immutable` Cache-Control
+directive](https://bitsup.blogspot.de/2016/05/cache-control-immutable.html) will
+be added (e.g. `Cache-Control: public, max-age=31536000, immutable`).
+
 
 ##### root
 
