@@ -1,7 +1,8 @@
 unreleased
 ==========
 
-  * deps: debug@2.6.6
+  * deps: debug@2.6.7
+    - deps: ms@2.0.0
   * deps: ms@2.0.0
 
 0.15.2 / 2017-04-26
