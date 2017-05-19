@@ -57,13 +57,14 @@ true. Disabling this will ignore the `maxAge` option.
 Set how "dotfiles" are treated when encountered. A dotfile is a file
 or directory that begins with a dot ("."). Note this check is done on
 the path itself without checking if the path actually exists on the
-disk. If `root` is specified, only the dotfiles above the root are
+disk. If `root` is specified, only dotfiles below the root are
 checked (i.e. the root itself can be within a dotfile when when set
 to "deny").
 
-  - `'allow'` No special treatment for dotfiles.
-  - `'deny'` Send a 403 for any request for a dotfile.
-  - `'ignore'` Pretend like the dotfile does not exist and 404.
+  - `undefined` dotdirs have no special treadment, dotfiles are 404'd.
+  - `'allow'` No special treatment for dotdirs or dotfiles.
+  - `'deny'` Send a 403 for dotfiles and 404 for non-dot files in dotdirs.
+  - `'ignore'` Pretend like dotdirs and dotfiles do not exist and 404.
 
 The default value is _similar_ to `'ignore'`, with the exception that
 this default will not ignore the files within a directory that begins
