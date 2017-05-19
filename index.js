@@ -272,14 +272,14 @@ SendStream.prototype.maxage = deprecate.function(function maxage (maxAge) {
  * Emit error with `status`.
  *
  * @param {number} status
- * @param {Error} [err]
+ * @param {Error} [error]
  * @private
  */
 
-SendStream.prototype.error = function error (status, err) {
+SendStream.prototype.error = function error (status, error) {
   // emit if listeners instead of responding
   if (listenerCount(this, 'error') !== 0) {
-    return this.emit('error', createError(status, err, {
+    return this.emit('error', createError(status, error, {
       expose: false
     }))
   }
@@ -292,8 +292,8 @@ SendStream.prototype.error = function error (status, err) {
   clearHeaders(res)
 
   // add error headers
-  if (err && err.headers) {
-    setHeaders(res, err.headers)
+  if (error && error.headers) {
+    setHeaders(res, error.headers)
   }
 
   // send basic response
@@ -351,9 +351,9 @@ SendStream.prototype.isPreconditionFailure = function isPreconditionFailure () {
   }
 
   // if-unmodified-since
-  var unmodifiedSince = parseHttpDate(req.headers['if-unmodified-since'])
+  var unmodifiedSince = Date.parse(req.headers['if-unmodified-since'])
   if (!isNaN(unmodifiedSince)) {
-    var lastModified = parseHttpDate(res.getHeader('Last-Modified'))
+    var lastModified = Date.parse(res.getHeader('Last-Modified'))
     return isNaN(lastModified) || lastModified > unmodifiedSince
   }
 
@@ -474,7 +474,7 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
 
   // if-range as modified date
   var lastModified = this.res.getHeader('Last-Modified')
-  return parseHttpDate(lastModified) <= parseHttpDate(ifRange)
+  return Boolean(lastModified && Date.parse(lastModified) <= Date.parse(ifRange))
 }
 
 /**
@@ -704,7 +704,9 @@ SendStream.prototype.send = function send (path, stat) {
   opts.end = Math.max(offset, offset + len - 1)
 
   // content-length
-  res.setHeader('Content-Length', len)
+  if (options.autoEnd !== undefined ? options.autoEnd : true) {
+    res.setHeader('Content-Length', len)
+  }
 
   // HEAD support
   if (req.method === 'HEAD') {
@@ -803,7 +805,8 @@ SendStream.prototype.stream = function stream (path, options) {
   // pipe
   var stream = fs.createReadStream(path, options)
   this.emit('stream', stream)
-  stream.pipe(res)
+  var autoEnd = options.autoEnd !== undefined ? options.autoEnd : true
+  stream.pipe(res, {end: autoEnd})
 
   // response finished, done with the fd
   onFinished(res, function onfinished () {
@@ -1039,21 +1042,6 @@ function normalizeList (val, name) {
   }
 
   return list
-}
-
-/**
- * Parse an HTTP Date into a number.
- *
- * @param {string} date
- * @private
- */
-
-function parseHttpDate (date) {
-  var timestamp = date && Date.parse(date)
-
-  return typeof timestamp === 'number'
-    ? timestamp
-    : NaN
 }
 
 /**
