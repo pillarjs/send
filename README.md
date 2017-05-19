@@ -55,19 +55,21 @@ true. Disabling this will ignore the `maxAge` option.
 ##### dotfiles
 
 Set how "dotfiles" are treated when encountered. A dotfile is a file
-or directory that begins with a dot ("."). Note this check is done on
-the path itself without checking if the path actually exists on the
-disk. If `root` is specified, only the dotfiles above the root are
-checked (i.e. the root itself can be within a dotfile when when set
-to "deny").
+or directory that begins with a dot (".").
 
+Note: This check is only performed on the path (of the url).
+It doesn't affect `root` (of the filesystem) and doesn't actually check for dotfiles on disk.
+
+  - **default behavior** Ignore child dotfiles, but treat parents normally.
+    - 404 `/.well-known`, `/.foo/.bar`
+    - 200 `/.well-known/existing-file`
   - `'allow'` No special treatment for dotfiles.
+    - 200 `/.exists`
+    - 404 `/.doesnt-exist`
   - `'deny'` Send a 403 for any request for a dotfile.
+    - 403 `/.exists`, `/.doesnt-exist`
   - `'ignore'` Pretend like the dotfile does not exist and 404.
-
-The default value is _similar_ to `'ignore'`, with the exception that
-this default will not ignore the files within a directory that begins
-with a dot, for backward-compatibility.
+    - 404 `/.exists`, `/.doesnt-exist`
 
 ##### end
 
