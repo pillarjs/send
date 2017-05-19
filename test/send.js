@@ -95,6 +95,84 @@ describe('send(file).pipe(res)', function () {
     .expect('etag', /^W\/"[^"]+"$/)
     .end(done)
   })
+  
+  it('should add an ETag strong header field', function(done){
+    var app = http.createServer(function(req, res){
+    function error(err) {
+        res.statusCode = err.status;
+        res.end(http.STATUS_CODES[err.status]);
+    }
+
+    function redirect() {
+        res.statusCode = 301;
+        res.setHeader('Location', req.url + '/');
+        res.end('Redirecting to ' + req.url + '/');
+    }
+
+    send(req, req.url, {root: fixtures, etag: 'strong'})
+    .on('error', error)
+    .on('directory', redirect)
+    .pipe(res);
+    });
+    request(app)
+    .get('/name.txt')
+    .expect('etag', /^"[^"]+"$/)
+    .end(done);
+  })
+  
+  it('should not add an ETag header field', function(done){
+    var app = http.createServer(function(req, res){
+    function error(err) {
+        res.statusCode = err.status;
+        res.end(http.STATUS_CODES[err.status]);
+    }
+
+    function redirect() {
+        res.statusCode = 301;
+        res.setHeader('Location', req.url + '/');
+        res.end('Redirecting to ' + req.url + '/');
+    }
+
+    send(req, req.url, {root: fixtures, etag: false})
+    .on('error', error)
+    .on('directory', redirect)
+    .pipe(res);
+    });
+
+    request(app)
+    .get('/name.txt')
+    .end(function(err, res) {
+        if (err) {
+            return done(err);
+        }
+        assert.equal('etag' in res.headers, false);
+        done();
+    });
+  })
+  
+  it('should add an ETag custom header field', function(done){
+    var app = http.createServer(function(req, res){
+    function error(err) {
+        res.statusCode = err.status;
+        res.end(http.STATUS_CODES[err.status]);
+    }
+
+    function redirect() {
+        res.statusCode = 301;
+        res.setHeader('Location', req.url + '/');
+        res.end('Redirecting to ' + req.url + '/');
+    }
+
+    send(req, req.url, {root: fixtures, etag: function(){return 'test'}})
+    .on('error', error)
+    .on('directory', redirect)
+    .pipe(res);
+    });
+    request(app)
+    .get('/name.txt')
+    .expect('etag', 'test')
+    .end(done);
+  })
 
   it('should add a Date header field', function (done) {
     request(app)
