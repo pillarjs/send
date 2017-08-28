@@ -1,3 +1,10 @@
+unreleased
+==========
+
+  * deps: mime@1.4.0
+    - Add 70 new types for file extensions
+    - Set charset as "UTF-8" for .js and .json
+
 0.15.6 / 2017-09-22
 ===================
 
