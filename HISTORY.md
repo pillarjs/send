@@ -1,3 +1,12 @@
+0.16.0 / 2017-09-29
+===================
+
+  * deps: mime@1.4.0
+    - Register `.md` to be `text/markdown`
+    - Register `.mjs` to be `application/javascript`
+    - Register `.gz` to be `application/gzip`
+    - `font/opentype` is now `font/otf` as it has been [officially registered](https://www.iana.org/assignments/media-types/font/otf)
+
 0.15.4 / 2017-08-05
 ===================
 
