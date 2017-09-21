@@ -1,5 +1,5 @@
-unreleased
-==========
+0.15.5 / 2017-09-20
+===================
 
   * deps: etag@~1.8.1
     - perf: replace regular expression with substring
