@@ -447,7 +447,7 @@ describe('send(file).pipe(res)', function () {
       it('should respond with 412 when ETag unmatched', function (done) {
         request(app)
         .get('/name.txt')
-        .set('If-Match', '"foo", "bar"')
+        .set('If-Match', ' "foo", "bar" ')
         .expect(412, done)
       })
 
