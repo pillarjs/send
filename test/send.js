@@ -162,8 +162,7 @@ describe('send(file).pipe(res)', function () {
         // simulate file ENOENT after on open, after stat
         var fn = this.send
         this.send = function (path, stat) {
-          path += '__xxx_no_exist'
-          fn.call(this, path, stat)
+          fn.call(this, (path + '__xxx_no_exist'), stat)
         }
       })
       .pipe(res)
