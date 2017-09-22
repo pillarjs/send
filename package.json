@@ -16,7 +16,7 @@
     "server"
   ],
   "dependencies": {
-    "debug": "2.6.8",
+    "debug": "2.6.9",
     "depd": "~1.1.1",
     "destroy": "~1.0.4",
     "encodeurl": "~1.0.1",
