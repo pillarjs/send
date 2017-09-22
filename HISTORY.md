@@ -1,5 +1,5 @@
-unreleased
-==========
+0.15.6 / 2017-09-22
+===================
 
   * deps: debug@2.6.9
   * perf: improve `If-Match` token parsing
