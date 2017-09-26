@@ -149,6 +149,7 @@ function SendStream (req, path, options) {
   this._maxage = typeof this._maxage === 'string'
     ? ms(this._maxage)
     : Number(this._maxage)
+  this._immutable = this._maxage === Infinity ? ', immutable' : ''
   this._maxage = !isNaN(this._maxage)
     ? Math.min(Math.max(0, this._maxage), MAX_MAXAGE)
     : 0
@@ -860,7 +861,7 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
   }
 
   if (this._cacheControl && !res.getHeader('Cache-Control')) {
-    var cacheControl = 'public, max-age=' + Math.floor(this._maxage / 1000)
+    var cacheControl = 'public, max-age=' + Math.floor(this._maxage / 1000) + this._immutable
     debug('cache-control %s', cacheControl)
     res.setHeader('Cache-Control', cacheControl)
   }
