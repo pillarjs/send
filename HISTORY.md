@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Fix missing `</html>` in default error & redirects
   * Use instance methods on steam to check for listeners
   * deps: mime@1.4.0
     - Add 70 new types for file extensions
