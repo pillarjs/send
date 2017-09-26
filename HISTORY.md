@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Use instance methods on steam to check for listeners
   * deps: mime@1.4.0
     - Add 70 new types for file extensions
     - Set charset as "UTF-8" for .js and .json

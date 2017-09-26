@@ -19,7 +19,6 @@ var destroy = require('destroy')
 var encodeUrl = require('encodeurl')
 var escapeHtml = require('escape-html')
 var etag = require('etag')
-var EventEmitter = require('events').EventEmitter
 var fresh = require('fresh')
 var fs = require('fs')
 var mime = require('mime')
@@ -70,14 +69,6 @@ var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/
 
 module.exports = send
 module.exports.mime = mime
-
-/**
- * Shim EventEmitter.listenerCount for node.js < 0.10
- */
-
-/* istanbul ignore next */
-var listenerCount = EventEmitter.listenerCount ||
-  function (emitter, type) { return emitter.listeners(type).length }
 
 /**
  * Return a `SendStream` for `req` and `path`.
@@ -271,7 +262,7 @@ SendStream.prototype.maxage = deprecate.function(function maxage (maxAge) {
 
 SendStream.prototype.error = function error (status, err) {
   // emit if listeners instead of responding
-  if (listenerCount(this, 'error') !== 0) {
+  if (hasListeners(this, 'error')) {
     return this.emit('error', createError(status, err, {
       expose: false
     }))
@@ -480,7 +471,7 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
 SendStream.prototype.redirect = function redirect (path) {
   var res = this.res
 
-  if (listenerCount(this, 'directory') !== 0) {
+  if (hasListeners(this, 'directory')) {
     this.emit('directory', res, path)
     return
   }
@@ -998,6 +989,26 @@ function getHeaderNames (res) {
   return typeof res.getHeaderNames !== 'function'
     ? Object.keys(res._headers || {})
     : res.getHeaderNames()
+}
+
+/**
+ * Determine if emitter has listeners of a given type.
+ *
+ * The way to do this check is done three different ways in Node.js >= 0.8
+ * so this consolidates them into a minimal set using instance methods.
+ *
+ * @param {EventEmitter} emitter
+ * @param {string} type
+ * @returns {boolean}
+ * @private
+ */
+
+function hasListeners (emitter, type) {
+  var count = typeof emitter.listenerCount !== 'function'
+    ? emitter.listeners(type).length
+    : emitter.listenerCount(type)
+
+  return count > 0
 }
 
 /**
