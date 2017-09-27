@@ -529,19 +529,22 @@ SendStream.prototype.pipe = function pipe (res) {
 
   var parts
   if (root !== null) {
+    // normalize
+    path = normalize('.' + sep + path)
+
     // malicious path
-    if (UP_PATH_REGEXP.test(normalize('.' + sep + path))) {
+    if (UP_PATH_REGEXP.test(path)) {
       debug('malicious path "%s"', path)
       this.error(403)
       return res
     }
 
+    // explode path parts
+    parts = path.split(sep)
+
     // join / normalize from optional root dir
     path = normalize(join(root, path))
     root = normalize(root + sep)
-
-    // explode path parts
-    parts = path.substr(root.length).split(sep)
   } else {
     // ".." is malicious without "root"
     if (UP_PATH_REGEXP.test(path)) {
@@ -928,7 +931,8 @@ function collapseLeadingSlashes (str) {
 
 function containsDotFile (parts) {
   for (var i = 0; i < parts.length; i++) {
-    if (parts[i][0] === '.') {
+    var part = parts[i]
+    if (part.length > 1 && part[0] === '.') {
       return true
     }
   }
