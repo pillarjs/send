@@ -1,5 +1,5 @@
-unreleased
-==========
+0.16.0 / 2017-09-27
+===================
 
   * Add `immutable` option
   * Fix missing `</html>` in default error & redirects
