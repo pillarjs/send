@@ -530,7 +530,9 @@ SendStream.prototype.pipe = function pipe (res) {
   var parts
   if (root !== null) {
     // normalize
-    path = normalize('.' + sep + path)
+    if (path) {
+      path = normalize('.' + sep + path)
+    }
 
     // malicious path
     if (UP_PATH_REGEXP.test(path)) {

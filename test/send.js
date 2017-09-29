@@ -1343,6 +1343,23 @@ describe('send(file, options)', function () {
         .expect(301, /Redirecting to/, done)
       })
 
+      //
+      // NOTE: This is not a real part of the API, but
+      //       over time this has become something users
+      //       are doing, so this will prevent unseen
+      //       regressions around this use-case.
+      //
+      it('should try as file with empty path', function (done) {
+        var app = http.createServer(function (req, res) {
+          send(req, '', {root: path.join(fixtures, 'name.txt')})
+          .pipe(res)
+        })
+
+        request(app)
+        .get('/')
+        .expect(200, 'tobi', done)
+      })
+
       it('should restrict paths to within root', function (done) {
         request(createServer({root: fixtures}))
         .get('/pets/../../send.js')
