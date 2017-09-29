@@ -1,5 +1,5 @@
-unreleased
-==========
+0.16.1 / 2017-09-29
+===================
 
   * Fix regression in edge-case behavior for empty `path`
 
