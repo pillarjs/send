@@ -70,7 +70,7 @@ var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/
 module.exports = send
 module.exports.mime = mime
 module.exports.setFsModule = function (vfs) {
-  fs = vfs;
+  fs = vfs
 }
 
 /**
