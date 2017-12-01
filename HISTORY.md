@@ -7,6 +7,19 @@ unreleased
     - deps: depd@~1.1.2
     - deps: setprototypeof@1.1.0
     - deps: statuses@'>= 1.5.0 < 2'
+  * deps: mime@1.6.0
+    - Add extensions for JPEG-2000 images
+    - Add new `font/*` types from IANA
+    - Add WASM mapping
+    - Update `.bdoc` to `application/bdoc`
+    - Update `.bmp` to `image/bmp`
+    - Update `.m4a` to `audio/mp4`
+    - Update `.rtf` to `application/rtf`
+    - Update `.wav` to `audio/wav`
+    - Update `.xml` to `application/xml`
+    - Update generic extensions to `application/octet-stream`:
+      `.deb`, `.dll`, `.dmg`, `.exe`, `.iso`, `.msi`
+    - Use mime-score module to resolve extension conflicts
   * deps: ms@2.1.1
     - Add `week`/`w` support
     - Fix negative number handling

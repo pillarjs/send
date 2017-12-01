@@ -24,7 +24,7 @@
     "etag": "~1.8.1",
     "fresh": "0.5.2",
     "http-errors": "~1.7.1",
-    "mime": "1.4.1",
+    "mime": "1.6.0",
     "ms": "2.1.1",
     "on-finished": "~2.3.0",
     "range-parser": "~1.2.0",
