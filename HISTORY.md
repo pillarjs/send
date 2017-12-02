@@ -1,5 +1,6 @@
 0.16.2 / 2017-12-02
 ==================
+
 * deps: mime@1.6.0
     - Add mime-score module to resolve file extension conflicts
 
