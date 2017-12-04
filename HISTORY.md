@@ -1,8 +1,11 @@
-0.16.2 / 2017-12-02
-==================
-
 * deps: mime@1.6.0
-    - Add mime-score module to resolve file extension conflicts
+  - Fix issue when building with webpack
+  - Add ES5 version ready in npm package
+  - Add support for extensions in mime-db (iWork - pages / numbers / etc.)
+  - Add support for mime/lite
+  - Fix missing `./Mime`
+  - Fix vulnerable regular expression
+  - Add mime-score module to resolve file extension conflicts
 
 0.16.1 / 2017-09-29
 ===================
