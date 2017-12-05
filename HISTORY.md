@@ -5,7 +5,6 @@
   - Add support for mime/lite
   - Fix missing `./Mime`
   - Fix vulnerable regular expression
-  - Add mime-score module to resolve file extension conflicts
 
 0.16.1 / 2017-09-29
 ===================
@@ -414,6 +413,7 @@
  * Support "If-Range" header
  * Control whether to generate etags
  * deps: mime@1.2.11
+  - Add mime-score module to resolve file extension conflicts
 
 0.2.0 / 2014-01-29
 ==================
