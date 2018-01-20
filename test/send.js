@@ -1,7 +1,7 @@
 
 process.env.NO_DEPRECATION = 'send'
 
-var after = require('after')
+var afterCalls = require('after') // do not interfere with mocha's after() global
 var assert = require('assert')
 var fs = require('fs')
 var http = require('http')
@@ -22,6 +22,52 @@ var app = http.createServer(function (req, res) {
   send(req, req.url, {root: fixtures})
   .on('error', error)
   .pipe(res)
+})
+
+var noop = Function.prototype
+var fsOpen = fs.open
+var fsClose = fs.close
+var fds = { opened: 0, closed: 0 }
+// Before any of the tests run wrap `fs.open()` and `fs.close()`
+// so we can test that all the file descriptors that get opened
+// by `send()` are also closed properly after each response
+before(function () {
+  // When `fs.open()` is called we wrap the last argument (the
+  // callback which receives the file descriptor) so that when
+  // it is eventually called we can increment the number of
+  // opened file descriptors
+  fs.open = function wrappedFSopen () {
+    var args = Array.prototype.slice.call(arguments)
+    var last = args.length - 1
+    var done = args[last]
+    args[last] = function (err, fd) {
+      if (typeof fd === 'number') fds.opened++
+      done(err, fd)
+    }
+    return fsOpen.apply(fs, args)
+  }
+
+  // When `fs.close()` is called we increment the number of closed
+  // file descriptors immediately since closing is asynchronous and
+  // we check after each response that any opened file descriptors
+  // will eventually be closed, not necessarily that they *are* now
+  fs.close = function wrappedFSclose (fd, cb) {
+    if (typeof fd === 'number') fds.closed++
+    return fsClose.call(fs, fd, cb)
+  }
+})
+
+// After all the tests have run then restore `fs.open()`
+// and `fs.close()` to their original un-wrapped versions
+after(function () {
+  fs.open = fsOpen
+  fs.close = fsClose
+})
+
+// After each test: ensure all opened file descriptors have been closed
+afterEach(function () {
+  var reason = 'all opened file descriptors (' + fds.opened + ') should have been closed (' + fds.closed + ')'
+  assert.equal(fds.closed, fds.opened, reason)
 })
 
 describe('send(file).pipe(res)', function () {
@@ -155,22 +201,24 @@ describe('send(file).pipe(res)', function () {
     })
   })
 
-  it('should 404 if file disappears after stat, before open', function (done) {
+  it('should 200 even if file disappears after stat', function (done) {
+    var resource = '/tmp.txt'
+    var tmpPath = path.join(__dirname, 'fixtures', resource)
     var app = http.createServer(function (req, res) {
       send(req, req.url, {root: 'test/fixtures'})
-      .on('file', function () {
-        // simulate file ENOENT after on open, after stat
-        var fn = this.send
-        this.send = function (path, stat) {
-          fn.call(this, (path + '__xxx_no_exist'), stat)
-        }
+      .on('file', function (path) {
+        fs.unlinkSync(tmpPath)
       })
       .pipe(res)
     })
 
-    request(app)
-    .get('/name.txt')
-    .expect(404, done)
+    fs.writeFile(tmpPath, 'howdy', { flag: 'wx' }, function (err) {
+      if (err) return done(err)
+      request(app)
+      .get(resource)
+      .expect('Content-Type', /plain/)
+      .expect(200, done)
+    })
   })
 
   it('should 500 on file stream error', function (done) {
@@ -192,7 +240,7 @@ describe('send(file).pipe(res)', function () {
 
   describe('"headers" event', function () {
     it('should fire when sending file', function (done) {
-      var cb = after(2, done)
+      var cb = afterCalls(2, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', function () { cb() })
@@ -205,7 +253,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should not fire on 404', function (done) {
-      var cb = after(1, done)
+      var cb = afterCalls(1, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', function () { cb() })
@@ -218,7 +266,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should fire on index', function (done) {
-      var cb = after(2, done)
+      var cb = afterCalls(2, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', function () { cb() })
@@ -231,7 +279,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should not fire on redirect', function (done) {
-      var cb = after(1, done)
+      var cb = afterCalls(1, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', function () { cb() })
@@ -244,7 +292,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should provide path', function (done) {
-      var cb = after(2, done)
+      var cb = afterCalls(2, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', onHeaders)
@@ -263,7 +311,7 @@ describe('send(file).pipe(res)', function () {
     })
 
     it('should provide stat', function (done) {
-      var cb = after(2, done)
+      var cb = afterCalls(2, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, {root: fixtures})
         .on('headers', onHeaders)
@@ -1011,6 +1059,82 @@ describe('send(file, options)', function () {
       request(createServer({extensions: 'html', root: fixtures}))
       .get('/thing.html')
       .expect(404, done)
+    })
+  })
+
+  describe('fd', function () {
+    it('should support providing an existing file descriptor', function (done) {
+      var resource = '/nums'
+      fs.open(path.join(fixtures, resource), 'r', function (err, fd) {
+        if (err) return done(err)
+        request(createServer({fd: fd}))
+        .get(resource)
+        .expect(200, done)
+      })
+    })
+
+    it('should still error if the fd cannot be streamed', function (done) {
+      request(createServer({fd: 999, autoClose: false}))
+      .get('/anything')
+      .expect(500, done)
+    })
+
+    it('should close the file descriptor if the response ends before pipe', function (done) {
+      var app = http.createServer(function (req, res) {
+        if (req.url === '/fd') {
+          fs.open(path.join(fixtures, '/name.txt'), 'r', function (err, fd) {
+            res.end()
+            if (err) return done(err)
+            send(req, req.url, {fd: fd})
+            .on('close', done)
+            .pipe(res)
+          })
+        } else {
+          res.end()
+          send(req, req.url, {root: 'test/fixtures'})
+          .on('close', done)
+          .pipe(res)
+        }
+      })
+
+      request(app)
+      .get('/nums')
+      .expect(200, function (err) {
+        if (err) return done(err)
+        request(app)
+        .get('/fd')
+        .expect(200, function (err) {
+          if (err) done(err)
+        })
+      })
+    })
+
+    it('should close the file descriptor if the response ends immediately after pipe', function (done) {
+      var app = http.createServer(function (req, res) {
+        send(req, req.url, {root: 'test/fixtures'})
+        .on('close', done)
+        .pipe(res)
+        res.end()
+      })
+
+      request(app)
+      .get('/name.txt')
+      .expect(200, noop)
+    })
+  })
+
+  describe('autoClose', function () {
+    it('should prevent the file descriptor from being closed automatically if set to `false`', function (done) {
+      var resource = '/nums'
+      fs.open(path.join(fixtures, resource), 'r', function (err, fd) {
+        if (err) return done(err)
+        request(createServer({fd: fd, autoClose: false}))
+        .get(resource)
+        .expect(200, function (err) {
+          if (err) return done(err)
+          fs.close(fd, done)
+        })
+      })
     })
   })
 

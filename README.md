@@ -46,6 +46,14 @@ Enable or disable accepting ranged requests, defaults to true.
 Disabling this will not send `Accept-Ranges` and ignore the contents
 of the `Range` request header.
 
+##### autoClose
+
+If `autoClose` is `false`, then the file descriptor won't be closed,
+even if there's an error. It is your responsibility to close it and
+make sure there's no file descriptor leak. If `autoClose` is set to
+`true` (default behavior), on `error` or `end` the file descriptor
+will be closed automatically.
+
 ##### cacheControl
 
 Enable or disable setting `Cache-Control` response header, defaults to
@@ -84,6 +92,11 @@ If a given file doesn't exist, try appending one of the given extensions,
 in the given order. By default, this is disabled (set to `false`). An
 example value that will serve extension-less HTML files: `['html', 'htm']`.
 This is skipped if the requested file already has an extension.
+
+##### fd
+
+If `fd` is specified, send will ignore the `path` argument and will use the
+specified file descriptor. This means that no `'open'` event will be emitted.
 
 ##### immutable
 
@@ -126,9 +139,11 @@ The `SendStream` is an event emitter and will emit the following events:
   - `error` an error occurred `(err)`
   - `directory` a directory was requested `(res, path)`
   - `file` a file was requested `(path, stat)`
+  - `open` a file descriptor was opened for streaming `(fd)`
   - `headers` the headers are about to be set on a file `(res, path, stat)`
   - `stream` file streaming has started `(stream)`
   - `end` streaming has completed
+  - `close` the file descriptor was closed
 
 #### .pipe
 
