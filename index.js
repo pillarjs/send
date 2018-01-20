@@ -18,7 +18,6 @@ var deprecate = require('depd')('send')
 var encodeUrl = require('encodeurl')
 var escapeHtml = require('escape-html')
 var etag = require('etag')
-var EventEmitter = require('events').EventEmitter
 var fresh = require('fresh')
 var fs = require('fs')
 var mime = require('mime')
@@ -48,13 +47,6 @@ var sep = path.sep
  */
 
 var BYTES_RANGE_REGEXP = /^ *bytes=/
-
-/**
- * Simple expression to split token list.
- * @private
- */
-
-var TOKEN_LIST_REGEXP = / *, */
 
 /**
  * Maximum value allowed for the max age.
@@ -89,14 +81,6 @@ var BAD_FD_REGEXP = /^(EBADF|OK)$/
 
 module.exports = send
 module.exports.mime = mime
-
-/**
- * Shim EventEmitter.listenerCount for node.js < 0.10
- */
-
-/* istanbul ignore next */
-var listenerCount = EventEmitter.listenerCount ||
-  function (emitter, type) { return emitter.listeners(type).length }
 
 /**
  * Return a `SendStream` for `req` and `path`.
@@ -164,6 +148,10 @@ function SendStream (req, path, options) {
   this._extensions = opts.extensions !== undefined
     ? normalizeList(opts.extensions, 'extensions option')
     : []
+
+  this._immutable = opts.immutable !== undefined
+    ? Boolean(opts.immutable)
+    : false
 
   this._index = opts.index !== undefined
     ? normalizeList(opts.index, 'index option')
@@ -292,14 +280,14 @@ SendStream.prototype.maxage = deprecate.function(function maxage (maxAge) {
  * Emit error with `status`.
  *
  * @param {number} status
- * @param {Error} [error]
+ * @param {Error} [err]
  * @private
  */
 
-SendStream.prototype.error = function error (status, error) {
+SendStream.prototype.error = function error (status, err) {
   // emit if listeners instead of responding
-  if (listenerCount(this, 'error') !== 0) {
-    return this.emit('error', createError(status, error, {
+  if (hasListeners(this, 'error')) {
+    return this.emit('error', createError(status, err, {
       expose: false
     }))
   }
@@ -312,8 +300,8 @@ SendStream.prototype.error = function error (status, error) {
   clearHeaders(res)
 
   // add error headers
-  if (error && error.headers) {
-    setHeaders(res, error.headers)
+  if (err && err.headers) {
+    setHeaders(res, err.headers)
   }
 
   // send basic response
@@ -365,15 +353,15 @@ SendStream.prototype.isPreconditionFailure = function isPreconditionFailure () {
   var match = req.headers['if-match']
   if (match) {
     var etag = res.getHeader('ETag')
-    return !etag || (match !== '*' && match.split(TOKEN_LIST_REGEXP).every(function (match) {
+    return !etag || (match !== '*' && parseTokenList(match).every(function (match) {
       return match !== etag && match !== 'W/' + etag && 'W/' + match !== etag
     }))
   }
 
   // if-unmodified-since
-  var unmodifiedSince = Date.parse(req.headers['if-unmodified-since'])
+  var unmodifiedSince = parseHttpDate(req.headers['if-unmodified-since'])
   if (!isNaN(unmodifiedSince)) {
-    var lastModified = Date.parse(res.getHeader('Last-Modified'))
+    var lastModified = parseHttpDate(res.getHeader('Last-Modified'))
     return isNaN(lastModified) || lastModified > unmodifiedSince
   }
 
@@ -494,7 +482,7 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
 
   // if-range as modified date
   var lastModified = this.res.getHeader('Last-Modified')
-  return Boolean(lastModified && Date.parse(lastModified) <= Date.parse(ifRange))
+  return parseHttpDate(lastModified) <= parseHttpDate(ifRange)
 }
 
 /**
@@ -507,7 +495,7 @@ SendStream.prototype.isRangeFresh = function isRangeFresh () {
 SendStream.prototype.redirect = function redirect (path) {
   var res = this.res
 
-  if (listenerCount(this, 'directory') !== 0) {
+  if (hasListeners(this, 'directory')) {
     this.emit('directory', res, path)
     return
   }
@@ -607,19 +595,24 @@ SendStream.prototype.pipe = function pipe (res) {
 
   var parts
   if (root !== null) {
+    // normalize
+    if (path) {
+      path = normalize('.' + sep + path)
+    }
+
     // malicious path
-    if (UP_PATH_REGEXP.test(normalize('.' + sep + path))) {
+    if (UP_PATH_REGEXP.test(path)) {
       debug('malicious path "%s"', path)
       this.error(403)
       return res
     }
 
+    // explode path parts
+    parts = path.split(sep)
+
     // join / normalize from optional root dir
     path = normalize(join(root, path))
     root = normalize(root + sep)
-
-    // explode path parts
-    parts = path.substr(root.length).split(sep)
   } else {
     // ".." is malicious without "root"
     if (UP_PATH_REGEXP.test(path)) {
@@ -938,6 +931,11 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
 
   if (this._cacheControl && !res.getHeader('Cache-Control')) {
     var cacheControl = 'public, max-age=' + Math.floor(this._maxage / 1000)
+
+    if (this._immutable) {
+      cacheControl += ', immutable'
+    }
+
     debug('cache-control %s', cacheControl)
     res.setHeader('Cache-Control', cacheControl)
   }
@@ -1007,7 +1005,8 @@ function collapseLeadingSlashes (str) {
 
 function containsDotFile (parts) {
   for (var i = 0; i < parts.length; i++) {
-    if (parts[i][0] === '.') {
+    var part = parts[i]
+    if (part.length > 1 && part[0] === '.') {
       return true
     }
   }
@@ -1044,7 +1043,8 @@ function createHtmlDocument (title, body) {
     '</head>\n' +
     '<body>\n' +
     '<pre>' + body + '</pre>\n' +
-    '</body>\n'
+    '</body>\n' +
+    '<html>\n'
 }
 
 /**
@@ -1080,6 +1080,26 @@ function getHeaderNames (res) {
 }
 
 /**
+ * Determine if emitter has listeners of a given type.
+ *
+ * The way to do this check is done three different ways in Node.js >= 0.8
+ * so this consolidates them into a minimal set using instance methods.
+ *
+ * @param {EventEmitter} emitter
+ * @param {string} type
+ * @returns {boolean}
+ * @private
+ */
+
+function hasListeners (emitter, type) {
+  var count = typeof emitter.listenerCount !== 'function'
+    ? emitter.listeners(type).length
+    : emitter.listenerCount(type)
+
+  return count > 0
+}
+
+/**
  * Determine if the response headers have been sent.
  *
  * @param {object} res
@@ -1109,6 +1129,57 @@ function normalizeList (val, name) {
       throw new TypeError(name + ' must be array of strings or false')
     }
   }
+
+  return list
+}
+
+/**
+ * Parse an HTTP Date into a number.
+ *
+ * @param {string} date
+ * @private
+ */
+
+function parseHttpDate (date) {
+  var timestamp = date && Date.parse(date)
+
+  return typeof timestamp === 'number'
+    ? timestamp
+    : NaN
+}
+
+/**
+ * Parse a HTTP token list.
+ *
+ * @param {string} str
+ * @private
+ */
+
+function parseTokenList (str) {
+  var end = 0
+  var list = []
+  var start = 0
+
+  // gather tokens
+  for (var i = 0, len = str.length; i < len; i++) {
+    switch (str.charCodeAt(i)) {
+      case 0x20: /*   */
+        if (start === end) {
+          start = end = i + 1
+        }
+        break
+      case 0x2c: /* , */
+        list.push(str.substring(start, end))
+        start = end = i + 1
+        break
+      default:
+        end = i + 1
+        break
+    }
+  }
+
+  // final token
+  list.push(str.substring(start, end))
 
   return list
 }

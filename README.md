@@ -5,7 +5,6 @@
 [![Linux Build][travis-image]][travis-url]
 [![Windows Build][appveyor-image]][appveyor-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
-[![Gratipay][gratipay-image]][gratipay-url]
 
 Send is a library for streaming files from the file system as a http response
 supporting partial responses (Ranges), conditional-GET negotiation (If-Match,
@@ -58,7 +57,7 @@ will be closed automatically.
 ##### cacheControl
 
 Enable or disable setting `Cache-Control` response header, defaults to
-true. Disabling this will ignore the `maxAge` option.
+true. Disabling this will ignore the `immutable` and `maxAge` options.
 
 ##### dotfiles
 
@@ -98,6 +97,14 @@ This is skipped if the requested file already has an extension.
 
 If `fd` is specified, send will ignore the `path` argument and will use the
 specified file descriptor. This means that no `'open'` event will be emitted.
+
+##### immutable
+
+Enable or diable the `immutable` directive in the `Cache-Control` response
+header, defaults to `false`. If set to `true`, the `maxAge` option should
+also be specified to enable caching. The `immutable` directive will prevent
+supported clients from making conditional requests during the life of the
+`maxAge` option to check if the file has changed.
 
 ##### index
 
@@ -312,5 +319,3 @@ server.listen(3000)
 [coveralls-url]: https://coveralls.io/r/pillarjs/send?branch=master
 [downloads-image]: https://img.shields.io/npm/dm/send.svg
 [downloads-url]: https://npmjs.org/package/send
-[gratipay-image]: https://img.shields.io/gratipay/dougwilson.svg
-[gratipay-url]: https://www.gratipay.com/dougwilson/

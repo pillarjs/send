@@ -495,7 +495,7 @@ describe('send(file).pipe(res)', function () {
       it('should respond with 412 when ETag unmatched', function (done) {
         request(app)
         .get('/name.txt')
-        .set('If-Match', '"foo", "bar"')
+        .set('If-Match', ' "foo", "bar" ')
         .expect(412, done)
       })
 
@@ -1329,6 +1329,20 @@ describe('send(file, options)', function () {
     })
   })
 
+  describe('immutable', function () {
+    it('should default to false', function (done) {
+      request(createServer({root: fixtures}))
+      .get('/name.txt')
+      .expect('Cache-Control', 'public, max-age=0', done)
+    })
+
+    it('should set immutable directive in Cache-Control', function (done) {
+      request(createServer({immutable: true, maxAge: '1h', root: fixtures}))
+      .get('/name.txt')
+      .expect('Cache-Control', 'public, max-age=3600, immutable', done)
+    })
+  })
+
   describe('maxAge', function () {
     it('should default to 0', function (done) {
       request(createServer({root: fixtures}))
@@ -1349,7 +1363,7 @@ describe('send(file, options)', function () {
     })
 
     it('should max at 1 year', function (done) {
-      request(createServer({maxAge: Infinity, root: fixtures}))
+      request(createServer({maxAge: '2y', root: fixtures}))
       .get('/name.txt')
       .expect('Cache-Control', 'public, max-age=31536000', done)
     })
@@ -1451,6 +1465,23 @@ describe('send(file, options)', function () {
         request(app)
         .get('/name.txt')
         .expect(301, /Redirecting to/, done)
+      })
+
+      //
+      // NOTE: This is not a real part of the API, but
+      //       over time this has become something users
+      //       are doing, so this will prevent unseen
+      //       regressions around this use-case.
+      //
+      it('should try as file with empty path', function (done) {
+        var app = http.createServer(function (req, res) {
+          send(req, '', {root: path.join(fixtures, 'name.txt')})
+          .pipe(res)
+        })
+
+        request(app)
+        .get('/')
+        .expect(200, 'tobi', done)
       })
 
       it('should restrict paths to within root', function (done) {
