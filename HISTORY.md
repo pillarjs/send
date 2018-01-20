@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Fix incorrect end tag in default error & redirects
   * deps: depd@~1.1.2
     - perf: remove argument reassignment
   * deps: encodeurl@~1.0.2
