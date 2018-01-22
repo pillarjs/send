@@ -3,6 +3,8 @@ unreleased
 
   * deps: depd@~1.1.2
     - perf: remove argument reassignment
+  * deps: encodeurl@~1.0.2
+    - Fix encoding `%` as last character
 
 0.16.1 / 2017-09-29
 ===================
