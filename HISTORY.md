@@ -6,6 +6,7 @@ unreleased
     - perf: remove argument reassignment
   * deps: encodeurl@~1.0.2
     - Fix encoding `%` as last character
+  * deps: statuses@~1.4.0
 
 0.16.1 / 2017-09-29
 ===================
