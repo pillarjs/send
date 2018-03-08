@@ -225,8 +225,8 @@ var send = require('send')
 // with a custom handler for directory listing
 var server = http.createServer(function onRequest (req, res) {
   send(req, parseUrl(req).pathname, {index: false, root: '/www/example.com/public'})
-  .once('directory', directory)
-  .pipe(res)
+    .once('directory', directory)
+    .pipe(res)
 })
 
 server.listen(3000)
@@ -281,10 +281,10 @@ var server = http.createServer(function onRequest (req, res) {
   // transfer arbitrary files from within
   // /www/example.com/public/*
   send(req, parseUrl(req).pathname, {root: '/www/example.com/public'})
-  .on('error', error)
-  .on('directory', redirect)
-  .on('headers', headers)
-  .pipe(res)
+    .on('error', error)
+    .on('directory', redirect)
+    .on('headers', headers)
+    .pipe(res)
 })
 
 server.listen(3000)
