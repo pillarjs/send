@@ -174,7 +174,27 @@ $ npm test
 
 ## Examples
 
-### Small example
+### Serve a specific file
+
+This simple example will send a specific file to all requests.
+
+```js
+var http = require('http')
+var send = require('send')
+
+var server = http.createServer(function onRequest (req, res) {
+  send(req, '/path/to/index.html')
+    .pipe(res)
+})
+
+server.listen(3000)
+```
+
+### Serve all files from a directory
+
+This simple example will just serve up all the files in a
+given directory as the top-level. For example, a request
+`GET /foo.txt` will send back `/www/public/foo.txt`.
 
 ```js
 var http = require('http')
@@ -182,7 +202,8 @@ var parseUrl = require('parseurl')
 var send = require('send')
 
 var server = http.createServer(function onRequest (req, res) {
-  send(req, parseUrl(req).pathname).pipe(res)
+  send(req, parseUrl(req).pathname, { root: '/www/public' })
+    .pipe(res)
 })
 
 server.listen(3000)
@@ -204,7 +225,8 @@ send.mime.define({
 })
 
 var server = http.createServer(function onRequest (req, res) {
-  send(req, parseUrl(req).pathname).pipe(res)
+  send(req, parseUrl(req).pathname, { root: '/www/public' })
+    .pipe(res)
 })
 
 server.listen(3000)
@@ -224,7 +246,7 @@ var send = require('send')
 // Transfer arbitrary files from within /www/example.com/public/*
 // with a custom handler for directory listing
 var server = http.createServer(function onRequest (req, res) {
-  send(req, parseUrl(req).pathname, {index: false, root: '/www/example.com/public'})
+  send(req, parseUrl(req).pathname, { index: false, root: '/www/public' })
     .once('directory', directory)
     .pipe(res)
 })
@@ -280,7 +302,7 @@ var server = http.createServer(function onRequest (req, res) {
 
   // transfer arbitrary files from within
   // /www/example.com/public/*
-  send(req, parseUrl(req).pathname, {root: '/www/example.com/public'})
+  send(req, parseUrl(req).pathname, { root: '/www/public' })
     .on('error', error)
     .on('directory', redirect)
     .on('headers', headers)
