@@ -1,7 +1,7 @@
 unreleased
 ==========
 
-  * deps: statuses@~1.4.0
+  * deps: statuses@~1.5.0
 
 0.16.2 / 2018-02-07
 ===================
