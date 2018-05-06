@@ -1,6 +1,10 @@
 unreleased
 ==========
 
+  * deps: http-errors@~1.6.3
+    - deps: depd@~1.1.2
+    - deps: setprototypeof@1.1.0
+    - deps: statuses@'>= 1.3.1 < 2'
   * deps: statuses@~1.5.0
 
 0.16.2 / 2018-02-07
