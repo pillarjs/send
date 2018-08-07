@@ -418,6 +418,8 @@ describe('send(file).pipe(res)', function () {
         res.setHeader('Content-Language', 'en-US')
         res.setHeader('Content-Location', 'http://localhost/name.txt')
         res.setHeader('Contents', 'foo')
+        res.setHeader('Content-Security-Policy', 'default-src \'self\'')
+        res.setHeader('Content-Security-Policy-Report-Only', 'default-src https:; report-uri /csp-violation-report-endpoint/')
       })
 
       request(server)
@@ -432,6 +434,8 @@ describe('send(file).pipe(res)', function () {
             .expect(shouldNotHaveHeader('Content-Type'))
             .expect('Content-Location', 'http://localhost/name.txt')
             .expect('Contents', 'foo')
+            .expect('Content-Security-Policy', 'default-src \'self\'')
+            .expect('Content-Security-Policy-Report-Only', 'default-src https:; report-uri /csp-violation-report-endpoint/')
             .expect(304, done)
         })
     })
