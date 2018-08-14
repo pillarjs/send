@@ -178,7 +178,7 @@ describe('send(file).pipe(res)', function () {
       send(req, req.url, {root: 'test/fixtures'})
         .on('stream', function (stream) {
         // simulate file error
-          process.nextTick(function () {
+          stream.on('open', function () {
             stream.emit('error', new Error('boom!'))
           })
         })
