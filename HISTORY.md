@@ -6,6 +6,7 @@ unreleased
     - deps: setprototypeof@1.1.0
     - deps: statuses@'>= 1.3.1 < 2'
   * deps: statuses@~1.5.0
+  * perf: remove redundant `path.normalize` call
 
 0.16.2 / 2018-02-07
 ===================
