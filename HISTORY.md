@@ -5,6 +5,9 @@ unreleased
     - deps: depd@~1.1.2
     - deps: setprototypeof@1.1.0
     - deps: statuses@'>= 1.3.1 < 2'
+  * deps: ms@2.1.1
+    - Add `week`/`w` support
+    - Fix negative number handling
   * deps: statuses@~1.5.0
   * perf: remove redundant `path.normalize` call
 
