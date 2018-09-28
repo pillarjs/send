@@ -253,7 +253,7 @@ describe('send(file).pipe(res)', function () {
 
       function onHeaders (res, filePath) {
         assert.ok(filePath)
-        assert.equal(path.normalize(filePath), path.normalize(path.join(fixtures, 'nums')))
+        assert.strictEqual(path.normalize(filePath), path.normalize(path.join(fixtures, 'nums')))
         cb()
       }
 
