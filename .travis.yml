@@ -34,4 +34,4 @@ script:
   - "test   -z $(npm -ps ls istanbul) || npm run-script test-ci"
   - "test   -z $(npm -ps ls eslint  ) || npm run-script lint"
 after_script:
-  - "test -e ./coverage/lcov.info && npm install coveralls@2.10.0 && cat ./coverage/lcov.info | coveralls"
+  - "test -e ./coverage/lcov.info && npm install coveralls@2.13.3 && cat ./coverage/lcov.info | coveralls"
