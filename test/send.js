@@ -85,8 +85,10 @@ describe('send(file).pipe(res)', function () {
   it('should support HEAD', function (done) {
     request(app)
       .head('/name.txt')
+      .expect(200)
       .expect('Content-Length', '4')
-      .expect(200, '', done)
+      .expect(shouldNotHaveBody())
+      .end(done)
   })
 
   it('should add an ETag header field', function (done) {
@@ -1462,6 +1464,12 @@ function createServer (opts, fn) {
       res.end(String(err))
     }
   })
+}
+
+function shouldNotHaveBody () {
+  return function (res) {
+    assert.ok(res.text === '' || res.text === undefined)
+  }
 }
 
 function shouldNotHaveHeader (header) {
