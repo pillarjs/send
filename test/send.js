@@ -78,7 +78,7 @@ describe('send(file).pipe(res)', function () {
         .pipe(res)
     })
     request(app)
-      .get('/nums')
+      .get('/name.txt')
       .expect(200, '0 - Can\'t set headers after they are sent.', done)
   })
 
@@ -138,7 +138,7 @@ describe('send(file).pipe(res)', function () {
       send(req, req.url, {root: fixtures}).pipe(res)
     })
     request(app)
-      .get('/nums')
+      .get('/name.txt')
       .expect('Content-Type', 'application/x-custom', done)
   })
 
@@ -200,8 +200,8 @@ describe('send(file).pipe(res)', function () {
       })
 
       request(server)
-        .get('/nums')
-        .expect(200, '123456789', cb)
+        .get('/name.txt')
+        .expect(200, 'tobi', cb)
     })
 
     it('should not fire on 404', function (done) {
@@ -253,13 +253,13 @@ describe('send(file).pipe(res)', function () {
 
       function onHeaders (res, filePath) {
         assert.ok(filePath)
-        assert.strictEqual(path.normalize(filePath), path.normalize(path.join(fixtures, 'nums')))
+        assert.strictEqual(path.normalize(filePath), path.normalize(path.join(fixtures, 'name.txt')))
         cb()
       }
 
       request(server)
-        .get('/nums')
-        .expect(200, '123456789', cb)
+        .get('/name.txt')
+        .expect(200, 'tobi', cb)
     })
 
     it('should provide stat', function (done) {
@@ -278,8 +278,8 @@ describe('send(file).pipe(res)', function () {
       }
 
       request(server)
-        .get('/nums')
-        .expect(200, '123456789', cb)
+        .get('/name.txt')
+        .expect(200, 'tobi', cb)
     })
 
     it('should allow altering headers', function (done) {
@@ -297,12 +297,14 @@ describe('send(file).pipe(res)', function () {
       }
 
       request(server)
-        .get('/nums')
+        .get('/name.txt')
+        .expect(200)
         .expect('Cache-Control', 'no-cache')
         .expect('Content-Type', 'text/x-custom')
         .expect('ETag', 'W/"everything"')
         .expect('X-Created', dateRegExp)
-        .expect(200, '123456789', done)
+        .expect('tobi')
+        .end(done)
     })
   })
 
@@ -557,28 +559,28 @@ describe('send(file).pipe(res)', function () {
   describe('with Range request', function () {
     it('should support byte ranges', function (done) {
       request(app)
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'bytes=0-4')
         .expect(206, '12345', done)
     })
 
     it('should ignore non-byte ranges', function (done) {
       request(app)
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'items=0-4')
         .expect(200, '123456789', done)
     })
 
     it('should be inclusive', function (done) {
       request(app)
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'bytes=0-0')
         .expect(206, '1', done)
     })
 
     it('should set Content-Range', function (done) {
       request(app)
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'bytes=2-5')
         .expect('Content-Range', 'bytes 2-5/9')
         .expect(206, done)
@@ -586,28 +588,28 @@ describe('send(file).pipe(res)', function () {
 
     it('should support -n', function (done) {
       request(app)
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'bytes=-3')
         .expect(206, '789', done)
     })
 
     it('should support n-', function (done) {
       request(app)
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'bytes=3-')
         .expect(206, '456789', done)
     })
 
     it('should respond with 206 "Partial Content"', function (done) {
       request(app)
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'bytes=0-4')
         .expect(206, done)
     })
 
     it('should set Content-Length to the # of octets transferred', function (done) {
       request(app)
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'bytes=2-3')
         .expect('Content-Length', '2')
         .expect(206, '34', done)
@@ -616,7 +618,7 @@ describe('send(file).pipe(res)', function () {
     describe('when last-byte-pos of the range is greater the length', function () {
       it('is taken to be equal to one less than the length', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .set('Range', 'bytes=2-50')
           .expect('Content-Range', 'bytes 2-8/9')
           .expect(206, done)
@@ -624,7 +626,7 @@ describe('send(file).pipe(res)', function () {
 
       it('should adapt the Content-Length accordingly', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .set('Range', 'bytes=2-50')
           .expect('Content-Length', '7')
           .expect(206, done)
@@ -634,7 +636,7 @@ describe('send(file).pipe(res)', function () {
     describe('when the first- byte-pos of the range is greater length', function () {
       it('should respond with 416', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .set('Range', 'bytes=9-50')
           .expect('Content-Range', 'bytes */9')
           .expect(416, done)
@@ -644,7 +646,7 @@ describe('send(file).pipe(res)', function () {
     describe('when syntactically invalid', function () {
       it('should respond with 200 and the entire contents', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .set('Range', 'asdf')
           .expect(200, '123456789', done)
       })
@@ -653,7 +655,7 @@ describe('send(file).pipe(res)', function () {
     describe('when multiple ranges', function () {
       it('should respond with 200 and the entire contents', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .set('Range', 'bytes=1-1,3-')
           .expect(shouldNotHaveHeader('Content-Range'))
           .expect(200, '123456789', done)
@@ -661,7 +663,7 @@ describe('send(file).pipe(res)', function () {
 
       it('should respond with 206 is all ranges can be combined', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .set('Range', 'bytes=1-2,3-5')
           .expect('Content-Range', 'bytes 1-5/9')
           .expect(206, '23456', done)
@@ -671,13 +673,13 @@ describe('send(file).pipe(res)', function () {
     describe('when if-range present', function () {
       it('should respond with parts when etag unchanged', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .expect(200, function (err, res) {
             if (err) return done(err)
             var etag = res.headers.etag
 
             request(app)
-              .get('/nums')
+              .get('/nums.txt')
               .set('If-Range', etag)
               .set('Range', 'bytes=0-0')
               .expect(206, '1', done)
@@ -686,13 +688,13 @@ describe('send(file).pipe(res)', function () {
 
       it('should respond with 200 when etag changed', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .expect(200, function (err, res) {
             if (err) return done(err)
             var etag = res.headers.etag.replace(/"(.)/, '"0$1')
 
             request(app)
-              .get('/nums')
+              .get('/nums.txt')
               .set('If-Range', etag)
               .set('Range', 'bytes=0-0')
               .expect(200, '123456789', done)
@@ -701,13 +703,13 @@ describe('send(file).pipe(res)', function () {
 
       it('should respond with parts when modified unchanged', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .expect(200, function (err, res) {
             if (err) return done(err)
             var modified = res.headers['last-modified']
 
             request(app)
-              .get('/nums')
+              .get('/nums.txt')
               .set('If-Range', modified)
               .set('Range', 'bytes=0-0')
               .expect(206, '1', done)
@@ -716,13 +718,13 @@ describe('send(file).pipe(res)', function () {
 
       it('should respond with 200 when modified changed', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .expect(200, function (err, res) {
             if (err) return done(err)
             var modified = Date.parse(res.headers['last-modified']) - 20000
 
             request(app)
-              .get('/nums')
+              .get('/nums.txt')
               .set('If-Range', new Date(modified).toUTCString())
               .set('Range', 'bytes=0-0')
               .expect(200, '123456789', done)
@@ -731,7 +733,7 @@ describe('send(file).pipe(res)', function () {
 
       it('should respond with 200 when invalid value', function (done) {
         request(app)
-          .get('/nums')
+          .get('/nums.txt')
           .set('If-Range', 'foo')
           .set('Range', 'bytes=0-0')
           .expect(200, '123456789', done)
@@ -742,26 +744,26 @@ describe('send(file).pipe(res)', function () {
   describe('when "options" is specified', function () {
     it('should support start/end', function (done) {
       request(createServer({root: fixtures, start: 3, end: 5}))
-        .get('/nums')
+        .get('/nums.txt')
         .expect(200, '456', done)
     })
 
     it('should adjust too large end', function (done) {
       request(createServer({root: fixtures, start: 3, end: 90}))
-        .get('/nums')
+        .get('/nums.txt')
         .expect(200, '456789', done)
     })
 
     it('should support start/end with Range request', function (done) {
       request(createServer({root: fixtures, start: 0, end: 2}))
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'bytes=-2')
         .expect(206, '23', done)
     })
 
     it('should support start/end with unsatisfiable Range request', function (done) {
       request(createServer({root: fixtures, start: 0, end: 2}))
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'bytes=5-9')
         .expect('Content-Range', 'bytes */3')
         .expect(416, done)
@@ -777,7 +779,7 @@ describe('send(file).pipe(res)', function () {
       })
 
       request(app)
-        .get('/nums')
+        .get('/name.txt')
         .expect(shouldNotHaveHeader('ETag'))
         .expect(200, done)
     })
@@ -918,14 +920,14 @@ describe('send(file, options)', function () {
   describe('acceptRanges', function () {
     it('should support disabling accept-ranges', function (done) {
       request(createServer({acceptRanges: false, root: fixtures}))
-        .get('/nums')
+        .get('/nums.txt')
         .expect(shouldNotHaveHeader('Accept-Ranges'))
         .expect(200, done)
     })
 
     it('should ignore requested range', function (done) {
       request(createServer({acceptRanges: false, root: fixtures}))
-        .get('/nums')
+        .get('/nums.txt')
         .set('Range', 'bytes=0-2')
         .expect(shouldNotHaveHeader('Accept-Ranges'))
         .expect(shouldNotHaveHeader('Content-Range'))
@@ -936,14 +938,14 @@ describe('send(file, options)', function () {
   describe('cacheControl', function () {
     it('should support disabling cache-control', function (done) {
       request(createServer({cacheControl: false, root: fixtures}))
-        .get('/nums')
+        .get('/name.txt')
         .expect(shouldNotHaveHeader('Cache-Control'))
         .expect(200, done)
     })
 
     it('should ignore maxAge option', function (done) {
       request(createServer({cacheControl: false, maxAge: 1000, root: fixtures}))
-        .get('/nums')
+        .get('/name.txt')
         .expect(shouldNotHaveHeader('Cache-Control'))
         .expect(200, done)
     })
@@ -952,7 +954,7 @@ describe('send(file, options)', function () {
   describe('etag', function () {
     it('should support disabling etags', function (done) {
       request(createServer({etag: false, root: fixtures}))
-        .get('/nums')
+        .get('/name.txt')
         .expect(shouldNotHaveHeader('ETag'))
         .expect(200, done)
     })
@@ -1017,7 +1019,7 @@ describe('send(file, options)', function () {
   describe('lastModified', function () {
     it('should support disabling last-modified', function (done) {
       request(createServer({lastModified: false, root: fixtures}))
-        .get('/nums')
+        .get('/name.txt')
         .expect(shouldNotHaveHeader('Last-Modified'))
         .expect(200, done)
     })
@@ -1046,7 +1048,7 @@ describe('send(file, options)', function () {
 
     it('should reject bad value', function (done) {
       request(createServer({dotfiles: 'bogus'}))
-        .get('/nums')
+        .get('/name.txt')
         .expect(500, /dotfiles/, done)
     })
 
@@ -1434,7 +1436,7 @@ describe('send.mime', function () {
       send.mime.default_type = 'text/plain'
 
       request(createServer({root: fixtures}))
-        .get('/nums')
+        .get('/no_ext')
         .expect('Content-Type', 'text/plain; charset=UTF-8')
         .expect(200, done)
     })
@@ -1443,7 +1445,7 @@ describe('send.mime', function () {
       send.mime.default_type = undefined
 
       request(createServer({root: fixtures}))
-        .get('/nums')
+        .get('/no_ext')
         .expect(shouldNotHaveHeader('Content-Type'))
         .expect(200, done)
     })
