@@ -808,8 +808,8 @@ describe('send(file).pipe(res)', function () {
       })
 
       request(app)
-        .get('/.hidden')
-        .expect(200, /secret/, done)
+        .get('/.hidden.txt')
+        .expect(200, 'secret', done)
     })
   })
 
@@ -1036,7 +1036,7 @@ describe('send(file, options)', function () {
   describe('dotfiles', function () {
     it('should default to "ignore"', function (done) {
       request(createServer({root: fixtures}))
-        .get('/.hidden')
+        .get('/.hidden.txt')
         .expect(404, done)
     })
 
@@ -1055,8 +1055,8 @@ describe('send(file, options)', function () {
     describe('when "allow"', function (done) {
       it('should send dotfile', function (done) {
         request(createServer({dotfiles: 'allow', root: fixtures}))
-          .get('/.hidden')
-          .expect(200, /secret/, done)
+          .get('/.hidden.txt')
+          .expect(200, 'secret', done)
       })
 
       it('should send within dotfile directory', function (done) {
@@ -1075,7 +1075,7 @@ describe('send(file, options)', function () {
     describe('when "deny"', function (done) {
       it('should 403 for dotfile', function (done) {
         request(createServer({dotfiles: 'deny', root: fixtures}))
-          .get('/.hidden')
+          .get('/.hidden.txt')
           .expect(403, done)
       })
 
@@ -1141,7 +1141,7 @@ describe('send(file, options)', function () {
     describe('when "ignore"', function (done) {
       it('should 404 for dotfile', function (done) {
         request(createServer({dotfiles: 'ignore', root: fixtures}))
-          .get('/.hidden')
+          .get('/.hidden.txt')
           .expect(404, done)
       })
 
@@ -1196,14 +1196,14 @@ describe('send(file, options)', function () {
   describe('hidden', function () {
     it('should default to false', function (done) {
       request(app)
-        .get('/.hidden')
+        .get('/.hidden.txt')
         .expect(404, 'Not Found', done)
     })
 
     it('should default support sending hidden files', function (done) {
       request(createServer({hidden: true, root: fixtures}))
-        .get('/.hidden')
-        .expect(200, /secret/, done)
+        .get('/.hidden.txt')
+        .expect(200, 'secret', done)
     })
   })
 
