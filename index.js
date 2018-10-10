@@ -835,16 +835,16 @@ SendStream.prototype.type = function type (path) {
 
   if (res.getHeader('Content-Type')) return
 
-  var type;
-  var mimeVersion = null;
+  var type
+  var mimeVersion = null
   // check mime version <= 1
   if (typeof mime.lookup === 'function') {
-    type = mime.lookup(path);
-    mimeVersion = 1;
+    type = mime.lookup(path)
+    mimeVersion = 1
   }
   // check mime version >= 2
   if (typeof mime.getType === 'function') {
-    type = mime.getType(path);
+    type = mime.getType(path)
   }
 
   if (!type) {
@@ -852,10 +852,10 @@ SendStream.prototype.type = function type (path) {
     return
   }
 
-  var charset;
+  var charset
   // mime version >= 2 removed function charsets
   if (mimeVersion === 1) {
-    charset = mime.charsets.lookup(type);
+    charset = mime.charsets.lookup(type)
   }
 
   debug('content-type %s', type)
