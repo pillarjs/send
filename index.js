@@ -668,7 +668,7 @@ SendStream.prototype.send = function send (path, stat) {
 
       // 416 Requested Range Not Satisfiable
       return this.error(416, {
-        headers: {'Content-Range': res.getHeader('Content-Range')}
+        headers: { 'Content-Range': res.getHeader('Content-Range') }
       })
     }
 
