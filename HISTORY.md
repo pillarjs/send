@@ -1,7 +1,7 @@
 unreleased
 ==========
 
-  * deps: http-errors@~1.7.0
+  * deps: http-errors@~1.7.1
     - Set constructor name when possible
     - Use `toidentifier` module to make class names
     - deps: depd@~1.1.2
