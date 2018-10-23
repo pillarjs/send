@@ -40,6 +40,12 @@ not the actual file-system path).
 
 #### Options
 
+##### host
+
+Enable override of the default nodejs `fs` and `path`.
+use this option to enable in memory or remote sources support 
+Default value: `{ fs: require('fs'), path: require('path') }`
+
 ##### acceptRanges
 
 Enable or disable accepting ranged requests, defaults to true.

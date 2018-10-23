@@ -20,26 +20,15 @@ var encodeUrl = require('encodeurl')
 var escapeHtml = require('escape-html')
 var etag = require('etag')
 var fresh = require('fresh')
-var fs = require('fs')
+var nodeFs = require('fs')
 var mime = require('mime')
 var ms = require('ms')
 var onFinished = require('on-finished')
 var parseRange = require('range-parser')
-var path = require('path')
+var nodePath = require('path')
 var statuses = require('statuses')
 var Stream = require('stream')
 var util = require('util')
-
-/**
- * Path function references.
- * @private
- */
-
-var extname = path.extname
-var join = path.join
-var normalize = path.normalize
-var resolve = path.resolve
-var sep = path.sep
 
 /**
  * Regular expression for identifying a bytes Range header.
@@ -97,7 +86,9 @@ function SendStream (req, path, options) {
   Stream.call(this)
 
   var opts = options || {}
-
+  var host = opts.host
+  this._hostFs = (host && host.fs) || nodeFs
+  this._hostPath = (host && host.path) || nodePath
   this.options = opts
   this.path = path
   this.req = req
@@ -158,7 +149,7 @@ function SendStream (req, path, options) {
     : 0
 
   this._root = opts.root
-    ? resolve(opts.root)
+    ? this._hostPath.resolve(opts.root)
     : null
 
   if (!this._root && opts.from) {
@@ -226,7 +217,7 @@ SendStream.prototype.index = deprecate.function(function index (paths) {
  */
 
 SendStream.prototype.root = function root (path) {
-  this._root = resolve(String(path))
+  this._root = this._hostPath.resolve(String(path))
   debug('root %s', this._root)
   return this
 }
@@ -510,7 +501,10 @@ SendStream.prototype.redirect = function redirect (path) {
 SendStream.prototype.pipe = function pipe (res) {
   // root path
   var root = this._root
-
+  var resolve = this._hostPath.resolve
+  var normalize = this._hostPath.normalize
+  var join = this._hostPath.join
+  var sep = this._hostPath.sep
   // references
   this.res = res
 
@@ -718,8 +712,8 @@ SendStream.prototype.sendFile = function sendFile (path) {
   var self = this
 
   debug('stat "%s"', path)
-  fs.stat(path, function onstat (err, stat) {
-    if (err && err.code === 'ENOENT' && !extname(path) && path[path.length - 1] !== sep) {
+  self._hostFs.stat(path, function onstat (err, stat) {
+    if (err && err.code === 'ENOENT' && !self._hostPath.extname(path) && path[path.length - 1] !== self._hostPath.sep) {
       // not found, check extensions
       return next(err)
     }
@@ -739,7 +733,7 @@ SendStream.prototype.sendFile = function sendFile (path) {
     var p = path + '.' + self._extensions[i++]
 
     debug('stat "%s"', p)
-    fs.stat(p, function (err, stat) {
+    self._hostFs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
       self.emit('file', p, stat)
@@ -764,10 +758,10 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
       return self.error(404)
     }
 
-    var p = join(path, self._index[i])
+    var p = self._hostPath.join(path, self._index[i])
 
     debug('stat "%s"', p)
-    fs.stat(p, function (err, stat) {
+    self._hostFs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
       self.emit('file', p, stat)
@@ -793,7 +787,7 @@ SendStream.prototype.stream = function stream (path, options) {
   var res = this.res
 
   // pipe
-  var stream = fs.createReadStream(path, options)
+  var stream = self._hostFs.createReadStream(path, options)
   this.emit('stream', stream)
   stream.pipe(res)
 
