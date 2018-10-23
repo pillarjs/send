@@ -1,7 +1,7 @@
 # send
 
-[![NPM Version][npm-image]][npm-url]
-[![NPM Downloads][downloads-image]][downloads-url]
+[![NPM Version][npm-version-image]][npm-url]
+[![NPM Downloads][npm-downloads-image]][npm-url]
 [![Linux Build][travis-image]][travis-url]
 [![Windows Build][appveyor-image]][appveyor-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
@@ -316,13 +316,14 @@ server.listen(3000)
 
 [MIT](LICENSE)
 
-[npm-image]: https://img.shields.io/npm/v/send.svg
-[npm-url]: https://npmjs.org/package/send
-[travis-image]: https://img.shields.io/travis/pillarjs/send/master.svg?label=linux
-[travis-url]: https://travis-ci.org/pillarjs/send
-[appveyor-image]: https://img.shields.io/appveyor/ci/dougwilson/send/master.svg?label=windows
+[appveyor-image]: https://badgen.net/appveyor/ci/dougwilson/send/master?label=windows
 [appveyor-url]: https://ci.appveyor.com/project/dougwilson/send
-[coveralls-image]: https://img.shields.io/coveralls/pillarjs/send/master.svg
+[coveralls-image]: https://badgen.net/coveralls/c/github/pillarjs/send/master
 [coveralls-url]: https://coveralls.io/r/pillarjs/send?branch=master
-[downloads-image]: https://img.shields.io/npm/dm/send.svg
-[downloads-url]: https://npmjs.org/package/send
+[node-image]: https://badgen.net/npm/node/send
+[node-url]: https://nodejs.org/en/download/
+[npm-downloads-image]: https://badgen.net/npm/dm/send
+[npm-url]: https://npmjs.org/package/send
+[npm-version-image]: https://badgen.net/npm/v/send
+[travis-image]: https://badgen.net/travis/pillarjs/send/master?label=linux
+[travis-url]: https://travis-ci.org/pillarjs/send
