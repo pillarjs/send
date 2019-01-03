@@ -118,6 +118,8 @@ function SendStream (req, path, options) {
     ? opts.dotfiles
     : 'ignore'
 
+  this._caseSensitive = opts.caseSensitive || false
+
   if (this._dotfiles !== 'ignore' && this._dotfiles !== 'allow' && this._dotfiles !== 'deny') {
     throw new TypeError('dotfiles option must be "allow", "deny", or "ignore"')
   }
@@ -313,9 +315,9 @@ SendStream.prototype.hasTrailingSlash = function hasTrailingSlash () {
 
 SendStream.prototype.isConditionalGET = function isConditionalGET () {
   return this.req.headers['if-match'] ||
-    this.req.headers['if-unmodified-since'] ||
-    this.req.headers['if-none-match'] ||
-    this.req.headers['if-modified-since']
+      this.req.headers['if-unmodified-since'] ||
+      this.req.headers['if-none-match'] ||
+      this.req.headers['if-modified-since']
 }
 
 /**
@@ -403,7 +405,7 @@ SendStream.prototype.headersAlreadySent = function headersAlreadySent () {
 SendStream.prototype.isCachable = function isCachable () {
   var statusCode = this.res.statusCode
   return (statusCode >= 200 && statusCode < 300) ||
-    statusCode === 304
+      statusCode === 304
 }
 
 /**
@@ -487,7 +489,7 @@ SendStream.prototype.redirect = function redirect (path) {
 
   var loc = encodeUrl(collapseLeadingSlashes(this.path + '/'))
   var doc = createHtmlDocument('Redirecting', 'Redirecting to <a href="' + escapeHtml(loc) + '">' +
-    escapeHtml(loc) + '</a>')
+      escapeHtml(loc) + '</a>')
 
   // redirect
   res.statusCode = 301
@@ -546,6 +548,7 @@ SendStream.prototype.pipe = function pipe (res) {
 
     // join / normalize from optional root dir
     path = normalize(join(root, path))
+    root = normalize(root + sep)
   } else {
     // ".." is malicious without "root"
     if (UP_PATH_REGEXP.test(path)) {
@@ -718,6 +721,7 @@ SendStream.prototype.sendFile = function sendFile (path) {
   var self = this
 
   debug('stat "%s"', path)
+
   fs.stat(path, function onstat (err, stat) {
     if (err && err.code === 'ENOENT' && !extname(path) && path[path.length - 1] !== sep) {
       // not found, check extensions
@@ -725,6 +729,9 @@ SendStream.prototype.sendFile = function sendFile (path) {
     }
     if (err) return self.onStatError(err)
     if (stat.isDirectory()) return self.redirect(path)
+    if (self.options.caseSensitive && !fileExistsWithCaseSync(path)) {
+      return self.error(404)
+    }
     self.emit('file', path, stat)
     self.send(path, stat)
   })
@@ -742,6 +749,9 @@ SendStream.prototype.sendFile = function sendFile (path) {
     fs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
+      if (self._caseSensitive && !fileExistsWithCaseSync(p)) {
+        return self.error(404)
+      }
       self.emit('file', p, stat)
       self.send(p, stat)
     })
@@ -963,15 +973,15 @@ function contentRange (type, size, range) {
 
 function createHtmlDocument (title, body) {
   return '<!DOCTYPE html>\n' +
-    '<html lang="en">\n' +
-    '<head>\n' +
-    '<meta charset="utf-8">\n' +
-    '<title>' + title + '</title>\n' +
-    '</head>\n' +
-    '<body>\n' +
-    '<pre>' + body + '</pre>\n' +
-    '</body>\n' +
-    '</html>\n'
+      '<html lang="en">\n' +
+      '<head>\n' +
+      '<meta charset="utf-8">\n' +
+      '<title>' + title + '</title>\n' +
+      '</head>\n' +
+      '<body>\n' +
+      '<pre>' + body + '</pre>\n' +
+      '</body>\n' +
+      '</html>\n'
 }
 
 /**
@@ -1126,4 +1136,21 @@ function setHeaders (res, headers) {
     var key = keys[i]
     res.setHeader(key, headers[key])
   }
+}
+
+/**
+ * Check if the given file incusive the path exits with the check on case sensitivity
+ * @param filepath the file to be checked
+ * @return {boolean} true when a file with the same case exists false if not
+ */
+function fileExistsWithCaseSync (filepath) {
+  var dir = path.dirname(filepath)
+  if (dir === path.dirname(dir)) {
+    return true
+  }
+  var filenames = fs.readdirSync(dir)
+  if (filenames.indexOf(path.basename(filepath)) === -1) {
+    return false
+  }
+  return fileExistsWithCaseSync(dir)
 }

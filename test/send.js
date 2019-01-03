@@ -175,6 +175,13 @@ describe('send(file).pipe(res)', function () {
       .expect(404, done)
   })
 
+  it('should 404 if the case is not matched with enabled case sensitivity', function (done) {
+    var server = createServer({ caseSensitive: true })
+    request(app)
+      .get('/namE.txt')
+      .expect(200, done)
+  })
+
   it('should 500 on file stream error', function (done) {
     var app = http.createServer(function (req, res) {
       send(req, req.url, { root: 'test/fixtures' })
