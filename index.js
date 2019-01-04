@@ -729,7 +729,7 @@ SendStream.prototype.sendFile = function sendFile (path) {
     }
     if (err) return self.onStatError(err)
     if (stat.isDirectory()) return self.redirect(path)
-    if (self.options.caseSensitive && !fileExistsWithCaseSync(path)) {
+    if (self._caseSensitive && !fileExistsWithCaseSync(path)) {
       return self.error(404)
     }
     self.emit('file', path, stat)

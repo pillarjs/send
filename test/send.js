@@ -1,4 +1,3 @@
-
 process.env.NO_DEPRECATION = 'send'
 
 var after = require('after')
@@ -74,7 +73,9 @@ describe('send(file).pipe(res)', function () {
     var app = http.createServer(function (req, res) {
       res.write('0')
       send(req, req.url, { root: fixtures })
-        .on('error', function (err) { res.end(' - ' + err.message) })
+        .on('error', function (err) {
+          res.end(' - ' + err.message)
+        })
         .pipe(res)
     })
     request(app)
@@ -125,7 +126,9 @@ describe('send(file).pipe(res)', function () {
   it('should emit ENOENT if the file does not exist', function (done) {
     var app = http.createServer(function (req, res) {
       send(req, req.url, { root: fixtures })
-        .on('error', function (err) { res.end(err.statusCode + ' ' + err.code) })
+        .on('error', function (err) {
+          res.end(err.statusCode + ' ' + err.code)
+        })
         .pipe(res)
     })
 
@@ -161,7 +164,7 @@ describe('send(file).pipe(res)', function () {
     var app = http.createServer(function (req, res) {
       send(req, req.url, { root: 'test/fixtures' })
         .on('file', function () {
-        // simulate file ENOENT after on open, after stat
+          // simulate file ENOENT after on open, after stat
           var fn = this.send
           this.send = function (path, stat) {
             fn.call(this, (path + '__xxx_no_exist'), stat)
@@ -175,18 +178,11 @@ describe('send(file).pipe(res)', function () {
       .expect(404, done)
   })
 
-  it('should 404 if the case is not matched with enabled case sensitivity', function (done) {
-    var server = createServer({ caseSensitive: true })
-    request(app)
-      .get('/namE.txt')
-      .expect(200, done)
-  })
-
   it('should 500 on file stream error', function (done) {
     var app = http.createServer(function (req, res) {
       send(req, req.url, { root: 'test/fixtures' })
         .on('stream', function (stream) {
-        // simulate file error
+          // simulate file error
           stream.on('open', function () {
             stream.emit('error', new Error('boom!'))
           })
@@ -204,7 +200,9 @@ describe('send(file).pipe(res)', function () {
       var cb = after(2, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, { root: fixtures })
-          .on('headers', function () { cb() })
+          .on('headers', function () {
+            cb()
+          })
           .pipe(res)
       })
 
@@ -217,7 +215,9 @@ describe('send(file).pipe(res)', function () {
       var cb = after(1, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, { root: fixtures })
-          .on('headers', function () { cb() })
+          .on('headers', function () {
+            cb()
+          })
           .pipe(res)
       })
 
@@ -230,7 +230,9 @@ describe('send(file).pipe(res)', function () {
       var cb = after(2, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, { root: fixtures })
-          .on('headers', function () { cb() })
+          .on('headers', function () {
+            cb()
+          })
           .pipe(res)
       })
 
@@ -243,7 +245,9 @@ describe('send(file).pipe(res)', function () {
       var cb = after(1, done)
       var server = http.createServer(function (req, res) {
         send(req, req.url, { root: fixtures })
-          .on('headers', function () { cb() })
+          .on('headers', function () {
+            cb()
+          })
           .pipe(res)
       })
 
@@ -1423,6 +1427,33 @@ describe('send(file, options)', function () {
           .get('/do..ts.txt')
           .expect(200, '...', done)
       })
+    })
+  })
+
+  describe('caseSensitive', function () {
+    it('should 404 if the case is not matched with enabled case sensitivity', function (done) {
+      var server = createServer({ caseSensitive: true, root: fixtures })
+      request(server)
+        .get('/namE.txt')
+        .expect(404, done)
+    })
+    it('should 404 if the case is not matched with enabled case sensitivity and extension', function (done) {
+      var server = createServer({ caseSensitive: true, root: fixtures, extensions: 'txt' })
+      request(server)
+        .get('/namE')
+        .expect(404, done)
+    })
+    it('should 200 if the case is match with enable case sensitivity', function (done) {
+      var server = createServer({ caseSensitive: true, root: fixtures })
+      request(server)
+        .get('/name.txt')
+        .expect(200, 'tobi', done)
+    })
+    it('should 200 if the case is match with enable case sensitivity and extension', function (done) {
+      var server = createServer({ caseSensitive: true, root: fixtures, extensions: 'txt' })
+      request(server)
+        .get('/name')
+        .expect(200, 'tobi', done)
     })
   })
 })
