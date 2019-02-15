@@ -1418,6 +1418,37 @@ describe('send(file, options)', function () {
       })
     })
   })
+
+  describe('fs', function () {
+    var FS_STAT = send.errors.INVALID_OPTION_FS_STAT
+    var CRTSTRM = send.errors.INVALID_OPTION_FS_CRTSTRM
+    it('must provide fs.stat()', function (done) {
+      try {
+        send(void 0, '', { fs: { createReadStream: function () {} } })
+      } catch (err) {
+        if (err === FS_STAT) {
+          done()
+        } else {
+          done(new Error('Must throw INVALID_OPTION_FS_STAT'))
+        }
+        return
+      }
+      done()
+    })
+    it('must implement fs.createReadStream()', function (done) {
+      try {
+        send(void 0, '', { fs: { stat: function () {} } })
+      } catch (err) {
+        if (err === CRTSTRM) {
+          done()
+        } else {
+          done(new Error('Must throw INVALID_OPTION_FS_CRTSTRM'))
+        }
+        return
+      }
+      done()
+    })
+  })
 })
 
 describe('send.mime', function () {

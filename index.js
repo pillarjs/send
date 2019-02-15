@@ -20,7 +20,6 @@ var encodeUrl = require('encodeurl')
 var escapeHtml = require('escape-html')
 var etag = require('etag')
 var fresh = require('fresh')
-var fs = require('fs')
 var mime = require('mime')
 var ms = require('ms')
 var onFinished = require('on-finished')
@@ -84,6 +83,10 @@ function send (req, path, options) {
   return new SendStream(req, path, options)
 }
 
+var errors = {}
+errors.INVALID_OPTION_FS_STAT = new TypeError('Invalid option: Incompatible file system interface: fs.stat() method is expected')
+errors.INVALID_OPTION_FS_CRTSTRM = new TypeError('Invalid option: Incompatible file system interface: fs.createReadStream() method is expected')
+send.errors = errors
 /**
  * Initialize a `SendStream` with the given `path`.
  *
@@ -101,6 +104,18 @@ function SendStream (req, path, options) {
   this.options = opts
   this.path = path
   this.req = req
+
+  // Dynamically import `fs` if not it is not provided by config
+  this.fs = opts.fs || require('fs')
+
+  // Checking if provided "fs" is compatible
+  if (typeof this.fs.stat !== 'function') {
+    throw errors.INVALID_OPTION_FS_STAT
+  }
+
+  if (typeof this.fs.createReadStream !== 'function') {
+    throw errors.INVALID_OPTION_FS_CRTSTRM
+  }
 
   this._acceptRanges = opts.acceptRanges !== undefined
     ? Boolean(opts.acceptRanges)
@@ -718,7 +733,7 @@ SendStream.prototype.sendFile = function sendFile (path) {
   var self = this
 
   debug('stat "%s"', path)
-  fs.stat(path, function onstat (err, stat) {
+  this.fs.stat(path, function onstat (err, stat) {
     if (err && err.code === 'ENOENT' && !extname(path) && path[path.length - 1] !== sep) {
       // not found, check extensions
       return next(err)
@@ -739,7 +754,7 @@ SendStream.prototype.sendFile = function sendFile (path) {
     var p = path + '.' + self._extensions[i++]
 
     debug('stat "%s"', p)
-    fs.stat(p, function (err, stat) {
+    self.fs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
       self.emit('file', p, stat)
@@ -767,7 +782,7 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
     var p = join(path, self._index[i])
 
     debug('stat "%s"', p)
-    fs.stat(p, function (err, stat) {
+    self.fs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
       self.emit('file', p, stat)
@@ -793,7 +808,7 @@ SendStream.prototype.stream = function stream (path, options) {
   var res = this.res
 
   // pipe
-  var stream = fs.createReadStream(path, options)
+  var stream = this.fs.createReadStream(path, options)
   this.emit('stream', stream)
   stream.pipe(res)
 

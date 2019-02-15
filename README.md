@@ -6,13 +6,16 @@
 [![Windows Build][appveyor-image]][appveyor-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
 
+> _This is a fork of an original [send](https://github.com/pillarjs/send) module. See changes made by this fork in [history file](./HISTORY.MD#0170--2018-02-07)._
+
 Send is a library for streaming files from the file system as a http response
 supporting partial responses (Ranges), conditional-GET negotiation (If-Match,
 If-Unmodified-Since, If-None-Match, If-Modified-Since), high test coverage,
 and granular events which may be leveraged to take appropriate actions in your
 application or framework.
 
-Looking to serve up entire folders mapped to URLs? Try [serve-static](https://www.npmjs.org/package/serve-static).
+
+Looking to serve up entire folders mapped to URLs? Try [serve-static (forked version)](/serve-static).
 
 ## Installation
 
@@ -119,6 +122,15 @@ Serve files relative to `path`.
 Byte offset at which the stream starts, defaults to 0. The start is inclusive,
 meaning `start: 2` will include the 3rd byte in the stream.
 
+##### fs
+
+**Default**: [require('fs')](https://nodejs.org/api/fs.html)
+
+File system to serve files by default. 
+```js
+  send(req, path, { fs: mockedFileSystem })
+```
+
 #### Events
 
 The `SendStream` is an event emitter and will emit the following events:
@@ -171,6 +183,12 @@ $ DEBUG=send node app
 $ npm install
 $ npm test
 ```
+### Debugging tests
+In order to debug testing you can run programmatic mocha instance by command:
+```
+$ npm test:d
+```
+> _[package.json.scripts.test:d](./package.json)_
 
 ## Examples
 

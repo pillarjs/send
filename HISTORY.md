@@ -1,6 +1,13 @@
 unreleased
 ==========
 
+0.17.0 / 2018-02-07
+==========
+  * Add `fs` option
+  * test:
+    - Add test.js for programmatic testing and debugging
+    - Add `test:d` script command 
+
   * deps: depd@~2.0.0
     - Replace internal `eval` usage with `Function` constructor
     - Use instance methods on `process` to check for listeners
