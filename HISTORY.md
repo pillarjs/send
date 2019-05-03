@@ -1,5 +1,5 @@
-unreleased
-==========
+0.17.0 / 2019-05-03
+===================
 
   * deps: http-errors@~1.7.2
     - Set constructor name when possible
