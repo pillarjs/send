@@ -1,9 +1,6 @@
 unreleased
 ==========
 
-  * deps: depd@~2.0.0
-    - Replace internal `eval` usage with `Function` constructor
-    - Use instance methods on `process` to check for listeners
   * deps: http-errors@~1.7.2
     - Set constructor name when possible
     - Use `toidentifier` module to make class names
