@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Set stricter CSP header in redirect & error responses
+
 0.17.0 / 2019-05-03
 ===================
 

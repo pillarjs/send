@@ -365,7 +365,7 @@ describe('send(file).pipe(res)', function () {
       request(createServer({ root: fixtures }))
         .get('/pets')
         .expect('Location', '/pets/')
-        .expect('Content-Security-Policy', "default-src 'self'")
+        .expect('Content-Security-Policy', "default-src 'none'")
         .expect(301, done)
     })
 
@@ -400,7 +400,7 @@ describe('send(file).pipe(res)', function () {
     it('should respond with default Content-Security-Policy', function (done) {
       request(createServer({ root: fixtures }))
         .get('/foobar')
-        .expect('Content-Security-Policy', "default-src 'self'")
+        .expect('Content-Security-Policy', "default-src 'none'")
         .expect(404, done)
     })
 
