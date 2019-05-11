@@ -993,7 +993,7 @@ function decode (path) {
 }
 
 /**
- * Get the header names on a respnse.
+ * Get the header names on a response.
  *
  * @param {object} res
  * @returns {array[string]}
@@ -1002,7 +1002,7 @@ function decode (path) {
 
 function getHeaderNames (res) {
   return typeof res.getHeaderNames !== 'function'
-    ? Object.keys(res.getHeaders || {})
+    ? Object.keys(typeof res.getHeaders === 'function' ? res.getHeaders : res._headers || {})
     : res.getHeaderNames()
 }
 
