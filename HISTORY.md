@@ -1,5 +1,5 @@
-unreleased
-==========
+0.17.1 / 2019-05-10
+===================
 
   * Set stricter CSP header in redirect & error responses
   * deps: range-parser@~1.2.1
