@@ -1002,7 +1002,7 @@ function decode (path) {
 
 function getHeaderNames (res) {
   return typeof res.getHeaderNames !== 'function'
-    ? Object.keys(res._headers || {})
+    ? Object.keys(res.getHeaders || {})
     : res.getHeaderNames()
 }
 
