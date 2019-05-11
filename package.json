@@ -27,7 +27,7 @@
     "mime": "1.6.0",
     "ms": "2.1.1",
     "on-finished": "~2.3.0",
-    "range-parser": "~1.2.0",
+    "range-parser": "~1.2.1",
     "statuses": "~1.5.0"
   },
   "devDependencies": {
