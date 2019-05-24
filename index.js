@@ -794,6 +794,15 @@ SendStream.prototype.stream = function stream (path, options) {
 
   // pipe
   var stream = fs.createReadStream(path, options)
+  
+  // apply additional transformation streams if any
+  if (options.transformStreams) {
+    for(var i = 0; i < options.transformStreams.length; i++) {
+        var transform = options.transformStreams[i];
+        stream = stream.pipe(transform);
+    }
+  }
+  
   this.emit('stream', stream)
   stream.pipe(res)
 
