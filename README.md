@@ -119,6 +119,15 @@ Serve files relative to `path`.
 Byte offset at which the stream starts, defaults to 0. The start is inclusive,
 meaning `start: 2` will include the 3rd byte in the stream.
 
+##### caseSensitive
+
+When set to `true` all the requests against the file system are made case sensitive even on case insensitive file systems.
+This effects not only the file name but the whole path.
+When set to `false` the default behavior of the filesystem is used.
+
+The default value is `false`
+
+
 #### Events
 
 The `SendStream` is an event emitter and will emit the following events:
