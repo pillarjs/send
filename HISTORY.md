@@ -1,3 +1,9 @@
+unreleased
+==========
+
+  * deps: http-errors@~1.7.3
+    - deps: inherits@2.0.4
+
 0.17.1 / 2019-05-10
 ===================
 

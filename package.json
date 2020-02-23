@@ -23,7 +23,7 @@
     "escape-html": "~1.0.3",
     "etag": "~1.8.1",
     "fresh": "0.5.2",
-    "http-errors": "~1.7.2",
+    "http-errors": "~1.7.3",
     "mime": "1.6.0",
     "ms": "2.1.1",
     "on-finished": "~2.3.0",
