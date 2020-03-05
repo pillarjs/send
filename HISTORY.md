@@ -7,6 +7,7 @@
   * Remove `send.index()` -- use `index` in `options`
   * Remove `send.maxage()` -- use `maxAge` in `options`
   * Remove `send.root()` -- use `root` in `options`
+  * Use `mime-types` for file to content type mapping -- removed `send.mime`
 
 0.17.2 / 2021-12-11
 ===================
