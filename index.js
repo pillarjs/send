@@ -21,7 +21,7 @@ var escapeHtml = require('escape-html')
 var etag = require('etag')
 var fresh = require('fresh')
 var fs = require('fs')
-var mime = require('mime')
+var mimeTypes = require('mime-types')
 var ms = require('ms')
 var onFinished = require('on-finished')
 var parseRange = require('range-parser')
@@ -68,7 +68,6 @@ var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/
  */
 
 module.exports = send
-module.exports.mime = mime
 
 /**
  * Return a `SendStream` for `req` and `path`.
@@ -835,14 +834,14 @@ SendStream.prototype.type = function type (path) {
 
   if (res.getHeader('Content-Type')) return
 
-  var type = mime.lookup(path)
+  var type = mimeTypes.lookup(path) || 'application/octet-stream'
 
   if (!type) {
     debug('no content-type')
     return
   }
 
-  var charset = mime.charsets.lookup(type)
+  var charset = mimeTypes.charset(type)
 
   debug('content-type %s', type)
   res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''))
