@@ -102,6 +102,10 @@ function SendStream (req, path, options) {
   this.path = path
   this.req = req
 
+  this._transform = opts.transform !== undefined
+    ? opts.transform
+    : undefined
+
   this._acceptRanges = opts.acceptRanges !== undefined
     ? Boolean(opts.acceptRanges)
     : true
@@ -112,7 +116,7 @@ function SendStream (req, path, options) {
 
   this._etag = opts.etag !== undefined
     ? Boolean(opts.etag)
-    : true
+    : (this._transform === undefined)
 
   this._dotfiles = opts.dotfiles !== undefined
     ? opts.dotfiles
@@ -147,7 +151,7 @@ function SendStream (req, path, options) {
 
   this._lastModified = opts.lastModified !== undefined
     ? Boolean(opts.lastModified)
-    : true
+    : (this._transform === undefined)
 
   this._maxage = opts.maxAge || opts.maxage
   this._maxage = typeof this._maxage === 'string'
@@ -794,6 +798,14 @@ SendStream.prototype.stream = function stream (path, options) {
 
   // pipe
   var stream = fs.createReadStream(path, options)
+  if (this._transform) {
+    // When using a transform stream, the implementor is
+    // responsible for setting content length or any other
+    // headers for their stream type.
+    res.removeHeader('Content-Length')
+
+    stream = this._transform(stream, res, options)
+  }
   this.emit('stream', stream)
   stream.pipe(res)
 

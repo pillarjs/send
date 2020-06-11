@@ -6,7 +6,9 @@ var assert = require('assert')
 var fs = require('fs')
 var http = require('http')
 var path = require('path')
+var Readable = require('stream').Readable
 var request = require('supertest')
+var concatStream = require('concat-stream')
 var send = require('..')
 
 // test server
@@ -914,6 +916,59 @@ describe('send(file).pipe(res)', function () {
       request(app)
         .get('/pets/../name.txt')
         .expect(200, 'tobi', done)
+    })
+  })
+
+  describe('transforming file stream', function () {
+    it('should transform a file', function (done) {
+      var app = http.createServer(function (req, res) {
+        send(req, req.url, {
+          root: fixtures,
+          transform: function (stream, res, opts) {
+            var readStream = new Readable({
+              read: function () { }
+            })
+            stream.pipe(concatStream(function (d) {
+              var _d = typeof Buffer.from === 'function' ?
+                Buffer.from(d.toString('utf8').replace('tobi', 'not tobi'))
+                : new Buffer(d.toString('utf8').replace('tobi', 'not tobi'), 'utf8')
+              res.setHeader('Content-Length', _d.length)
+              readStream.push(_d)
+              readStream.push(null)
+            }))
+            return readStream
+          }
+        }).pipe(res)
+      })
+      request(app)
+        .get('/name.txt')
+        .expect(shouldNotHaveHeader('Last-Modified'))
+        .expect(shouldNotHaveHeader('ETag'))
+        .expect(200, 'not tobi', done)
+    })
+
+    it('should transform range requests', function (done) {
+      request(createServer({
+        root: fixtures,
+        transform: function (stream, res, opts) {
+          var readStream = new Readable({
+            read: function () { }
+          })
+          stream
+            .on('data', function (d) {
+              readStream.push(d.toString('utf8').split('').map(function (i) {
+                return ['a', 'b', 'c', 'd', 'e'][parseInt(i, 10) - 1]
+              }).join(''))
+            })
+            .on('end', function (d) {
+              readStream.push(null)
+            })
+          return readStream
+        }
+      }))
+        .get('/nums.txt')
+        .set('Range', 'bytes=0-4')
+        .expect(206, 'abcde', done)
     })
   })
 })
