@@ -78,6 +78,8 @@ the 4th byte in the stream.
 
 Enable or disable etag generation, defaults to true.
 
+This will default to `false` if the [`transform` option is passed](#transform).
+
 ##### extensions
 
 If a given file doesn't exist, try appending one of the given extensions,
@@ -104,6 +106,8 @@ in preferred order.
 Enable or disable `Last-Modified` header, defaults to true. Uses the file
 system's last modified value.
 
+This will default to `false` if the [`transform` option is passed](#transform).
+
 ##### maxAge
 
 Provide a max-age in milliseconds for http caching, defaults to 0.
@@ -118,6 +122,55 @@ Serve files relative to `path`.
 
 Byte offset at which the stream starts, defaults to 0. The start is inclusive,
 meaning `start: 2` will include the 3rd byte in the stream.
+
+##### transform
+
+A function which returns a stream which can be used to transform the data.
+If this option is passed it will change the defaults of `etag` and `lastModified`
+to `false`.  If the transform stream changes the content length, it is also
+responsible for updating the `Content-Length` header or changing to
+`Transfer-Encoding: chunked`.
+
+The transform function is given the readable stream from `fs.createReadStream`,
+the `response` object and, the `options` passed to `send()`.  It must return
+a `ReadableStream`, you can even just return the `stream` passed to you.
+
+If you expect the transform to always return the same results, you can re-enable
+`etag` and `lastModified` and to use the underlying file as it normally would.
+
+*Note on range requests:* When a range request is sent, the read stream will
+only read part of the file. If your transform is preforming replacements, or
+otherwise relying on always having complete content it might not work.  You
+can set `acceptRanges: false` to disallow range requests or you will have
+to ensure that your transform logic can handle partial data.  For an example
+of a transform which can work on range requests, see the test labled
+`should transform range requests`.
+
+Example:
+
+```javascript
+var http = require('http')
+var Readable = require('stream').Readable
+var concatStream = require('concat-stream')
+var send = require('send')
+
+http.createServer(function (req, res) {
+  send(req, req.url, {
+    transform: function (stream, res, opts) {
+      var readStream = new Readable({
+        read: function () { }
+      })
+      stream.pipe(concatStream(function (d) {
+        var _d = Buffer.from(d.toString('utf8').replace('tobi', 'not tobi'))
+        res.setHeader('Content-Length', _d.length)
+        readStream.push(_d)
+        readStream.push(null)
+      }))
+      return readStream
+    }
+  }).pipe(res)
+})
+```
 
 #### Events
 
