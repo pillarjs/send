@@ -2,7 +2,7 @@
 
 [![NPM Version][npm-version-image]][npm-url]
 [![NPM Downloads][npm-downloads-image]][npm-url]
-[![Linux Build][travis-image]][travis-url]
+[![Linux Build][github-actions-ci-image]][github-actions-ci-url]
 [![Windows Build][appveyor-image]][appveyor-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
 
@@ -320,10 +320,10 @@ server.listen(3000)
 [appveyor-url]: https://ci.appveyor.com/project/dougwilson/send
 [coveralls-image]: https://badgen.net/coveralls/c/github/pillarjs/send/master
 [coveralls-url]: https://coveralls.io/r/pillarjs/send?branch=master
+[github-actions-ci-image]: https://badgen.net/github/checks/pillarjs/send/master?label=ci
+[github-actions-ci-url]: https://github.com/pillarjs/send/actions?query=workflow%3Aci
 [node-image]: https://badgen.net/npm/node/send
 [node-url]: https://nodejs.org/en/download/
 [npm-downloads-image]: https://badgen.net/npm/dm/send
 [npm-url]: https://npmjs.org/package/send
 [npm-version-image]: https://badgen.net/npm/v/send
-[travis-image]: https://badgen.net/travis/pillarjs/send/master?label=linux
-[travis-url]: https://travis-ci.org/pillarjs/send
