@@ -835,7 +835,8 @@ SendStream.prototype.type = function type (path) {
 
   if (res.getHeader('Content-Type')) return
 
-  var type = mime.lookup(path)
+  var type;
+  if (mime.lookup) type = mime.lookup(path)
 
   if (!type) {
     debug('no content-type')
