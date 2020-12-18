@@ -81,6 +81,9 @@ jobs:
         - name: Node.js 12.x
           node-version: "12.20"
 
+        - name: Node.js 13.x
+          node-version: "13.14"
+
     steps:
     - uses: actions/checkout@v2
 
