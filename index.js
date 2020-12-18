@@ -435,7 +435,7 @@ SendStream.prototype.onStatError = function onStatError (error) {
 
 SendStream.prototype.isFresh = function isFresh () {
   return fresh(this.req.headers, {
-    'etag': this.res.getHeader('ETag'),
+    etag: this.res.getHeader('ETag'),
     'last-modified': this.res.getHeader('Last-Modified')
   })
 }
