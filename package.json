@@ -41,7 +41,7 @@
     "eslint-plugin-standard": "4.0.2",
     "istanbul": "0.4.5",
     "mocha": "7.2.0",
-    "supertest": "4.0.2"
+    "supertest": "6.0.1"
   },
   "files": [
     "HISTORY.md",
