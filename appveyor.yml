@@ -1,6 +1,5 @@
 environment:
   matrix:
-    - nodejs_version: "0.8"
     - nodejs_version: "0.10"
     - nodejs_version: "0.12"
     - nodejs_version: "1.8"
@@ -27,10 +26,6 @@ install:
   - ps: |
       # Skip updating shrinkwrap / lock
       npm config set shrinkwrap false
-      # Skip SSL validation on Node.js < 0.10
-      if ([int]$env:nodejs_version.split(".")[0] -eq 0 -and [int]$env:nodejs_version.split(".")[1] -lt 10) {
-        npm config set strict-ssl false
-      }
   # Remove all non-test dependencies
   - ps: |
       # Remove coverage dependency
@@ -42,13 +37,10 @@ install:
   # Setup Node.js version-specific dependencies
   - ps: |
       # mocha for testing
-      # - use 2.x for Node.js < 0.10
       # - use 3.x for Node.js < 4
       # - use 5.x for Node.js < 6
       # - use 6.x for Node.js < 8
-      if ([int]$env:nodejs_version.split(".")[0] -eq 0 -and [int]$env:nodejs_version.split(".")[1] -lt 10) {
-        npm install --silent --save-dev mocha@2.5.3
-      } elseif ([int]$env:nodejs_version.split(".")[0] -lt 4) {
+      if ([int]$env:nodejs_version.split(".")[0] -lt 4) {
         npm install --silent --save-dev mocha@3.5.3
       } elseif ([int]$env:nodejs_version.split(".")[0] -lt 6) {
         npm install --silent --save-dev mocha@5.2.0
@@ -57,12 +49,9 @@ install:
       }
   - ps: |
       # supertest for http calls
-      # - use 1.1.0 for Node.js < 0.10
       # - use 2.0.0 for Node.js < 4
       # - use 3.4.2 for Node.js < 6
-      if ([int]$env:nodejs_version.split(".")[0] -eq 0 -and [int]$env:nodejs_version.split(".")[1] -lt 10) {
-        npm install --silent --save-dev supertest@1.1.0
-      } elseif ([int]$env:nodejs_version.split(".")[0] -lt 4) {
+      if ([int]$env:nodejs_version.split(".")[0] -lt 4) {
         npm install --silent --save-dev supertest@2.0.0
       } elseif ([int]$env:nodejs_version.split(".")[0] -lt 6) {
         npm install --silent --save-dev supertest@3.4.2
