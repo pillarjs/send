@@ -26,8 +26,6 @@ $ npm install send
 
 ## API
 
-<!-- eslint-disable no-unused-vars -->
-
 ```js
 var send = require('send')
 ```
