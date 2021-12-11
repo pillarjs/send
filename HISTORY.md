@@ -1,5 +1,5 @@
-unreleased
-==========
+0.17.2 / 2021-12-11
+===================
 
   * pref: ignore empty http tokens
   * deps: http-errors@1.8.1
