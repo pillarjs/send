@@ -1096,7 +1096,9 @@ function parseTokenList (str) {
         }
         break
       case 0x2c: /* , */
-        list.push(str.substring(start, end))
+        if (start !== end) {
+          list.push(str.substring(start, end))
+        }
         start = end = i + 1
         break
       default:
@@ -1106,7 +1108,9 @@ function parseTokenList (str) {
   }
 
   // final token
-  list.push(str.substring(start, end))
+  if (start !== end) {
+    list.push(str.substring(start, end))
+  }
 
   return list
 }
