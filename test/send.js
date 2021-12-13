@@ -785,20 +785,6 @@ describe('send(file).pipe(res)', function () {
         .expect(200, 'secret', done)
     })
   })
-
-  describe('.root()', function () {
-    it('should set root', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url)
-          .root(fixtures)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/pets/../name.txt')
-        .expect(200, 'tobi', done)
-    })
-  })
 })
 
 describe('send(file, options)', function () {
