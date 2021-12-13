@@ -1,3 +1,8 @@
+1.x
+===
+
+  * Remove `send.maxage()` -- use `maxAge` in `options`
+
 0.17.2 / 2021-12-11
 ===================
 
