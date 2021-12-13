@@ -539,7 +539,7 @@ SendStream.prototype.send = function send (path, stat) {
   var ranges = req.headers.range
   var offset = options.start || 0
 
-  if (headersSent(res)) {
+  if (res.headersSent) {
     // impossible to send now
     this.headersAlreadySent()
     return
@@ -936,7 +936,7 @@ function getHeaderNames (res) {
 /**
  * Determine if emitter has listeners of a given type.
  *
- * The way to do this check is done three different ways in Node.js >= 0.8
+ * The way to do this check is done three different ways in Node.js >= 0.10
  * so this consolidates them into a minimal set using instance methods.
  *
  * @param {EventEmitter} emitter
@@ -951,20 +951,6 @@ function hasListeners (emitter, type) {
     : emitter.listenerCount(type)
 
   return count > 0
-}
-
-/**
- * Determine if the response headers have been sent.
- *
- * @param {object} res
- * @returns {boolean}
- * @private
- */
-
-function headersSent (res) {
-  return typeof res.headersSent !== 'boolean'
-    ? Boolean(res._header)
-    : res.headersSent
 }
 
 /**
