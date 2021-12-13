@@ -1,6 +1,7 @@
 1.x
 ===
 
+  * Remove `from` alias to `root` -- use `root` directly
   * Remove `send.index()` -- use `index` in `options`
   * Remove `send.maxage()` -- use `maxAge` in `options`
 
