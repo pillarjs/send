@@ -2,6 +2,7 @@
 ===
 
   * Drop support for Node.js 0.8
+  * Remove `hidden` option -- use `dotfiles` option
   * Remove `from` alias to `root` -- use `root` directly
   * Remove `send.etag()` -- use `etag` in `options`
   * Remove `send.index()` -- use `index` in `options`

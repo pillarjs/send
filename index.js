@@ -14,7 +14,6 @@
 
 var createError = require('http-errors')
 var debug = require('debug')('send')
-var deprecate = require('depd')('send')
 var destroy = require('destroy')
 var encodeUrl = require('encodeurl')
 var escapeHtml = require('escape-html')
@@ -121,17 +120,6 @@ function SendStream (req, path, options) {
     throw new TypeError('dotfiles option must be "allow", "deny", or "ignore"')
   }
 
-  this._hidden = Boolean(opts.hidden)
-
-  if (opts.hidden !== undefined) {
-    deprecate('hidden: use dotfiles: \'' + (this._hidden ? 'allow' : 'ignore') + '\' instead')
-  }
-
-  // legacy support
-  if (opts.dotfiles === undefined) {
-    this._dotfiles = undefined
-  }
-
   this._extensions = opts.extensions !== undefined
     ? normalizeList(opts.extensions, 'extensions option')
     : []
@@ -166,21 +154,6 @@ function SendStream (req, path, options) {
  */
 
 util.inherits(SendStream, Stream)
-
-/**
- * Enable or disable "hidden" (dot) files.
- *
- * @param {Boolean} path
- * @return {SendStream}
- * @api public
- */
-
-SendStream.prototype.hidden = deprecate.function(function hidden (val) {
-  this._hidden = Boolean(val)
-  this._dotfiles = undefined
-  debug('hidden %s', this._hidden)
-  return this
-}, 'send.hidden: use dotfiles option')
 
 /**
  * Emit error with `status`.
@@ -489,17 +462,8 @@ SendStream.prototype.pipe = function pipe (res) {
 
   // dotfile handling
   if (containsDotFile(parts)) {
-    var access = this._dotfiles
-
-    // legacy support
-    if (access === undefined) {
-      access = parts[parts.length - 1][0] === '.'
-        ? (this._hidden ? 'allow' : 'ignore')
-        : 'allow'
-    }
-
-    debug('%s dotfile "%s"', access, path)
-    switch (access) {
+    debug('%s dotfile "%s"', this._dotfiles, path)
+    switch (this._dotfiles) {
       case 'allow':
         break
       case 'deny':

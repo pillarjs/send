@@ -778,20 +778,6 @@ describe('send(file).pipe(res)', function () {
         .expect(416, done)
     })
   })
-
-  describe('.hidden()', function () {
-    it('should default support sending hidden files', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url, { root: fixtures })
-          .hidden(true)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/.hidden.txt')
-        .expect(200, 'secret', done)
-    })
-  })
 })
 
 describe('send(file, options)', function () {
@@ -910,10 +896,10 @@ describe('send(file, options)', function () {
         .expect(404, done)
     })
 
-    it('should allow file within dotfile directory for back-compat', function (done) {
+    it('should ignore file within dotfile directory', function (done) {
       request(createServer({ root: fixtures }))
         .get('/.mine/name.txt')
-        .expect(200, /tobi/, done)
+        .expect(404, done)
     })
 
     it('should reject bad value', function (done) {
@@ -1060,20 +1046,6 @@ describe('send(file, options)', function () {
           .get('/name.txt')
           .expect(404, done)
       })
-    })
-  })
-
-  describe('hidden', function () {
-    it('should default to false', function (done) {
-      request(app)
-        .get('/.hidden.txt')
-        .expect(404, 'Not Found', done)
-    })
-
-    it('should default support sending hidden files', function (done) {
-      request(createServer({ hidden: true, root: fixtures }))
-        .get('/.hidden.txt')
-        .expect(200, 'secret', done)
     })
   })
 
