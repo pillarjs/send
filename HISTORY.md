@@ -9,6 +9,12 @@
   * Remove `send.maxage()` -- use `maxAge` in `options`
   * Remove `send.root()` -- use `root` in `options`
   * Use `mime-types` for file to content type mapping -- removed `send.mime`
+  * deps: debug@3.1.0
+    - Add `DEBUG_HIDE_DATE` environment variable
+    - Change timer to per-namespace instead of global
+    - Change non-TTY date format
+    - Remove `DEBUG_FD` environment variable support
+    - Support 256 namespace colors
 
 0.17.2 / 2021-12-11
 ===================
