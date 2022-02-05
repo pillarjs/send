@@ -1,5 +1,5 @@
-1.x
-===
+1.0.0-beta.1 / 2022-02-04
+=========================
 
   * Drop support for Node.js 0.8
   * Remove `hidden` option -- use `dotfiles` option
