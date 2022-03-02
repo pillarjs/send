@@ -643,6 +643,24 @@ describe('send(file).pipe(res)', function () {
           .expect('Content-Range', 'bytes */9')
           .expect(416, done)
       })
+
+      it('should emit error 416 with content-range header', function (done) {
+        var server = http.createServer(function (req, res) {
+          send(req, req.url, { root: fixtures })
+            .on('error', function (err) {
+              res.setHeader('X-Content-Range', err.headers['Content-Range'])
+              res.statusCode = err.statusCode
+              res.end(err.message)
+            })
+            .pipe(res)
+        })
+
+        request(server)
+          .get('/nums.txt')
+          .set('Range', 'bytes=9-50')
+          .expect('X-Content-Range', 'bytes */9')
+          .expect(416, done)
+      })
     })
 
     describe('when syntactically invalid', function () {

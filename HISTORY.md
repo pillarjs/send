@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Fix emitted 416 error missing headers property
   * deps: destroy@1.1.1
 
 0.17.2 / 2021-12-11

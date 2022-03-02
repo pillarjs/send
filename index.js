@@ -267,9 +267,7 @@ SendStream.prototype.maxage = deprecate.function(function maxage (maxAge) {
 SendStream.prototype.error = function error (status, err) {
   // emit if listeners instead of responding
   if (hasListeners(this, 'error')) {
-    return this.emit('error', createError(status, err, {
-      expose: false
-    }))
+    return this.emit('error', createHttpError(status, err))
   }
 
   var res = this.res
@@ -972,6 +970,24 @@ function createHtmlDocument (title, body) {
     '<pre>' + body + '</pre>\n' +
     '</body>\n' +
     '</html>\n'
+}
+
+/**
+ * Create a HttpError object from simple arguments.
+ *
+ * @param {number} status
+ * @param {Error|object} err
+ * @private
+ */
+
+function createHttpError (status, err) {
+  if (!err) {
+    return createError(status)
+  }
+
+  return err instanceof Error
+    ? createError(status, err, { expose: false })
+    : createError(status, err)
 }
 
 /**
