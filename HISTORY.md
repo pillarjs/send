@@ -3,6 +3,9 @@ unreleased
 
   * Fix emitted 416 error missing headers property
   * deps: destroy@1.1.1
+  * deps: http-errors@2.0.0
+    - deps: depd@2.0.0
+    - deps: statuses@2.0.1
 
 0.17.2 / 2021-12-11
 ===================
