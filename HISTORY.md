@@ -2,6 +2,9 @@ unreleased
 ==========
 
   * Fix emitted 416 error missing headers property
+  * deps: depd@2.0.0
+    - Replace internal `eval` usage with `Function` constructor
+    - Use instance methods on `process` to check for listeners
   * deps: destroy@1.1.1
   * deps: http-errors@2.0.0
     - deps: depd@2.0.0
