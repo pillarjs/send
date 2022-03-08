@@ -271,7 +271,7 @@ SendStream.prototype.error = function error (status, err) {
   }
 
   var res = this.res
-  var msg = statuses[status] || String(status)
+  var msg = statuses.message[status] || String(status)
   var doc = createHtmlDocument('Error', escapeHtml(msg))
 
   // clear existing headers
