@@ -785,8 +785,6 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
  */
 
 SendStream.prototype.stream = function stream (path, options) {
-  // TODO: this is all lame, refactor meeee
-  var finished = false
   var self = this
   var res = this.res
 
@@ -795,20 +793,18 @@ SendStream.prototype.stream = function stream (path, options) {
   this.emit('stream', stream)
   stream.pipe(res)
 
-  // response finished, done with the fd
-  onFinished(res, function onfinished () {
-    finished = true
-    destroy(stream)
-  })
+  // cleanup
+  function cleanup () {
+    destroy(stream, true)
+  }
 
-  // error handling code-smell
+  // response finished, cleanup
+  onFinished(res, cleanup)
+
+  // error handling
   stream.on('error', function onerror (err) {
-    // request already finished
-    if (finished) return
-
-    // clean up stream
-    finished = true
-    destroy(stream)
+    // clean up stream early
+    cleanup()
 
     // error
     self.onStatError(err)
