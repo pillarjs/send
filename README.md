@@ -318,8 +318,8 @@ server.listen(3000)
 [appveyor-url]: https://ci.appveyor.com/project/dougwilson/send
 [coveralls-image]: https://badgen.net/coveralls/c/github/pillarjs/send/master
 [coveralls-url]: https://coveralls.io/r/pillarjs/send?branch=master
-[github-actions-ci-image]: https://badgen.net/github/checks/pillarjs/send/master?label=ci
-[github-actions-ci-url]: https://github.com/pillarjs/send/actions?query=workflow%3Aci
+[github-actions-ci-image]: https://badgen.net/github/checks/pillarjs/send/master?label=linux
+[github-actions-ci-url]: https://github.com/pillarjs/send/actions/workflows/ci.yml
 [node-image]: https://badgen.net/npm/node/send
 [node-url]: https://nodejs.org/en/download/
 [npm-downloads-image]: https://badgen.net/npm/dm/send
