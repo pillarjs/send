@@ -440,6 +440,27 @@ describe('send(file).pipe(res)', function () {
         })
     })
 
+    it('should not remove all Content-* headers', function (done) {
+      var server = createServer({ root: fixtures }, function (req, res) {
+        res.setHeader('Content-Location', 'http://localhost/name.txt')
+        res.setHeader('Content-Security-Policy', 'default-src \'self\'')
+      })
+
+      request(server)
+        .get('/name.txt')
+        .expect(200, function (err, res) {
+          if (err) return done(err)
+          request(server)
+            .get('/name.txt')
+            .set('If-None-Match', res.headers.etag)
+            .expect(shouldNotHaveHeader('Content-Length'))
+            .expect(shouldNotHaveHeader('Content-Type'))
+            .expect('Content-Location', 'http://localhost/name.txt')
+            .expect('Content-Security-Policy', 'default-src \'self\'')
+            .expect(304, done)
+        })
+    })
+
     describe('where "If-Match" is set', function () {
       it('should respond with 200 when "*"', function (done) {
         request(app)

@@ -347,21 +347,19 @@ SendStream.prototype.isPreconditionFailure = function isPreconditionFailure () {
 }
 
 /**
- * Strip content-* header fields.
+ * Strip various content header fields for a change in entity.
  *
  * @private
  */
 
 SendStream.prototype.removeContentHeaderFields = function removeContentHeaderFields () {
   var res = this.res
-  var headers = getHeaderNames(res)
 
-  for (var i = 0; i < headers.length; i++) {
-    var header = headers[i]
-    if (header.substr(0, 8) === 'content-' && header !== 'content-location') {
-      res.removeHeader(header)
-    }
-  }
+  res.removeHeader('Content-Encoding')
+  res.removeHeader('Content-Language')
+  res.removeHeader('Content-Length')
+  res.removeHeader('Content-Range')
+  res.removeHeader('Content-Type')
 }
 
 /**
