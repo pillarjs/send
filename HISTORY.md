@@ -1,5 +1,5 @@
-unreleased
-==========
+0.18.0 / 2022-03-23
+===================
 
   * Fix emitted 416 error missing headers property
   * Limit the headers removed for 304 response
