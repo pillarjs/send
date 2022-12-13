@@ -772,21 +772,6 @@ describe('send(file).pipe(res)', function () {
     })
   })
 
-  describe('.etag()', function () {
-    it('should support disabling etags', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url, { root: fixtures })
-          .etag(false)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/name.txt')
-        .expect(shouldNotHaveHeader('ETag'))
-        .expect(200, done)
-    })
-  })
-
   describe('.hidden()', function () {
     it('should default support sending hidden files', function (done) {
       var app = http.createServer(function (req, res) {

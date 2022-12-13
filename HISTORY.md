@@ -2,6 +2,7 @@
 ===
 
   * Remove `from` alias to `root` -- use `root` directly
+  * Remove `send.etag()` -- use `etag` in `options`
   * Remove `send.index()` -- use `index` in `options`
   * Remove `send.maxage()` -- use `maxAge` in `options`
 

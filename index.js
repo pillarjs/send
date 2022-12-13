@@ -169,20 +169,6 @@ function SendStream (req, path, options) {
 util.inherits(SendStream, Stream)
 
 /**
- * Enable or disable etag generation.
- *
- * @param {Boolean} val
- * @return {SendStream}
- * @api public
- */
-
-SendStream.prototype.etag = deprecate.function(function etag (val) {
-  this._etag = Boolean(val)
-  debug('etag %s', this._etag)
-  return this
-}, 'send.etag: pass etag as option')
-
-/**
  * Enable or disable "hidden" (dot) files.
  *
  * @param {Boolean} path
