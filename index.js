@@ -184,23 +184,6 @@ SendStream.prototype.hidden = deprecate.function(function hidden (val) {
 }, 'send.hidden: use dotfiles option')
 
 /**
- * Set root `path`.
- *
- * @param {String} path
- * @return {SendStream}
- * @api public
- */
-
-SendStream.prototype.root = function root (path) {
-  this._root = resolve(String(path))
-  debug('root %s', this._root)
-  return this
-}
-
-SendStream.prototype.root = deprecate.function(SendStream.prototype.root,
-  'send.root: pass root as option')
-
-/**
  * Emit error with `status`.
  *
  * @param {number} status
