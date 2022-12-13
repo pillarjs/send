@@ -787,20 +787,6 @@ describe('send(file).pipe(res)', function () {
     })
   })
 
-  describe('.from()', function () {
-    it('should set with deprecated from', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url)
-          .from(fixtures)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/pets/../name.txt')
-        .expect(200, 'tobi', done)
-    })
-  })
-
   describe('.hidden()', function () {
     it('should default support sending hidden files', function (done) {
       var app = http.createServer(function (req, res) {
@@ -936,14 +922,6 @@ describe('send(file, options)', function () {
         .get('/name.txt')
         .expect(shouldNotHaveHeader('Last-Modified'))
         .expect(200, done)
-    })
-  })
-
-  describe('from', function () {
-    it('should set with deprecated from', function (done) {
-      request(createServer({ from: fixtures }))
-        .get('/pets/../name.txt')
-        .expect(200, 'tobi', done)
     })
   })
 

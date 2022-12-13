@@ -160,10 +160,6 @@ function SendStream (req, path, options) {
   this._root = opts.root
     ? resolve(opts.root)
     : null
-
-  if (!this._root && opts.from) {
-    this.from(opts.from)
-  }
 }
 
 /**
@@ -214,9 +210,6 @@ SendStream.prototype.root = function root (path) {
   debug('root %s', this._root)
   return this
 }
-
-SendStream.prototype.from = deprecate.function(SendStream.prototype.root,
-  'send.from: pass root as option')
 
 SendStream.prototype.root = deprecate.function(SendStream.prototype.root,
   'send.root: pass root as option')
