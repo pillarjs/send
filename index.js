@@ -202,22 +202,6 @@ SendStream.prototype.hidden = deprecate.function(function hidden (val) {
 }, 'send.hidden: use dotfiles option')
 
 /**
- * Set index `paths`, set to a falsy
- * value to disable index support.
- *
- * @param {String|Boolean|Array} paths
- * @return {SendStream}
- * @api public
- */
-
-SendStream.prototype.index = deprecate.function(function index (paths) {
-  var index = !paths ? [] : normalizeList(paths, 'paths argument')
-  debug('index %o', paths)
-  this._index = index
-  return this
-}, 'send.index: pass index as option')
-
-/**
  * Set root `path`.
  *
  * @param {String} path

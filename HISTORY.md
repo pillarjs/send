@@ -1,6 +1,7 @@
 1.x
 ===
 
+  * Remove `send.index()` -- use `index` in `options`
   * Remove `send.maxage()` -- use `maxAge` in `options`
 
 0.17.2 / 2021-12-11
