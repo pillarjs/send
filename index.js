@@ -238,25 +238,6 @@ SendStream.prototype.root = deprecate.function(SendStream.prototype.root,
   'send.root: pass root as option')
 
 /**
- * Set max-age to `maxAge`.
- *
- * @param {Number} maxAge
- * @return {SendStream}
- * @api public
- */
-
-SendStream.prototype.maxage = deprecate.function(function maxage (maxAge) {
-  this._maxage = typeof maxAge === 'string'
-    ? ms(maxAge)
-    : Number(maxAge)
-  this._maxage = !isNaN(this._maxage)
-    ? Math.min(Math.max(0, this._maxage), MAX_MAXAGE)
-    : 0
-  debug('max-age %d', this._maxage)
-  return this
-}, 'send.maxage: pass maxAge as option')
-
-/**
  * Emit error with `status`.
  *
  * @param {number} status
