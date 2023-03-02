@@ -55,7 +55,7 @@ Set how "dotfiles" are treated when encountered. A dotfile is a file
 or directory that begins with a dot ("."). Note this check is done on
 the path itself without checking if the path actually exists on the
 disk. If `root` is specified, only the dotfiles above the root are
-checked (i.e. the root itself can be within a dotfile when when set
+checked (i.e. the root itself can be within a dotfile when set
 to "deny").
 
   - `'allow'` No special treatment for dotfiles.
@@ -135,7 +135,7 @@ object, typically `send(req, path, options).pipe(res)`.
 
 ### .mime
 
-The `mime` export is the global instance of of the
+The `mime` export is the global instance of the
 [`mime` npm module](https://www.npmjs.com/package/mime).
 
 This is used to configure the MIME types that are associated with file extensions
@@ -232,7 +232,7 @@ server.listen(3000)
 
 ### Custom directory index view
 
-This is a example of serving up a structure of directories with a
+This is an example of serving up a structure of directories with a
 custom function to render a listing of a directory.
 
 ```js
