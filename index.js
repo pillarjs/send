@@ -605,12 +605,16 @@ SendStream.prototype.sendFile = function sendFile (path) {
 
   debug('stat "%s"', path)
   fs.stat(path, function onstat (err, stat) {
-    if (err && err.code === 'ENOENT' && !extname(path) && path[path.length - 1] !== sep) {
+    var pathEndsWithSep = path[path.length - 1] === sep
+    
+    if (err && err.code === 'ENOENT' && !extname(path) && !pathEndsWithSep) {
       // not found, check extensions
       return next(err)
     }
     if (err) return self.onStatError(err)
     if (stat.isDirectory()) return self.redirect(path)
+    if(pathEndsWithSep) return self.error(404)
+    
     self.emit('file', path, stat)
     self.send(path, stat)
   })
