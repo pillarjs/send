@@ -14,14 +14,13 @@
 
 var createError = require('http-errors')
 var debug = require('debug')('send')
-var deprecate = require('depd')('send')
 var destroy = require('destroy')
 var encodeUrl = require('encodeurl')
 var escapeHtml = require('escape-html')
 var etag = require('etag')
 var fresh = require('fresh')
 var fs = require('fs')
-var mime = require('mime')
+var mime = require('mime-types')
 var ms = require('ms')
 var onFinished = require('on-finished')
 var parseRange = require('range-parser')
@@ -68,7 +67,6 @@ var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/
  */
 
 module.exports = send
-module.exports.mime = mime
 
 /**
  * Return a `SendStream` for `req` and `path`.
@@ -122,17 +120,6 @@ function SendStream (req, path, options) {
     throw new TypeError('dotfiles option must be "allow", "deny", or "ignore"')
   }
 
-  this._hidden = Boolean(opts.hidden)
-
-  if (opts.hidden !== undefined) {
-    deprecate('hidden: use dotfiles: \'' + (this._hidden ? 'allow' : 'ignore') + '\' instead')
-  }
-
-  // legacy support
-  if (opts.dotfiles === undefined) {
-    this._dotfiles = undefined
-  }
-
   this._extensions = opts.extensions !== undefined
     ? normalizeList(opts.extensions, 'extensions option')
     : []
@@ -160,10 +147,6 @@ function SendStream (req, path, options) {
   this._root = opts.root
     ? resolve(opts.root)
     : null
-
-  if (!this._root && opts.from) {
-    this.from(opts.from)
-  }
 }
 
 /**
@@ -171,90 +154,6 @@ function SendStream (req, path, options) {
  */
 
 util.inherits(SendStream, Stream)
-
-/**
- * Enable or disable etag generation.
- *
- * @param {Boolean} val
- * @return {SendStream}
- * @api public
- */
-
-SendStream.prototype.etag = deprecate.function(function etag (val) {
-  this._etag = Boolean(val)
-  debug('etag %s', this._etag)
-  return this
-}, 'send.etag: pass etag as option')
-
-/**
- * Enable or disable "hidden" (dot) files.
- *
- * @param {Boolean} path
- * @return {SendStream}
- * @api public
- */
-
-SendStream.prototype.hidden = deprecate.function(function hidden (val) {
-  this._hidden = Boolean(val)
-  this._dotfiles = undefined
-  debug('hidden %s', this._hidden)
-  return this
-}, 'send.hidden: use dotfiles option')
-
-/**
- * Set index `paths`, set to a falsy
- * value to disable index support.
- *
- * @param {String|Boolean|Array} paths
- * @return {SendStream}
- * @api public
- */
-
-SendStream.prototype.index = deprecate.function(function index (paths) {
-  var index = !paths ? [] : normalizeList(paths, 'paths argument')
-  debug('index %o', paths)
-  this._index = index
-  return this
-}, 'send.index: pass index as option')
-
-/**
- * Set root `path`.
- *
- * @param {String} path
- * @return {SendStream}
- * @api public
- */
-
-SendStream.prototype.root = function root (path) {
-  this._root = resolve(String(path))
-  debug('root %s', this._root)
-  return this
-}
-
-SendStream.prototype.from = deprecate.function(SendStream.prototype.root,
-  'send.from: pass root as option')
-
-SendStream.prototype.root = deprecate.function(SendStream.prototype.root,
-  'send.root: pass root as option')
-
-/**
- * Set max-age to `maxAge`.
- *
- * @param {Number} maxAge
- * @return {SendStream}
- * @api public
- */
-
-SendStream.prototype.maxage = deprecate.function(function maxage (maxAge) {
-  this._maxage = typeof maxAge === 'string'
-    ? ms(maxAge)
-    : Number(maxAge)
-  this._maxage = !isNaN(this._maxage)
-    ? Math.min(Math.max(0, this._maxage), MAX_MAXAGE)
-    : 0
-  debug('max-age %d', this._maxage)
-  return this
-}, 'send.maxage: pass maxAge as option')
 
 /**
  * Emit error with `status`.
@@ -559,17 +458,8 @@ SendStream.prototype.pipe = function pipe (res) {
 
   // dotfile handling
   if (containsDotFile(parts)) {
-    var access = this._dotfiles
-
-    // legacy support
-    if (access === undefined) {
-      access = parts[parts.length - 1][0] === '.'
-        ? (this._hidden ? 'allow' : 'ignore')
-        : 'allow'
-    }
-
-    debug('%s dotfile "%s"', access, path)
-    switch (access) {
+    debug('%s dotfile "%s"', this._dotfiles, path)
+    switch (this._dotfiles) {
       case 'allow':
         break
       case 'deny':
@@ -608,7 +498,7 @@ SendStream.prototype.send = function send (path, stat) {
   var ranges = req.headers.range
   var offset = options.start || 0
 
-  if (headersSent(res)) {
+  if (res.headersSent) {
     // impossible to send now
     this.headersAlreadySent()
     return
@@ -827,17 +717,11 @@ SendStream.prototype.type = function type (path) {
 
   if (res.getHeader('Content-Type')) return
 
-  var type = mime.lookup(path)
-
-  if (!type) {
-    debug('no content-type')
-    return
-  }
-
-  var charset = mime.charsets.lookup(type)
+  var ext = extname(path)
+  var type = mime.contentType(ext) || 'application/octet-stream'
 
   debug('content-type %s', type)
-  res.setHeader('Content-Type', type + (charset ? '; charset=' + charset : ''))
+  res.setHeader('Content-Type', type)
 }
 
 /**
@@ -1019,7 +903,7 @@ function getHeaderNames (res) {
 /**
  * Determine if emitter has listeners of a given type.
  *
- * The way to do this check is done three different ways in Node.js >= 0.8
+ * The way to do this check is done three different ways in Node.js >= 0.10
  * so this consolidates them into a minimal set using instance methods.
  *
  * @param {EventEmitter} emitter
@@ -1034,20 +918,6 @@ function hasListeners (emitter, type) {
     : emitter.listenerCount(type)
 
   return count > 0
-}
-
-/**
- * Determine if the response headers have been sent.
- *
- * @param {object} res
- * @returns {boolean}
- * @private
- */
-
-function headersSent (res) {
-  return typeof res.headersSent !== 'boolean'
-    ? Boolean(res._header)
-    : res.headersSent
 }
 
 /**

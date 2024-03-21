@@ -133,15 +133,6 @@ The `SendStream` is an event emitter and will emit the following events:
 The `pipe` method is used to pipe the response into the Node.js HTTP response
 object, typically `send(req, path, options).pipe(res)`.
 
-### .mime
-
-The `mime` export is the global instance of of the
-[`mime` npm module](https://www.npmjs.com/package/mime).
-
-This is used to configure the MIME types that are associated with file extensions
-as well as other options for how to resolve the MIME type of a file (like the
-default type to use for an unknown file extension).
-
 ## Error-handling
 
 By default when no `error` listeners are present an automatic response will be
@@ -210,20 +201,22 @@ server.listen(3000)
 ### Custom file types
 
 ```js
+var extname = require('path').extname
 var http = require('http')
 var parseUrl = require('parseurl')
 var send = require('send')
 
-// Default unknown types to text/plain
-send.mime.default_type = 'text/plain'
-
-// Add a custom type
-send.mime.define({
-  'application/x-my-type': ['x-mt', 'x-mtt']
-})
-
 var server = http.createServer(function onRequest (req, res) {
   send(req, parseUrl(req).pathname, { root: '/www/public' })
+    .on('headers', function (res, path) {
+      switch (extname(path)) {
+        case '.x-mt':
+        case '.x-mtt':
+          // custom type for these extensions
+          res.setHeader('Content-Type', 'application/x-my-type')
+          break
+      }
+    })
     .pipe(res)
 })
 
