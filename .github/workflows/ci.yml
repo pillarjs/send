@@ -34,7 +34,8 @@ jobs:
         - Node.js 19.x
         - Node.js 20.x
         - Node.js 21.x
-
+        - Node.js 22.x
+        
         include:
         - name: Node.js 0.8
           node-version: "0.8"
@@ -122,9 +123,12 @@ jobs:
 
         - name: Node.js 21.x
           node-version: "21.7"
-
+          
+        - name: Node.js 22.x
+          node-version: "22.0"
+          
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install Node.js ${{ matrix.node-version }}
       shell: bash -eo pipefail -l {0}
@@ -203,7 +207,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-    - name: Uploade code coverage
+    - name: Upload code coverage
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.github_token }}
