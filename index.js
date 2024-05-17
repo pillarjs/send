@@ -721,6 +721,9 @@ SendStream.prototype.sendFile = function sendFile (path) {
     }
     if (err) return self.onStatError(err)
     if (stat.isDirectory()) return self.redirect(path)
+    if (stat.size === 0) {
+      stat.size = getSize(path);
+    }
     self.emit('file', path, stat)
     self.send(path, stat)
   })
@@ -1141,3 +1144,38 @@ function setHeaders (res, headers) {
     res.setHeader(key, headers[key])
   }
 }
+
+/**
+ * Get size of a given file (used especially for /proc/* files)
+ *
+ * @param {string} path
+ * @private
+ */
+function getSize (path) {
+	const fd = fs.openSync(path, 'r');
+	const tmpBufMinLen = 4096 * 2;
+	const tmpBufMaxLen = 4096 * 8;
+	let tmpBuf = Buffer.allocUnsafeSlow(tmpBufMinLen);
+	let pos = 0;
+	let bytesRead;
+	let buf = tmpBuf;
+	let length = buf.length;
+	do {
+		bytesRead = fs.readSync(fd, buf, pos, buf.length - pos, null);
+		pos += bytesRead;
+		if (pos === tmpBuf.length) {
+			length = length << 1;
+			let newBuf = Buffer.allocUnsafeSlow(length);
+
+			if (length <= tmpBufMaxLen) {
+				tmpBuf = newBuf;
+			}
+
+			buf.copy(newBuf);
+			buf = newBuf;
+		}
+	} while (bytesRead !== 0);
+	fs.closeSync(fd);
+	return buf.toString('utf8', 0, pos).length;
+}
+
