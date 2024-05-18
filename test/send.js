@@ -1194,6 +1194,12 @@ describe('send(file, options)', function () {
         .get('/')
         .expect(200, /tobi/, done)
     })
+
+    it('should 404 if file path contains tralling slash (windows)', function (done) {
+      request(createServer({ root: fixtures, index: false }))
+        .get('/tobi.html/')
+        .expect(404, done)
+    })
   })
 
   describe('root', function () {
