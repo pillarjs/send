@@ -27,7 +27,7 @@
     "ms": "^2.1.3",
     "on-finished": "^2.4.1",
     "range-parser": "^1.2.1",
-    "statuses": "2.0.1"
+    "statuses": "^2.0.1"
   },
   "devDependencies": {
     "after": "^0.8.2",
