@@ -1,3 +1,20 @@
+unreleased
+======================
+
+  * Drop support for Node.js <18.0
+  * `statuses@^2.0.1`
+  * `range-parser@^1.2.1`
+  * `on-finished@^2.4.1`
+  * `ms@^2.1.3`
+  * `mime-types@^2.1.35`
+  * `http-errors@^2.0.0`
+  * `fresh@^0.5.2`
+  * `etag@^1.8.1`
+  * `escape-html@^1.0.3`
+  * `encodeurl@^2.0.0`
+  * `destroy@^1.2.0`
+  * `debug@^4.3.5`
+
 1.0.0-beta.2 / 2024-03-04
 =========================
 
