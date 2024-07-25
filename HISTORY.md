@@ -1,3 +1,26 @@
+1.0.0-beta.2 / 2024-03-04
+=========================
+
+  * Changes from 0.18.0
+
+1.0.0-beta.1 / 2022-02-04
+=========================
+
+  * Drop support for Node.js 0.8
+  * Remove `hidden` option -- use `dotfiles` option
+  * Remove `from` alias to `root` -- use `root` directly
+  * Remove `send.etag()` -- use `etag` in `options`
+  * Remove `send.index()` -- use `index` in `options`
+  * Remove `send.maxage()` -- use `maxAge` in `options`
+  * Remove `send.root()` -- use `root` in `options`
+  * Use `mime-types` for file to content type mapping -- removed `send.mime`
+  * deps: debug@3.1.0
+    - Add `DEBUG_HIDE_DATE` environment variable
+    - Change timer to per-namespace instead of global
+    - Change non-TTY date format
+    - Remove `DEBUG_FD` environment variable support
+    - Support 256 namespace colors
+
 0.18.0 / 2022-03-23
 ===================
 

@@ -147,14 +147,21 @@ describe('send(file).pipe(res)', function () {
   it('should set Content-Type via mime map', function (done) {
     request(app)
       .get('/name.txt')
-      .expect('Content-Type', 'text/plain; charset=UTF-8')
+      .expect('Content-Type', 'text/plain; charset=utf-8')
       .expect(200, function (err) {
         if (err) return done(err)
         request(app)
           .get('/tobi.html')
-          .expect('Content-Type', 'text/html; charset=UTF-8')
+          .expect('Content-Type', 'text/html; charset=utf-8')
           .expect(200, done)
       })
+  })
+
+  it('should default Content-Type to octet-stream', function (done) {
+    request(app)
+      .get('/no_ext')
+      .expect('Content-Type', 'application/octet-stream')
+      .expect(200, done)
   })
 
   it('should 404 if file disappears after stat, before open', function (done) {
@@ -810,151 +817,6 @@ describe('send(file).pipe(res)', function () {
         .expect(416, done)
     })
   })
-
-  describe('.etag()', function () {
-    it('should support disabling etags', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url, { root: fixtures })
-          .etag(false)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/name.txt')
-        .expect(shouldNotHaveHeader('ETag'))
-        .expect(200, done)
-    })
-  })
-
-  describe('.from()', function () {
-    it('should set with deprecated from', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url)
-          .from(fixtures)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/pets/../name.txt')
-        .expect(200, 'tobi', done)
-    })
-  })
-
-  describe('.hidden()', function () {
-    it('should default support sending hidden files', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url, { root: fixtures })
-          .hidden(true)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/.hidden.txt')
-        .expect(200, 'secret', done)
-    })
-  })
-
-  describe('.index()', function () {
-    it('should be configurable', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url, { root: fixtures })
-          .index('tobi.html')
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/')
-        .expect(200, '<p>tobi</p>', done)
-    })
-
-    it('should support disabling', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url, { root: fixtures })
-          .index(false)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/pets/')
-        .expect(403, done)
-    })
-
-    it('should support fallbacks', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url, { root: fixtures })
-          .index(['default.htm', 'index.html'])
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/pets/')
-        .expect(200, fs.readFileSync(path.join(fixtures, 'pets', 'index.html'), 'utf8'), done)
-    })
-  })
-
-  describe('.maxage()', function () {
-    it('should default to 0', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, 'test/fixtures/name.txt')
-          .maxage(undefined)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/name.txt')
-        .expect('Cache-Control', 'public, max-age=0', done)
-    })
-
-    it('should floor to integer', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, 'test/fixtures/name.txt')
-          .maxage(1234)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/name.txt')
-        .expect('Cache-Control', 'public, max-age=1', done)
-    })
-
-    it('should accept string', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, 'test/fixtures/name.txt')
-          .maxage('30d')
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/name.txt')
-        .expect('Cache-Control', 'public, max-age=2592000', done)
-    })
-
-    it('should max at 1 year', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, 'test/fixtures/name.txt')
-          .maxage(Infinity)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/name.txt')
-        .expect('Cache-Control', 'public, max-age=31536000', done)
-    })
-  })
-
-  describe('.root()', function () {
-    it('should set root', function (done) {
-      var app = http.createServer(function (req, res) {
-        send(req, req.url)
-          .root(fixtures)
-          .pipe(res)
-      })
-
-      request(app)
-        .get('/pets/../name.txt')
-        .expect(200, 'tobi', done)
-    })
-  })
 })
 
 describe('send(file, options)', function () {
@@ -1066,14 +928,6 @@ describe('send(file, options)', function () {
     })
   })
 
-  describe('from', function () {
-    it('should set with deprecated from', function (done) {
-      request(createServer({ from: fixtures }))
-        .get('/pets/../name.txt')
-        .expect(200, 'tobi', done)
-    })
-  })
-
   describe('dotfiles', function () {
     it('should default to "ignore"', function (done) {
       request(createServer({ root: fixtures }))
@@ -1081,10 +935,10 @@ describe('send(file, options)', function () {
         .expect(404, done)
     })
 
-    it('should allow file within dotfile directory for back-compat', function (done) {
+    it('should ignore file within dotfile directory', function (done) {
       request(createServer({ root: fixtures }))
         .get('/.mine/name.txt')
-        .expect(200, /tobi/, done)
+        .expect(404, done)
     })
 
     it('should reject bad value', function (done) {
@@ -1231,20 +1085,6 @@ describe('send(file, options)', function () {
           .get('/name.txt')
           .expect(404, done)
       })
-    })
-  })
-
-  describe('hidden', function () {
-    it('should default to false', function (done) {
-      request(app)
-        .get('/.hidden.txt')
-        .expect(404, 'Not Found', done)
-    })
-
-    it('should default support sending hidden files', function (done) {
-      request(createServer({ hidden: true, root: fixtures }))
-        .get('/.hidden.txt')
-        .expect(200, 'secret', done)
     })
   })
 
@@ -1455,40 +1295,6 @@ describe('send(file, options)', function () {
           .get('/do..ts.txt')
           .expect(200, '...', done)
       })
-    })
-  })
-})
-
-describe('send.mime', function () {
-  it('should be exposed', function () {
-    assert.ok(send.mime)
-  })
-
-  describe('.default_type', function () {
-    before(function () {
-      this.default_type = send.mime.default_type
-    })
-
-    afterEach(function () {
-      send.mime.default_type = this.default_type
-    })
-
-    it('should change the default type', function (done) {
-      send.mime.default_type = 'text/plain'
-
-      request(createServer({ root: fixtures }))
-        .get('/no_ext')
-        .expect('Content-Type', 'text/plain; charset=UTF-8')
-        .expect(200, done)
-    })
-
-    it('should not add Content-Type for undefined default', function (done) {
-      send.mime.default_type = undefined
-
-      request(createServer({ root: fixtures }))
-        .get('/no_ext')
-        .expect(shouldNotHaveHeader('Content-Type'))
-        .expect(200, done)
     })
   })
 })
