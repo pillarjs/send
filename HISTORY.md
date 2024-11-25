@@ -4,6 +4,7 @@ unreleased
   * deps: 
     * `fresh@^2.0.0` 
     * removed `destroy`
+  * remove `getHeaderNames()` polyfill and refactor `clearHeaders()`
 
 1.1.0 / 2024-09-10
 ==================

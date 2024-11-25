@@ -775,10 +775,8 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
  */
 
 function clearHeaders (res) {
-  var headers = getHeaderNames(res)
-
-  for (var i = 0; i < headers.length; i++) {
-    res.removeHeader(headers[i])
+  for (const header of res.getHeaderNames()) {
+    res.removeHeader(header)
   }
 }
 
@@ -884,20 +882,6 @@ function decode (path) {
   } catch (err) {
     return -1
   }
-}
-
-/**
- * Get the header names on a response.
- *
- * @param {object} res
- * @returns {array[string]}
- * @private
- */
-
-function getHeaderNames (res) {
-  return typeof res.getHeaderNames !== 'function'
-    ? Object.keys(res._headers || {})
-    : res.getHeaderNames()
 }
 
 /**
