@@ -21,7 +21,7 @@
     "encodeurl": "^2.0.0",
     "escape-html": "^1.0.3",
     "etag": "^1.8.1",
-    "fresh": "^0.5.2",
+    "fresh": "^2.0.0",
     "http-errors": "^2.0.0",
     "mime-types": "^2.1.35",
     "ms": "^2.1.3",
