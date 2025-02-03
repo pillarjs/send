@@ -3,6 +3,7 @@ unreleased
 
   * deps: 
     * `fresh@^2.0.0` 
+    * removed `destroy`
 
 1.1.0 / 2024-09-10
 ==================
