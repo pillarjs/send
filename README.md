@@ -2,8 +2,7 @@
 
 [![NPM Version][npm-version-image]][npm-url]
 [![NPM Downloads][npm-downloads-image]][npm-url]
-[![Linux Build][github-actions-ci-image]][github-actions-ci-url]
-[![Windows Build][appveyor-image]][appveyor-url]
+[![CI][github-actions-ci-image]][github-actions-ci-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
 
 Send is a library for streaming files from the file system as a http response
@@ -307,8 +306,6 @@ server.listen(3000)
 
 [MIT](LICENSE)
 
-[appveyor-image]: https://badgen.net/appveyor/ci/dougwilson/send/master?label=windows
-[appveyor-url]: https://ci.appveyor.com/project/dougwilson/send
 [coveralls-image]: https://badgen.net/coveralls/c/github/pillarjs/send/master
 [coveralls-url]: https://coveralls.io/r/pillarjs/send?branch=master
 [github-actions-ci-image]: https://badgen.net/github/checks/pillarjs/send/master?label=linux
