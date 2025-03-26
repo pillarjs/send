@@ -1,7 +1,8 @@
 unreleased
 ==================
 
-  * deps: 
+  * deps:
+    * mime-types@3.0.1 
     * `fresh@^2.0.0` 
     * removed `destroy`
 
