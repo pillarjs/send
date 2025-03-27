@@ -1,8 +1,8 @@
-unreleased
+1.2.0 / 2025-03-27
 ==================
 
   * deps:
-    * mime-types@3.0.1 
+    * `mime-types@^3.0.1` 
     * `fresh@^2.0.0` 
     * removed `destroy`
   * remove `getHeaderNames()` polyfill and refactor `clearHeaders()`
