@@ -39,7 +39,7 @@
     "eslint-plugin-standard": "4.1.0",
     "mocha": "^10.7.0",
     "nyc": "^17.0.0",
-    "supertest": "6.2.2"
+    "supertest": "6.3.4"
   },
   "files": [
     "HISTORY.md",
