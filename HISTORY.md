@@ -1,3 +1,10 @@
+unreleased
+===================
+
+* deps: use tilde notation for dependencies
+* deps: http-errors@~2.0.1
+* deps: statuses@~2.0.2
+
 0.19.1 / 2024-10-09
 ===================
 
