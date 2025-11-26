@@ -1,3 +1,13 @@
+1.2.1 / 2025-12-15
+==================
+
+* Minor changes (package metadata)
+* deps:
+  * `debug@^4.4.3`
+  * `http-errors@^2.0.1`
+  * `mime-types@^3.0.2`
+  * `statuses@^2.0.2`
+
 1.2.0 / 2025-03-27
 ==================
 
