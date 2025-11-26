@@ -1,4 +1,4 @@
-unreleased
+0.19.2 / 2025-12-01
 ===================
 
 * deps: use tilde notation for dependencies
