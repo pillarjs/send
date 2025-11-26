@@ -787,14 +787,11 @@ function clearHeaders (res) {
  * @private
  */
 function collapseLeadingSlashes (str) {
-  for (var i = 0; i < str.length; i++) {
-    if (str[i] !== '/') {
-      break
-    }
-  }
+  let i
+  for (i = 0; i < str.length && str.charCodeAt(i) === 0x2f; i++);
 
   return i > 1
-    ? '/' + str.substr(i)
+    ? '/' + str.slice(i)
     : str
 }
 
