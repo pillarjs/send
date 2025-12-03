@@ -46,7 +46,6 @@
     "supertest": "6.3.4"
   },
   "files": [
-    "HISTORY.md",
     "LICENSE",
     "README.md",
     "index.js"
