@@ -1,3 +1,8 @@
+unreleased
+==================
+
+  * Refactor `SendStream` to an ES6 class
+
 1.2.0 / 2025-03-27
 ==================
 
