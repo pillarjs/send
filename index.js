@@ -606,17 +606,27 @@ SendStream.prototype.sendFile = function sendFile (path) {
     var pathEndsWithSep = path[path.length - 1] === sep
     if (err && err.code === 'ENOENT' && !extname(path) && !pathEndsWithSep) {
       // not found, check extensions
-      return next(err)
+      return next(err, false)
     }
     if (err) return self.onStatError(err)
-    if (stat.isDirectory()) return self.redirect(path)
+    if (stat.isDirectory()) {
+      // if extensions are configured and path has no extension, try extensions first
+      if (self._extensions.length > 0 && !extname(path) && !pathEndsWithSep) {
+        return next(null, true)
+      }
+      return self.redirect(path)
+    }
     if (pathEndsWithSep) return self.error(404)
     self.emit('file', path, stat)
     self.send(path, stat)
   })
 
-  function next (err) {
+  function next (err, isDir) {
     if (self._extensions.length <= i) {
+      // if original path was a directory, redirect to it
+      if (isDir) {
+        return self.redirect(path)
+      }
       return err
         ? self.onStatError(err)
         : self.error(404)
@@ -626,8 +636,8 @@ SendStream.prototype.sendFile = function sendFile (path) {
 
     debug('stat "%s"', p)
     fs.stat(p, function (err, stat) {
-      if (err) return next(err)
-      if (stat.isDirectory()) return next()
+      if (err) return next(err, isDir)
+      if (stat.isDirectory()) return next(null, isDir)
       self.emit('file', p, stat)
       self.send(p, stat)
     })
