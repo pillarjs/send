@@ -62,6 +62,18 @@
     - Remove `DEBUG_FD` environment variable support
     - Support 256 namespace colors
 
+0.19.2 / 2025-12-15
+===================
+
+* deps: use tilde notation for dependencies
+* deps: http-errors@~2.0.1
+* deps: statuses@~2.0.2
+
+0.19.1 / 2024-10-09
+===================
+
+* deps: encodeurl@~2.0.0
+
 0.19.0 / 2024-09-10
 ===================
 
