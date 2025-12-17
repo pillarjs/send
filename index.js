@@ -127,6 +127,10 @@ function SendStream (req, path, options) {
     ? Boolean(opts.immutable)
     : false
 
+  this._revalidate = opts.revalidate !== undefined
+    ? Boolean(opts.revalidate)
+    : false
+
   this._index = opts.index !== undefined
     ? normalizeList(opts.index, 'index option')
     : ['index.html']
@@ -748,6 +752,10 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
 
     if (this._immutable) {
       cacheControl += ', immutable'
+    }
+
+    if (this._revalidate) {
+      cacheControl += ', must-revalidate'
     }
 
     debug('cache-control %s', cacheControl)
