@@ -1,7 +1,7 @@
 {
-  "name": "@fastify/send",
+  "name": "send",
   "description": "Better streaming static file server with Range and conditional-GET support",
-  "version": "4.1.0",
+  "version": "1.2.1",
   "author": "TJ Holowaychuk <tj@vision-media.ca>",
   "contributors": [
     "Douglas Christopher Wilson <doug@somethingdoug.com>",
@@ -24,25 +24,25 @@
   "main": "index.js",
   "type": "commonjs",
   "types": "types/index.d.ts",
+  "files": [
+    "LICENSE",
+    "index.js",
+    "lib/",
+    "types"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fastify/send.git"
+    "url": "git+https://github.com/pillarjs/send.git"
   },
   "bugs": {
-    "url": "https://github.com/fastify/send/issues"
+    "url": "https://github.com/pillarjs/send/issues"
   },
-  "homepage": "https://github.com/fastify/send#readme",
-  "funding": [
-    {
-      "type": "github",
-      "url": "https://github.com/sponsors/fastify"
-    },
-    {
-      "type": "opencollective",
-      "url": "https://opencollective.com/fastify"
-    }
-  ],
+  "homepage": "https://github.com/pillarjs/send#readme",
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/express"
+  },
   "keywords": [
     "static",
     "file",
@@ -69,8 +69,12 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "npm run test:unit && npm run test:typescript",
+    "test:ci": "c8 --reporter=lcovonly --reporter=text npm test",
     "test:coverage": "c8 --reporter html node --test",
     "test:typescript": "tsd",
     "test:unit": "c8 --100 node --test"
+  },
+  "engines": {
+    "node": ">= 18"
   }
 }

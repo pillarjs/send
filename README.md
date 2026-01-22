@@ -1,8 +1,9 @@
-# @fastify/send
+# send
 
-[![CI](https://github.com/fastify/send/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/fastify/send/actions/workflows/ci.yml)
-[![NPM version](https://img.shields.io/npm/v/@fastify/send.svg?style=flat)](https://www.npmjs.com/package/@fastify/send)
-[![neostandard javascript style](https://img.shields.io/badge/code_style-neostandard-brightgreen?style=flat)](https://github.com/neostandard/neostandard)
+[![NPM Version][npm-version-image]][npm-url]
+[![NPM Downloads][npm-downloads-image]][npm-url]
+[![CI][github-actions-ci-image]][github-actions-ci-url]
+[![Test Coverage][coveralls-image]][coveralls-url]
 
 Send is a library for streaming files from the file system as an HTTP response
 supporting partial responses (Ranges), conditional-GET negotiation (If-Match,
@@ -17,7 +18,7 @@ This is a [Node.js](https://nodejs.org/en/) module available through the
 [`npm install` command](https://docs.npmjs.com/getting-started/installing-npm-packages-locally):
 
 ```bash
-$ npm install @fastify/send
+$ npm install send
 ```
 
 ### TypeScript
@@ -32,7 +33,7 @@ $ npm install -D @types/mime@3
 ## API
 
 ```js
-const send = require('@fastify/send')
+const send = require('send')
 ```
 
 ### send(req, path, [options])
@@ -208,7 +209,7 @@ given directory as the top-level. For example, a request
 ```js
 const http = require('node:http')
 const parseUrl = require('parseurl')
-const send = require('@fastify/send')
+const send = require('send')
 
 const server = http.createServer(async function onRequest (req, res) {
   const { statusCode, headers, stream } = await send(req, parseUrl(req).pathname, { root: '/www/public' })
@@ -224,7 +225,7 @@ server.listen(3000)
 ```js
 const http = require('node:http')
 const parseUrl = require('parseurl')
-const send = require('@fastify/send')
+const send = require('send')
 
 // Default unknown types to text/plain
 send.mime.default_type = 'text/plain'
@@ -252,7 +253,7 @@ custom function to render a listing of a directory.
 const http = require('node:http')
 const fs = require('node:fs')
 const parseUrl = require('parseurl')
-const send = require('@fastify/send')
+const send = require('send')
 
 // Transfer arbitrary files from within /www/example.com/public/*
 // with a custom handler for directory listing
@@ -278,7 +279,7 @@ server.listen(3000)
 ```js
 const http = require('node:http')
 const parseUrl = require('parseurl')
-const send = require('@fastify/send')
+const send = require('send')
 
 const server = http.createServer(async function onRequest (req, res) {
   // transfer arbitrary files from within
@@ -314,4 +315,14 @@ server.listen(3000)
 
 ## License
 
-Licensed under [MIT](./LICENSE).
+[MIT](LICENSE)
+
+[coveralls-image]: https://badgen.net/coveralls/c/github/pillarjs/send/master
+[coveralls-url]: https://coveralls.io/r/pillarjs/send?branch=master
+[github-actions-ci-image]: https://badgen.net/github/checks/pillarjs/send/master?label=linux
+[github-actions-ci-url]: https://github.com/pillarjs/send/actions/workflows/ci.yml
+[node-image]: https://badgen.net/npm/node/send
+[node-url]: https://nodejs.org/en/download/
+[npm-downloads-image]: https://badgen.net/npm/dm/send
+[npm-url]: https://npmjs.org/package/send
+[npm-version-image]: https://badgen.net/npm/v/send
