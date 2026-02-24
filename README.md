@@ -82,6 +82,16 @@ in the given order. By default, this is disabled (set to `false`). An
 example value that will serve extension-less HTML files: `['html', 'htm']`.
 This is skipped if the requested file already has an extension.
 
+##### followSymlinks
+
+Enable or disable following symbolic links, defaults to `true`. When set to
+`false`, if the resolved path (after following symlinks via `fs.realpath`)
+falls outside of the `root` directory, the request is rejected with a 403
+status code. This option requires the `root` option to be set.
+
+  - `true` - Follow symlinks (current/default behavior).
+  - `false` - Reject requests for symlinks that resolve outside `root`.
+
 ##### immutable
 
 Enable or disable the `immutable` directive in the `Cache-Control` response

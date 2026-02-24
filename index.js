@@ -127,6 +127,10 @@ function SendStream (req, path, options) {
     ? Boolean(opts.immutable)
     : false
 
+  this._followSymlinks = opts.followSymlinks !== undefined
+    ? Boolean(opts.followSymlinks)
+    : true
+
   this._index = opts.index !== undefined
     ? normalizeList(opts.index, 'index option')
     : ['index.html']
@@ -611,6 +615,16 @@ SendStream.prototype.sendFile = function sendFile (path) {
     if (err) return self.onStatError(err)
     if (stat.isDirectory()) return self.redirect(path)
     if (pathEndsWithSep) return self.error(404)
+
+    // symlink check
+    if (!self._followSymlinks && self._root) {
+      return self.checkSymlink(path, stat, function (err) {
+        if (err) return self.error(403)
+        self.emit('file', path, stat)
+        self.send(path, stat)
+      })
+    }
+
     self.emit('file', path, stat)
     self.send(path, stat)
   })
@@ -628,6 +642,16 @@ SendStream.prototype.sendFile = function sendFile (path) {
     fs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
+
+      // symlink check
+      if (!self._followSymlinks && self._root) {
+        return self.checkSymlink(p, stat, function (err) {
+          if (err) return self.error(403)
+          self.emit('file', p, stat)
+          self.send(p, stat)
+        })
+      }
+
       self.emit('file', p, stat)
       self.send(p, stat)
     })
@@ -656,12 +680,61 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
     fs.stat(p, function (err, stat) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
+
+      // symlink check
+      if (!self._followSymlinks && self._root) {
+        return self.checkSymlink(p, stat, function (err) {
+          if (err) return self.error(403)
+          self.emit('file', p, stat)
+          self.send(p, stat)
+        })
+      }
+
       self.emit('file', p, stat)
       self.send(p, stat)
     })
   }
 
   next()
+}
+
+/**
+ * Check if the file path resolves to a location within root.
+ *
+ * @param {String} path
+ * @param {Object} stat
+ * @param {Function} callback
+ * @api private
+ */
+SendStream.prototype.checkSymlink = function checkSymlink (path, stat, callback) {
+  var self = this
+  var root = this._root
+
+  fs.realpath(path, function (err, realPath) {
+    if (err) {
+      debug('realpath error "%s": %s', path, err.message)
+      return callback(err)
+    }
+
+    // Resolve root to its realpath as well for consistent comparison
+    fs.realpath(root, function (err, realRoot) {
+      if (err) {
+        debug('realpath error for root "%s": %s', root, err.message)
+        return callback(err)
+      }
+
+      // Check if realPath is within realRoot
+      var isWithinRoot = realPath === realRoot ||
+        realPath.startsWith(realRoot + sep)
+
+      if (!isWithinRoot) {
+        debug('symlink "%s" points outside root "%s"', path, root)
+        return callback(new Error('Symlink target outside root'))
+      }
+
+      callback(null)
+    })
+  })
 }
 
 /**

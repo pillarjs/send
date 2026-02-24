@@ -1303,6 +1303,58 @@ describe('send(file, options)', function () {
       })
     })
   })
+
+  describe('followSymlinks', function () {
+    it('should default to true (follow symlinks)', function (done) {
+      request(createServer({ root: path.join(fixtures, 'symlinks') }))
+        .get('/internal-link.txt')
+        .expect(200, 'tobi', done)
+    })
+
+    it('should allow symlinks within root when false', function (done) {
+      request(createServer({ followSymlinks: false, root: fixtures }))
+        .get('/symlinks/internal-link.txt')
+        .expect(200, 'tobi', done)
+    })
+
+    it('should reject symlinks outside root when false', function (done) {
+      request(createServer({ followSymlinks: false, root: path.join(fixtures, 'symlinks') }))
+        .get('/external-link.txt')
+        .expect(403, done)
+    })
+
+    it('should serve regular files when false', function (done) {
+      request(createServer({ followSymlinks: false, root: path.join(fixtures, 'symlinks') }))
+        .get('/safe.txt')
+        .expect(200, 'safe content\n', done)
+    })
+
+    it('should work with extensions option', function (done) {
+      // Create a symlink without extension for testing
+      request(createServer({ followSymlinks: false, root: fixtures, extensions: ['txt'] }))
+        .get('/name')
+        .expect(200, 'tobi', done)
+    })
+
+    it('should work with index files', function (done) {
+      var indexFixtures = path.join(fixtures, 'symlinks')
+      request(createServer({ followSymlinks: false, root: fixtures, index: ['safe.txt'] }))
+        .get('/symlinks/')
+        .expect(200, 'safe content\n', done)
+    })
+
+    it('should require root option', function (done) {
+      // followSymlinks without root should not trigger the check
+      var app = http.createServer(function (req, res) {
+        send(req, path.join(fixtures, 'symlinks', req.url), { followSymlinks: false })
+          .pipe(res)
+      })
+
+      request(app)
+        .get('/safe.txt')
+        .expect(200, 'safe content\n', done)
+    })
+  })
 })
 
 function createServer (opts, fn) {
