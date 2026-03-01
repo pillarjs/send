@@ -5,13 +5,11 @@
 [![CI][github-actions-ci-image]][github-actions-ci-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
 
-Send is a library for streaming files from the file system as a http response
+Send is a library for streaming files from the file system as an HTTP response
 supporting partial responses (Ranges), conditional-GET negotiation (If-Match,
 If-Unmodified-Since, If-None-Match, If-Modified-Since), high test coverage,
 and granular events which may be leveraged to take appropriate actions in your
 application or framework.
-
-Looking to serve up entire folders mapped to URLs? Try [serve-static](https://www.npmjs.org/package/serve-static).
 
 ## Installation
 
@@ -23,17 +21,26 @@ This is a [Node.js](https://nodejs.org/en/) module available through the
 $ npm install send
 ```
 
+### TypeScript
+
+`@types/mime@3` must be used if wanting to use TypeScript;
+`@types/mime@4` removed the `mime` types.
+
+```bash
+$ npm install -D @types/mime@3
+```
+
 ## API
 
 ```js
-var send = require('send')
+const send = require('send')
 ```
 
 ### send(req, path, [options])
 
-Create a new `SendStream` for the given path to send to a `res`. The `req` is
-the Node.js HTTP request and the `path` is a urlencoded path to send (urlencoded,
-not the actual file-system path).
+Provide `statusCode`, `headers`, and `stream` for the given path to send to a
+`res`. The `req` is the Node.js HTTP request and the `path `is a urlencoded path
+to send (urlencoded, not the actual file-system path).
 
 #### Options
 
@@ -48,11 +55,19 @@ of the `Range` request header.
 Enable or disable setting `Cache-Control` response header, defaults to
 true. Disabling this will ignore the `immutable` and `maxAge` options.
 
+##### contentType
+
+By default, this library uses the `mime` module to set the `Content-Type`
+of the response based on the file extension of the requested file.
+
+To disable this functionality, set `contentType` to `false`.
+The `Content-Type` header will need to be set manually if disabled.
+
 ##### dotfiles
 
 Set how "dotfiles" are treated when encountered. A dotfile is a file
 or directory that begins with a dot ("."). Note this check is done on
-the path itself without checking if the path actually exists on the
+the path itself without checking if the path exists on the
 disk. If `root` is specified, only the dotfiles above the root are
 checked (i.e. the root itself can be within a dotfile when set
 to "deny").
@@ -103,9 +118,14 @@ system's last modified value.
 
 ##### maxAge
 
-Provide a max-age in milliseconds for http caching, defaults to 0.
+Provide a max-age in milliseconds for HTTP caching, defaults to 0.
 This can also be a string accepted by the
 [ms](https://www.npmjs.org/package/ms#readme) module.
+
+##### maxContentRangeChunkSize
+
+Specify the maximum response content size, defaults to the entire file size.
+This will be used when `acceptRanges` is true.
 
 ##### root
 
@@ -116,27 +136,28 @@ Serve files relative to `path`.
 Byte offset at which the stream starts, defaults to 0. The start is inclusive,
 meaning `start: 2` will include the 3rd byte in the stream.
 
-#### Events
+##### highWaterMark
 
-The `SendStream` is an event emitter and will emit the following events:
+When provided, this option sets the maximum number of bytes that the internal 
+buffer will hold before pausing reads from the underlying resource.
+If you omit this option (or pass undefined), Node.js falls back to 
+its built-in default for readable binary streams.
 
-  - `error` an error occurred `(err)`
-  - `directory` a directory was requested `(res, path)`
-  - `file` a file was requested `(path, stat)`
-  - `headers` the headers are about to be set on a file `(res, path, stat)`
-  - `stream` file streaming has started `(stream)`
-  - `end` streaming has completed
+### .mime
 
-#### .pipe
+The `mime` export is the global instance of the
+[`mime` npm module](https://www.npmjs.com/package/mime).
 
-The `pipe` method is used to pipe the response into the Node.js HTTP response
-object, typically `send(req, path, options).pipe(res)`.
+This is used to configure the MIME types that are associated with file extensions
+as well as other options for how to resolve the MIME type of a file (like the
+default type to use for an unknown file extension).
 
 ## Error-handling
 
 By default when no `error` listeners are present an automatic response will be
 made, otherwise you have full control over the response, aka you may show a 5xx
 page etc.
+
 
 ## Caching
 
@@ -147,10 +168,10 @@ caching, it's small enough that it does not need caching at all ;).
 
 ## Debugging
 
-To enable `debug()` instrumentation output export __DEBUG__:
+To enable `debug()` instrumentation output export __NODE_DEBUG__:
 
 ```
-$ DEBUG=send node app
+$ NODE_DEBUG=send node app
 ```
 
 ## Running tests
@@ -167,12 +188,13 @@ $ npm test
 This simple example will send a specific file to all requests.
 
 ```js
-var http = require('http')
-var send = require('send')
+const http = require('node:http')
+const send = require('send')
 
-var server = http.createServer(function onRequest (req, res) {
-  send(req, '/path/to/index.html')
-    .pipe(res)
+const server = http.createServer(async function onRequest (req, res) {
+  const { statusCode, headers, stream } = await send(req, '/path/to/index.html')
+  res.writeHead(statusCode, headers)
+  stream.pipe(res)
 })
 
 server.listen(3000)
@@ -185,13 +207,14 @@ given directory as the top-level. For example, a request
 `GET /foo.txt` will send back `/www/public/foo.txt`.
 
 ```js
-var http = require('http')
-var parseUrl = require('parseurl')
-var send = require('send')
+const http = require('node:http')
+const parseUrl = require('parseurl')
+const send = require('send')
 
-var server = http.createServer(function onRequest (req, res) {
-  send(req, parseUrl(req).pathname, { root: '/www/public' })
-    .pipe(res)
+const server = http.createServer(async function onRequest (req, res) {
+  const { statusCode, headers, stream } = await send(req, parseUrl(req).pathname, { root: '/www/public' })
+  res.writeHead(statusCode, headers)
+  stream.pipe(res)
 })
 
 server.listen(3000)
@@ -200,23 +223,22 @@ server.listen(3000)
 ### Custom file types
 
 ```js
-var extname = require('path').extname
-var http = require('http')
-var parseUrl = require('parseurl')
-var send = require('send')
+const http = require('node:http')
+const parseUrl = require('parseurl')
+const send = require('send')
 
-var server = http.createServer(function onRequest (req, res) {
-  send(req, parseUrl(req).pathname, { root: '/www/public' })
-    .on('headers', function (res, path) {
-      switch (extname(path)) {
-        case '.x-mt':
-        case '.x-mtt':
-          // custom type for these extensions
-          res.setHeader('Content-Type', 'application/x-my-type')
-          break
-      }
-    })
-    .pipe(res)
+// Default unknown types to text/plain
+send.mime.default_type = 'text/plain'
+
+// Add a custom type
+send.mime.define({
+  'application/x-my-type': ['x-mt', 'x-mtt']
+})
+
+const server = http.createServer(function onRequest (req, res) {
+  const { statusCode, headers, stream } = await send(req, parseUrl(req).pathname, { root: '/www/public' })
+  res.writeHead(statusCode, headers)
+  stream.pipe(res)
 })
 
 server.listen(3000)
@@ -228,75 +250,64 @@ This is an example of serving up a structure of directories with a
 custom function to render a listing of a directory.
 
 ```js
-var http = require('http')
-var fs = require('fs')
-var parseUrl = require('parseurl')
-var send = require('send')
+const http = require('node:http')
+const fs = require('node:fs')
+const parseUrl = require('parseurl')
+const send = require('send')
 
 // Transfer arbitrary files from within /www/example.com/public/*
 // with a custom handler for directory listing
-var server = http.createServer(function onRequest (req, res) {
-  send(req, parseUrl(req).pathname, { index: false, root: '/www/public' })
-    .once('directory', directory)
-    .pipe(res)
+const server = http.createServer(async function onRequest (req, res) {
+  const { statusCode, headers, stream, type, metadata } = await send(req, parseUrl(req).pathname, { index: false, root: '/www/public' })
+  if(type === 'directory') {
+    // get directory list
+    const list = await readdir(metadata.path)
+    // render an index for the directory
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' })
+    res.end(list.join('\n') + '\n')
+  } else {
+    res.writeHead(statusCode, headers)
+    stream.pipe(res)
+  }
 })
 
 server.listen(3000)
-
-// Custom directory handler
-function directory (res, path) {
-  var stream = this
-
-  // redirect to trailing slash for consistent url
-  if (!stream.hasTrailingSlash()) {
-    return stream.redirect(path)
-  }
-
-  // get directory list
-  fs.readdir(path, function onReaddir (err, list) {
-    if (err) return stream.error(err)
-
-    // render an index for the directory
-    res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
-    res.end(list.join('\n') + '\n')
-  })
-}
 ```
 
 ### Serving from a root directory with custom error-handling
 
 ```js
-var http = require('http')
-var parseUrl = require('parseurl')
-var send = require('send')
+const http = require('node:http')
+const parseUrl = require('parseurl')
+const send = require('send')
 
-var server = http.createServer(function onRequest (req, res) {
-  // your custom error-handling logic:
-  function error (err) {
-    res.statusCode = err.status || 500
-    res.end(err.message)
-  }
-
-  // your custom headers
-  function headers (res, path, stat) {
-    // serve all files for download
-    res.setHeader('Content-Disposition', 'attachment')
-  }
-
-  // your custom directory handling logic:
-  function redirect () {
-    res.statusCode = 301
-    res.setHeader('Location', req.url + '/')
-    res.end('Redirecting to ' + req.url + '/')
-  }
-
+const server = http.createServer(async function onRequest (req, res) {
   // transfer arbitrary files from within
   // /www/example.com/public/*
-  send(req, parseUrl(req).pathname, { root: '/www/public' })
-    .on('error', error)
-    .on('directory', redirect)
-    .on('headers', headers)
-    .pipe(res)
+  const { statusCode, headers, stream, type, metadata } = await send(req, parseUrl(req).pathname, { root: '/www/public' })
+  switch (type) {
+    case 'directory': {
+      // your custom directory handling logic:
+      res.writeHead(301, {
+        'Location': metadata.requestPath + '/'
+      })
+      res.end('Redirecting to ' + metadata.requestPath + '/')
+      break
+    }
+    case 'error': {
+      // your custom error-handling logic:
+      res.writeHead(metadata.error.status ?? 500, {})
+      res.end(metadata.error.message)
+      break
+    }
+    default: {
+      // your custom headers
+      // serve all files for download
+      res.setHeader('Content-Disposition', 'attachment')
+      res.writeHead(statusCode, headers)
+      stream.pipe(res)
+    }
+  }
 })
 
 server.listen(3000)
