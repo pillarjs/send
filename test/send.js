@@ -917,6 +917,36 @@ describe('send(file, options)', function () {
         .get('/thing.html')
         .expect(404, done)
     })
+
+    it('should serve file with extension when no directory exists', function (done) {
+      // /contact (no directory exists) → serves contact.html
+      request(createServer({ extensions: ['html'], root: fixtures }))
+        .get('/tobi')
+        .expect(200, '<p>tobi</p>', done)
+    })
+
+    it('should serve file with extension when directory also exists', function (done) {
+      // /about (directory exists) → serves about.html (not redirect to /about/)
+      request(createServer({ extensions: ['html'], root: fixtures }))
+        .get('/about')
+        .expect(200, 'About Page', done)
+    })
+
+    it('should redirect when directory exists and extensions not configured', function (done) {
+      // When extensions are not configured, should still redirect when directory exists
+      request(createServer({ root: fixtures }))
+        .get('/about')
+        .expect('Location', '/about/')
+        .expect(301, done)
+    })
+
+    it('should redirect to directory when file with extension does not exist', function (done) {
+      // /about with only about/ directory → redirects to /about/
+      request(createServer({ extensions: ['html'], root: fixtures }))
+        .get('/pets')
+        .expect('Location', '/pets/')
+        .expect(301, done)
+    })
   })
 
   describe('lastModified', function () {
