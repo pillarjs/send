@@ -1200,6 +1200,26 @@ describe('send(file, options)', function () {
         .get('/tobi.html/')
         .expect(404, done)
     })
+
+    it('should not serve files outside static root via index path traversal', function (done) {
+      // Simulate an index value containing a traversal sequence that would
+      // resolve outside the static root (e.g. inherited via prototype pollution).
+      Object.prototype.index = '../../send.js'
+      var root = path.join(fixtures, 'pets')
+      request(createServer({ root: root }))
+        .get('/')
+        .end(function (err, res) {
+          delete Object.prototype.index
+          if (err) return done(err)
+          // With the hasOwnProperty guard the inherited traversal path is ignored;
+          // the server must not serve content from outside the static root.
+          assert.ok(
+            res.status !== 200 || !/describe\s*\(|it\s*\(/.test(res.text),
+            'traversal outside static root must not be served via index'
+          )
+          done()
+        })
+    })
   })
 
   describe('root', function () {

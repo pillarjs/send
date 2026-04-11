@@ -127,7 +127,7 @@ function SendStream (req, path, options) {
     ? Boolean(opts.immutable)
     : false
 
-  this._index = opts.index !== undefined
+  this._index = Object.prototype.hasOwnProperty.call(opts, 'index')
     ? normalizeList(opts.index, 'index option')
     : ['index.html']
 
