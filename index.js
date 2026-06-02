@@ -146,6 +146,10 @@ function SendStream (req, path, options) {
   this._root = opts.root
     ? resolve(opts.root)
     : null
+
+  this._followSymlinks = opts.followSymlinks !== undefined
+    ? Boolean(opts.followSymlinks)
+    : true
 }
 
 /**
@@ -601,6 +605,20 @@ SendStream.prototype.sendFile = function sendFile (path) {
   var i = 0
   var self = this
 
+  function checkSymlinks (p, stat, cb) {
+    if (!self._followSymlinks && self._root) {
+      fs.realpath(p, function onrealpath (err, resolvedPath) {
+        if (err) return self.onStatError(err)
+        if (resolvedPath.indexOf(self._root) !== 0) {
+          return self.error(403)
+        }
+        cb(p, stat)
+      })
+    } else {
+      cb(p, stat)
+    }
+  }
+
   debug('stat "%s"', path)
   fs.stat(path, function onstat (err, stat) {
     var pathEndsWithSep = path[path.length - 1] === sep
@@ -612,7 +630,9 @@ SendStream.prototype.sendFile = function sendFile (path) {
     if (stat.isDirectory()) return self.redirect(path)
     if (pathEndsWithSep) return self.error(404)
     self.emit('file', path, stat)
-    self.send(path, stat)
+    checkSymlinks(path, stat, function (p, st) {
+      self.send(p, st)
+    })
   })
 
   function next (err) {
@@ -629,7 +649,9 @@ SendStream.prototype.sendFile = function sendFile (path) {
       if (err) return next(err)
       if (stat.isDirectory()) return next()
       self.emit('file', p, stat)
-      self.send(p, stat)
+      checkSymlinks(p, stat, function (resolvedPath, st) {
+        self.send(resolvedPath, st)
+      })
     })
   }
 }
