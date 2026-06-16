@@ -1279,6 +1279,41 @@ describe('send(file, options)', function () {
       })
     })
 
+    describe('send special files', function () {
+      it('should stream /proc/meminfo when allowSpecialFiles is true', function (done) {
+        var app = http.createServer(function (req, res) {
+          send(req, '/proc/meminfo', { allowSpecialFiles: true }).pipe(res)
+        })
+    
+        request(app)
+          .get('/')
+          .expect(200)
+          .expect('Content-Type', /plain|text/)
+          .end(function (err, res) {
+            if (err) return done(err)
+            // /proc/meminfo should contain "MemTotal"
+            assert.ok(res.text.includes('MemTotal'))
+            done()
+          })
+      })
+
+      it('should return empty when allowSpecialFiles is false', function (done) {
+        var app = http.createServer(function (req, res) {
+          send(req, '/proc/meminfo').pipe(res)
+        })
+    
+        request(app)
+          .get('/')
+          .expect(200)
+          .end(function (err, res) {
+            if (err) return done(err)
+            // Without the flag, Content-Length is 0
+            assert.strictEqual(res.text, '')
+            done()
+          })
+      })
+    })
+
     describe('when missing', function () {
       it('should consider .. malicious', function (done) {
         var app = http.createServer(function (req, res) {

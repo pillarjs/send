@@ -103,6 +103,10 @@ function SendStream (req, path, options) {
     ? Boolean(opts.acceptRanges)
     : true
 
+  this._allowSpecialFiles = opts.allowSpecialFiles !== undefined
+    ? Boolean(opts.allowSpecialFiles)
+    : false
+
   this._cacheControl = opts.cacheControl !== undefined
     ? Boolean(opts.cacheControl)
     : true
@@ -578,6 +582,20 @@ SendStream.prototype.send = function send (path, stat) {
   // set read options
   opts.start = offset
   opts.end = Math.max(offset, offset + len - 1)
+
+  // Special file handling: size=0 but readable
+  const isSpecialFile = stat.size === 0 && this._allowSpecialFiles;
+
+  if (isSpecialFile) {
+    // Skip Content-Length, just stream
+    debug('special file streaming without Content-Length');
+    if (req.method === 'HEAD') {
+      res.end();
+      return;
+    }
+    this.stream(path, options); // stream without start/end
+    return;
+  }
 
   // content-length
   res.setHeader('Content-Length', len)

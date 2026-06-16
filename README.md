@@ -43,6 +43,10 @@ Enable or disable accepting ranged requests, defaults to true.
 Disabling this will not send `Accept-Ranges` and ignore the contents
 of the `Range` request header.
 
+##### allowSpecialFiles
+
+When true Serve files in linux based systems ( in folders like /proc ), default is set to false and files return a size=0.
+
 ##### cacheControl
 
 Enable or disable setting `Cache-Control` response header, defaults to
@@ -261,6 +265,51 @@ function directory (res, path) {
     res.end(list.join('\n') + '\n')
   })
 }
+```
+
+### Serving special files (e.g. /proc, dotfiles, hidden files)
+
+By default, files that report a size of 0 — such as Linux virtual files in
+`/proc` or `/sys` — are not streamed because their size cannot be determined
+ahead of time. Setting `allowSpecialFiles: true` opts in to streaming those
+files without a `Content-Length` header.
+
+This is also a useful pattern when your root directory contains dotfiles or
+other hidden files that you want to expose intentionally (combine with
+`dotfiles: 'allow'`).
+
+```js
+var http = require('http')
+var parseUrl = require('parseurl')
+var send = require('send')
+
+// Serve Linux virtual files from /proc (e.g. GET /cpuinfo → /proc/cpuinfo)
+var server = http.createServer(function onRequest (req, res) {
+  send(req, parseUrl(req).pathname, {
+    root: '/proc',
+    allowSpecialFiles: true
+  }).pipe(res)
+})
+
+server.listen(3000)
+```
+
+To also allow dotfiles and other hidden files alongside special files:
+
+```js
+var http = require('http')
+var parseUrl = require('parseurl')
+var send = require('send')
+
+var server = http.createServer(function onRequest (req, res) {
+  send(req, parseUrl(req).pathname, {
+    root: '/www/public',
+    allowSpecialFiles: true,
+    dotfiles: 'allow'
+  }).pipe(res)
+})
+
+server.listen(3000)
 ```
 
 ### Serving from a root directory with custom error-handling
