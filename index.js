@@ -577,10 +577,14 @@ SendStream.prototype.send = function send (path, stat) {
 
   // set read options
   opts.start = offset
-  opts.end = Math.max(offset, offset + len - 1)
+  if (len > 0) {
+    opts.end = Math.max(offset, offset + len - 1)
+  }
 
   // content-length
-  res.setHeader('Content-Length', len)
+  if (len > 0) {
+    res.setHeader('Content-Length', len)
+  }
 
   // HEAD support
   if (req.method === 'HEAD') {
