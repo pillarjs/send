@@ -941,6 +941,24 @@ describe('send(file, options)', function () {
         .expect(404, done)
     })
 
+    it('should serve file within well-known directory', function (done) {
+      request(createServer({ root: fixtures }))
+        .get('/.well-known/security.txt')
+        .expect(200, 'Contact: mailto:security@example.com', done)
+    })
+
+    it('should ignore dotfile within well-known directory', function (done) {
+      request(createServer({ root: fixtures }))
+        .get('/.well-known/.hidden')
+        .expect(404, done)
+    })
+
+    it('should ignore well-known directory when dotfiles is explicitly "ignore"', function (done) {
+      request(createServer({ dotfiles: 'ignore', root: fixtures }))
+        .get('/.well-known/security.txt')
+        .expect(404, done)
+    })
+
     it('should reject bad value', function (done) {
       request(createServer({ dotfiles: 'bogus' }))
         .get('/name.txt')
@@ -971,6 +989,12 @@ describe('send(file, options)', function () {
       it('should 403 for dotfile', function (done) {
         request(createServer({ dotfiles: 'deny', root: fixtures }))
           .get('/.hidden.txt')
+          .expect(403, done)
+      })
+
+      it('should 403 for file within well-known directory', function (done) {
+        request(createServer({ dotfiles: 'deny', root: fixtures }))
+          .get('/.well-known/security.txt')
           .expect(403, done)
       })
 
