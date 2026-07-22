@@ -119,6 +119,10 @@ function SendStream (req, path, options) {
     throw new TypeError('dotfiles option must be "allow", "deny", or "ignore"')
   }
 
+  // serve well-known URIs (RFC 8615, "/.well-known/*") when no explicit
+  // dotfiles option was provided
+  this._wellKnown = opts.dotfiles === undefined
+
   this._extensions = opts.extensions !== undefined
     ? normalizeList(opts.extensions, 'extensions option')
     : []
@@ -456,8 +460,16 @@ SendStream.prototype.pipe = function pipe (res) {
 
   // dotfile handling
   if (containsDotFile(parts)) {
-    debug('%s dotfile "%s"', this._dotfiles, path)
-    switch (this._dotfiles) {
+    var access = this._dotfiles
+
+    // serve well-known URIs (RFC 8615, "/.well-known/*") when no explicit
+    // dotfiles option was provided
+    if (this._wellKnown && isWellKnown(parts)) {
+      access = 'allow'
+    }
+
+    debug('%s dotfile "%s"', access, path)
+    switch (access) {
       case 'allow':
         break
       case 'deny':
@@ -813,6 +825,18 @@ function containsDotFile (parts) {
   }
 
   return false
+}
+
+/**
+ * Determine if path parts are within the well-known directory
+ * (RFC 8615, "/.well-known/") and contain no other dotfile parts.
+ *
+ * @api private
+ */
+
+function isWellKnown (parts) {
+  return parts.length > 1 && parts[0] === '.well-known' &&
+    !containsDotFile(parts.slice(1))
 }
 
 /**

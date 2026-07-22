@@ -62,8 +62,11 @@ to "deny").
   - `'ignore'` Pretend like the dotfile does not exist and 404.
 
 The default value is _similar_ to `'ignore'`, with the exception that
-this default will not ignore the files within a directory that begins
-with a dot, for backward-compatibility.
+files within the top-level `.well-known` directory ([RFC 8615
+well-known URIs][rfc-8615], such as ACME challenges) are not ignored.
+Set this option explicitly to disable that exception.
+
+[rfc-8615]: https://www.rfc-editor.org/rfc/rfc8615
 
 ##### end
 
