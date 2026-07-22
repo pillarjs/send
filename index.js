@@ -489,6 +489,7 @@ SendStream.prototype.pipe = function pipe (res) {
 
 SendStream.prototype.send = function send (path, stat) {
   var len = stat.size
+  var isVirtual = len === 0 && stat.isFile()
   var options = this.options
   var opts = {}
   var res = this.res
@@ -530,8 +531,8 @@ SendStream.prototype.send = function send (path, stat) {
     if (len > bytes) len = bytes
   }
 
-  // Range support
-  if (this._acceptRanges && BYTES_RANGE_REGEXP.test(ranges)) {
+  // Range support (skip for virtual files with unknown size, e.g. /proc)
+  if (this._acceptRanges && BYTES_RANGE_REGEXP.test(ranges) && !isVirtual) {
     // parse
     ranges = parseRange(len, ranges, {
       combine: true
@@ -577,10 +578,14 @@ SendStream.prototype.send = function send (path, stat) {
 
   // set read options
   opts.start = offset
-  opts.end = Math.max(offset, offset + len - 1)
+  if (!isVirtual) {
+    opts.end = Math.max(offset, offset + len - 1)
+  }
 
-  // content-length
-  res.setHeader('Content-Length', len)
+  // content-length (skip for virtual files with unknown size)
+  if (!isVirtual) {
+    res.setHeader('Content-Length', len)
+  }
 
   // HEAD support
   if (req.method === 'HEAD') {
