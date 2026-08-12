@@ -90,6 +90,18 @@ also be specified to enable caching. The `immutable` directive will prevent
 supported clients from making conditional requests during the life of the
 `maxAge` option to check if the file has changed.
 
+When enabled, the `immutable` directive is sent as its own `Cache-Control`
+field-line instead of being appended to the `max-age` value, for example:
+
+```
+Cache-Control: public, max-age=31536000
+Cache-Control: immutable
+```
+
+HTTP caches combine repeated field-lines, so the effective set of directives is
+unchanged. Splitting the value keeps the `public, max-age=<seconds>` field-line
+matchable against the HTTP/3 QPACK static table.
+
 ##### index
 
 By default send supports "index.html" files, to disable this
