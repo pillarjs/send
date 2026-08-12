@@ -1100,6 +1100,20 @@ describe('send(file, options)', function () {
         .get('/name.txt')
         .expect('Cache-Control', 'public, max-age=3600, immutable', done)
     })
+
+    it('should send the immutable directive as a separate field-line', function (done) {
+      request(createServer({ immutable: true, maxAge: '1h', root: fixtures }))
+        .get('/name.txt')
+        .expect(shouldHaveHeaderValues('Cache-Control', ['public, max-age=3600', 'immutable']))
+        .expect(200, done)
+    })
+
+    it('should send a single field-line when disabled', function (done) {
+      request(createServer({ immutable: false, maxAge: '1h', root: fixtures }))
+        .get('/name.txt')
+        .expect(shouldHaveHeaderValues('Cache-Control', ['public, max-age=3600']))
+        .expect(200, done)
+    })
   })
 
   describe('maxAge', function () {
@@ -1315,6 +1329,22 @@ function createServer (opts, fn) {
       res.end(String(err))
     }
   })
+}
+
+function shouldHaveHeaderValues (header, values) {
+  return function (res) {
+    var lower = header.toLowerCase()
+    var raw = res.res.rawHeaders
+    var actual = []
+
+    for (var i = 0; i < raw.length; i += 2) {
+      if (raw[i].toLowerCase() === lower) {
+        actual.push(raw[i + 1])
+      }
+    }
+
+    assert.deepStrictEqual(actual, values, 'should have ' + header + ' field-lines ' + JSON.stringify(values))
+  }
 }
 
 function shouldNotHaveBody () {

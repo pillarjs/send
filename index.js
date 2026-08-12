@@ -747,10 +747,14 @@ SendStream.prototype.setHeader = function setHeader (path, stat) {
     var cacheControl = 'public, max-age=' + Math.floor(this._maxage / 1000)
 
     if (this._immutable) {
-      cacheControl += ', immutable'
+      // Send the `immutable` directive as its own field-line so the
+      // `public, max-age=<seconds>` value can still be matched against the
+      // HTTP/3 QPACK static table. Caches combine repeated field-lines, so
+      // the effective directives are unchanged.
+      cacheControl = [cacheControl, 'immutable']
     }
 
-    debug('cache-control %s', cacheControl)
+    debug('cache-control %o', cacheControl)
     res.setHeader('Cache-Control', cacheControl)
   }
 
