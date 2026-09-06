@@ -919,6 +919,101 @@ describe('send(file, options)', function () {
     })
   })
 
+  describe('followSymlinks', function () {
+    var petsDir = path.join(fixtures, 'pets')
+    var linkDir = path.join(petsDir, 'outside-dir')
+    var linkFile = path.join(petsDir, 'outside-file.txt')
+    var linkInside = path.join(fixtures, 'inside-symlink.txt')
+    var hasFileSymlink = false
+    var hasDirSymlink = false
+    var hasInsideSymlink = false
+
+    before(function () {
+      try {
+        fs.symlinkSync(path.join(fixtures, 'name.txt'), linkFile)
+        hasFileSymlink = true
+      } catch (e) {
+        // file symlink creation may not be permitted on Windows without privileges
+      }
+
+      try {
+        fs.symlinkSync(path.join(fixtures, 'name.txt'), linkInside)
+        hasInsideSymlink = true
+      } catch (e) {
+        // file symlink creation may not be permitted on Windows without privileges
+      }
+
+      try {
+        var linkType = process.platform === 'win32' ? 'junction' : 'dir'
+        fs.symlinkSync(fixtures, linkDir, linkType)
+        hasDirSymlink = true
+      } catch (e) {
+        // ignore
+      }
+    })
+
+    after(function () {
+      if (hasFileSymlink) {
+        try {
+          fs.unlinkSync(linkFile)
+        } catch (e) {
+          try { fs.rmdirSync(linkFile) } catch (e) {}
+        }
+      }
+      if (hasDirSymlink) {
+        try {
+          fs.unlinkSync(linkDir)
+        } catch (e) {
+          try { fs.rmdirSync(linkDir) } catch (e) {}
+        }
+      }
+      if (hasInsideSymlink) {
+        try {
+          fs.unlinkSync(linkInside)
+        } catch (e) {
+          try { fs.rmdirSync(linkInside) } catch (e) {}
+        }
+      }
+    })
+
+    it('should default to true', function (done) {
+      if (!hasFileSymlink && !hasDirSymlink) return this.skip()
+      var targetUrl = hasFileSymlink ? '/outside-file.txt' : '/outside-dir/name.txt'
+      request(createServer({ root: petsDir }))
+        .get(targetUrl)
+        .expect(200, 'tobi', done)
+    })
+
+    it('should allow symlinks pointing outside root when true', function (done) {
+      if (!hasFileSymlink && !hasDirSymlink) return this.skip()
+      var targetUrl = hasFileSymlink ? '/outside-file.txt' : '/outside-dir/name.txt'
+      request(createServer({ followSymlinks: true, root: petsDir }))
+        .get(targetUrl)
+        .expect(200, 'tobi', done)
+    })
+
+    it('should 403 for symlinks pointing outside root when false', function (done) {
+      if (!hasFileSymlink && !hasDirSymlink) return this.skip()
+      var targetUrl = hasFileSymlink ? '/outside-file.txt' : '/outside-dir/name.txt'
+      request(createServer({ followSymlinks: false, root: petsDir }))
+        .get(targetUrl)
+        .expect(403, done)
+    })
+
+    it('should allow symlinks pointing inside root when false', function (done) {
+      if (!hasInsideSymlink) return this.skip()
+      request(createServer({ followSymlinks: false, root: fixtures }))
+        .get('/inside-symlink.txt')
+        .expect(200, 'tobi', done)
+    })
+
+    it('should allow regular files within root when false', function (done) {
+      request(createServer({ followSymlinks: false, root: petsDir }))
+        .get('/index.html')
+        .expect(200, done)
+    })
+  })
+
   describe('lastModified', function () {
     it('should support disabling last-modified', function (done) {
       request(createServer({ lastModified: false, root: fixtures }))

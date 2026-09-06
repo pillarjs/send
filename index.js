@@ -123,6 +123,10 @@ function SendStream (req, path, options) {
     ? normalizeList(opts.extensions, 'extensions option')
     : []
 
+  this._followSymlinks = opts.followSymlinks !== undefined
+    ? Boolean(opts.followSymlinks)
+    : true
+
   this._immutable = opts.immutable !== undefined
     ? Boolean(opts.immutable)
     : false
@@ -488,6 +492,50 @@ SendStream.prototype.pipe = function pipe (res) {
  */
 
 SendStream.prototype.send = function send (path, stat) {
+  var self = this
+  var root = this._root
+
+  if (this.res.headersSent) {
+    // impossible to send now
+    this.headersAlreadySent()
+    return
+  }
+
+  if (!this._followSymlinks && root !== null) {
+    debug('check symlink "%s"', path)
+    fs.realpath(path, function onrealpath (err, realPath) {
+      if (err) {
+        return self.onStatError(err)
+      }
+
+      fs.realpath(root, function onrealroot (err, realRoot) {
+        if (err) {
+          return self.onStatError(err)
+        }
+
+        if (realPath !== realRoot && !realPath.startsWith(realRoot.endsWith(sep) ? realRoot : realRoot + sep)) {
+          debug('symlink target outside root "%s"', realPath)
+          return self.error(403)
+        }
+
+        self._send(path, stat)
+      })
+    })
+    return
+  }
+
+  this._send(path, stat)
+}
+
+/**
+ * Transfer `path` to response.
+ *
+ * @param {String} path
+ * @param {Object} stat
+ * @api private
+ */
+
+SendStream.prototype._send = function _send (path, stat) {
   var len = stat.size
   var options = this.options
   var opts = {}
