@@ -228,10 +228,14 @@ SendStream.prototype.isPreconditionFailure = function isPreconditionFailure () {
   // if-match
   var match = req.headers['if-match']
   if (match) {
+    if (match === '*') {
+      return false
+    }
+
     var etag = res.getHeader('ETag')
-    return !etag || (match !== '*' && parseTokenList(match).every(function (match) {
+    return !etag || parseTokenList(match).every(function (match) {
       return match !== etag && match !== 'W/' + etag && 'W/' + match !== etag
-    }))
+    })
   }
 
   // if-unmodified-since
