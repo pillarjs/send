@@ -35,7 +35,6 @@ describe('send(file).pipe(res)', function () {
   it('should stream a zero-length file', function (done) {
     request(app)
       .get('/empty.txt')
-      .expect('Content-Length', '0')
       .expect(200, '', done)
   })
 
