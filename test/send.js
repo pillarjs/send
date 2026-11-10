@@ -476,6 +476,13 @@ describe('send(file).pipe(res)', function () {
           .expect(200, done)
       })
 
+      it('should respond with 200 when "*" and etag disabled', function (done) {
+        request(createServer({ etag: false, root: fixtures }))
+          .get('/name.txt')
+          .set('If-Match', '*')
+          .expect(200, 'tobi', done)
+      })
+
       it('should respond with 412 when ETag unmatched', function (done) {
         request(app)
           .get('/name.txt')
