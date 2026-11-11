@@ -111,6 +111,14 @@ This can also be a string accepted by the
 
 Serve files relative to `path`.
 
+**Important:** The `root` option restricts the served path through string-level
+normalization only. It does not resolve symbolic links. If the served
+directory contains symlinks, they may resolve to files outside the root.
+
+Do not serve directories where untrusted users can create files or symlinks.
+If your application accepts file uploads or operates in a shared/multi-tenant
+environment, ensure the served directory is not writable by untrusted parties.
+
 ##### start
 
 Byte offset at which the stream starts, defaults to 0. The start is inclusive,
